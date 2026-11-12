@@ -10,6 +10,8 @@ export default {
     firefoxProfile: fileURLToPath(new URL(".tb-dev-profile", import.meta.url)),
     profileCreateIfMissing: true,
     keepProfileChanges: true,
-    args: ["-no-remote"],
+    // -purgecaches: the persistent profile's startup cache otherwise keeps stale
+    // _locales strings of the add-on across restarts (same add-on version).
+    args: ["-no-remote", "-purgecaches"],
   },
 };
