@@ -140,5 +140,11 @@
         "content": "$1"
       }
     }
+  },
+  "composeDraftPlaceholder": {
+    "message": "Neuen Text schreiben, z. B. \"Um einen Termin nächste Woche bitten\""
+  },
+  "composeDraftLabel": {
+    "message": "Der Text ist leer: Die Anweisung schreibt einen neuen Entwurf."
   }
 }

@@ -140,5 +140,11 @@
         "content": "$1"
       }
     }
+  },
+  "composeDraftPlaceholder": {
+    "message": "Write new text, e.g. \"Ask for a meeting next week\""
+  },
+  "composeDraftLabel": {
+    "message": "The text is empty: the instruction writes a new draft."
   }
 }

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { controls, describeScope, initialState, reduce, resolveAction, scopeEvent, startEvent } from "../extension/compose/popup-state.ts";
+import { controls, describeScope, initialState, reduce, resolveAction, resolveInstructionJob, scopeEvent, startEvent } from "../extension/compose/popup-state.ts";
 import type { PopupEvent } from "../extension/compose/popup-state.ts";
 
 const run = (events: PopupEvent[]) => events.reduce(reduce, initialState());
@@ -24,11 +24,11 @@ test("cancel and failure", () => {
 
 test("controls per phase", () => {
   const s = run(["scope_ok"]);
-  assert.deepEqual(controls(s), { actionsEnabled: true, replyEnabled: true, cancelVisible: false, previewVisible: false, previewButtonsVisible: false });
+  assert.deepEqual(controls(s), { actionsEnabled: true, replyEnabled: true, instructionEnabled: true, instructionCreatesDraft: false, cancelVisible: false, previewVisible: false, previewButtonsVisible: false });
   const st = reduce(s, "start");
-  assert.deepEqual(controls(st), { actionsEnabled: false, replyEnabled: false, cancelVisible: true, previewVisible: true, previewButtonsVisible: false });
+  assert.deepEqual(controls(st), { actionsEnabled: false, replyEnabled: false, instructionEnabled: false, instructionCreatesDraft: false, cancelVisible: true, previewVisible: true, previewButtonsVisible: false });
   const pv = reduce(st, "done");
-  assert.deepEqual(controls(pv), { actionsEnabled: false, replyEnabled: false, cancelVisible: false, previewVisible: true, previewButtonsVisible: true });
+  assert.deepEqual(controls(pv), { actionsEnabled: false, replyEnabled: false, instructionEnabled: false, instructionCreatesDraft: false, cancelVisible: false, previewVisible: true, previewButtonsVisible: true });
   assert.equal(controls(run(["scope_unusable"])).actionsEnabled, false);
 });
 
@@ -96,4 +96,32 @@ test("preparing blocks a second start until the first one resolves", () => {
   assert.equal(run(["scope_ok", "start", "prepare_fail"]).phase, "streaming");
   assert.equal(run(["scope_ok", "prepare", "scope_unusable", "start"]).phase, "preparing");
   assert.equal(run(["scope_ok", "start", "fail", "prepare"]).phase, "preparing");
+});
+
+test("empty text: rewrite buttons off, instruction field on and creates a draft", () => {
+  const s = run(["scope_reply_only"]);
+  const c = controls(s);
+  assert.equal(c.actionsEnabled, false);
+  assert.equal(c.instructionEnabled, true);
+  assert.equal(c.instructionCreatesDraft, true);
+  const full = controls(run(["scope_ok"]));
+  assert.equal(full.instructionEnabled, true);
+  assert.equal(full.instructionCreatesDraft, false);
+  assert.equal(controls(run(["scope_unusable"])).instructionEnabled, false);
+  assert.equal(controls(run(["scope_reply_only", "start_reply"])).instructionEnabled, false);
+});
+
+test("resolveInstructionJob picks the job by scope", () => {
+  assert.deepEqual(resolveInstructionJob(run(["scope_reply_only"]), " Write hi "), { type: "instruction_draft", instruction: "Write hi" });
+  assert.deepEqual(resolveInstructionJob(run(["scope_ok"]), "Shorter"), { type: "compose", action: { kind: "custom", instruction: "Shorter" } });
+  assert.equal(resolveInstructionJob(run(["scope_reply_only"]), "  "), null);
+  assert.equal(resolveInstructionJob(run(["scope_unusable"]), "x"), null);
+});
+
+test("instruction draft uses the draft path and can be regenerated", () => {
+  const job = { type: "instruction_draft", instruction: "x" } as const;
+  assert.equal(startEvent(job), "start_reply");
+  const s = run(["scope_reply_only", "start_reply", "done"]);
+  assert.equal(s.phase, "preview");
+  assert.equal(reduce(reduce(s, "discard"), startEvent(job)).phase, "streaming");
 });

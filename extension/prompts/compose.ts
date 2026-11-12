@@ -8,7 +8,10 @@ export type ComposeAction =
   | { kind: "translate"; lang: "de" | "en" }
   | { kind: "custom"; instruction: string };
 
-export const COMPOSE_MODEL = "haiku";
+/** Model for rewriting existing text (rephrase, shorten, tone, translate, custom). */
+export const REWRITE_MODEL = "haiku";
+/** Model for newly written text (reply draft, draft from instruction). */
+export const DRAFT_MODEL = "sonnet";
 export const MAX_ORIGINAL_CHARS = 30000;
 /** Longest own text that is sent for rewriting. */
 export const MAX_COMPOSE_CHARS = 30000;
@@ -77,27 +80,65 @@ export function buildComposePrompt(action: ComposeAction, text: string): PromptP
   };
 }
 
-export function buildReplyDraftPrompt(
-  original: { from: string; subject: string; body: string },
-  notes: string,
-): PromptParts {
+interface OriginalInput {
+  from: string;
+  subject: string;
+  body: string;
+}
+
+function originalBlock(original: OriginalInput): string[] {
   let body = original.body;
   if (body.length > MAX_ORIGINAL_CHARS) body = body.slice(0, MAX_ORIGINAL_CHARS) + "\n" + TRUNCATION_MARKER;
-  const prompt = [
-    "Task: Write a reply to the email below.",
-    "",
+  return [
     "<original_email>",
     `From: ${neutralizeBlockTags(original.from)}`,
     `Subject: ${neutralizeBlockTags(original.subject)}`,
     "Body:",
     neutralizeBlockTags(body),
     "</original_email>",
+  ];
+}
+
+export function buildReplyDraftPrompt(original: OriginalInput, notes: string): PromptParts {
+  const prompt = [
+    "Task: Write a reply to the email below.",
+    "",
+    ...originalBlock(original),
     "",
     "<user_notes>",
     neutralizeBlockTags(notes.trim()),
     "</user_notes>",
   ].join("\n");
   return { system: REPLY_SYSTEM, prompt };
+}
+
+const INSTRUCTION_DRAFT_RULES = [
+  "Write a new email body according to the trusted instruction of the user in <user_instruction>.",
+  "Output only the email body: no subject line, no introduction, no explanation.",
+  "Do not invent facts, names, dates or numbers. Mark missing details as clearly recognizable placeholders in square brackets, for example [Name] or [Date].",
+  "Write in the language of the instruction.",
+];
+
+/** Draft from a free instruction; with `original` the text is a reply to that email. */
+export function buildInstructionDraftPrompt(instruction: string, original?: OriginalInput): PromptParts {
+  const text = instruction.trim();
+  if (!text) throw new Error("Instruction must not be empty");
+  const system = [
+    ...COMMON_RULES,
+    ...INSTRUCTION_DRAFT_RULES,
+    ...(original
+      ? ["The text is a reply to the email in <original_email>. Do not quote the original email and do not add a signature."]
+      : []),
+  ].join("\n");
+  const prompt = [
+    original ? "Task: Write a reply to the email below, following the instruction." : "Task: Write a new email following the instruction.",
+    "",
+    ...(original ? [...originalBlock(original), ""] : []),
+    "<user_instruction>",
+    neutralizeBlockTags(text),
+    "</user_instruction>",
+  ].join("\n");
+  return { system, prompt };
 }
 
 export function cleanModelOutput(s: string): string {

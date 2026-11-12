@@ -71,8 +71,9 @@ Nachrichten vom Host sind auf 1 MB begrenzt, deshalb immer in Stücken streamen.
 - Das Modell hat keine Tools und das Add-on führt aus der Antwort nichts automatisch aus.
 - Ergebnis wird immer als Vorschau gezeigt; Übernahme nur per Klick. HTML aus der Antwort wird
   nicht ungeprüft in den Editor oder ins Popup geschrieben.
-- Standardmodell für Umformulieren und Zusammenfassen: das kleinste (Haiku); für Postfach-Abfragen
-  Sonnet. In den Einstellungen änderbar.
+- Modelle: neu entstehende Texte (Antwortentwurf, Entwurf aus Anweisung) auf Sonnet;
+  Umformulieren, Kürzen, Ton, Übersetzen und Zusammenfassen auf Haiku; Postfach-Abfragen auf Sonnet.
+  In den Einstellungen änderbar.
 
 ## Phasen
 
@@ -108,9 +109,12 @@ ohne registrierten Host "Der Hilfsdienst ist nicht installiert …". Host-Manife
 - [x] Vorschau mit Übernehmen, Verwerfen, Neu erzeugen; Abbrechen während des Streamings
 - [x] Funktioniert im HTML- und im Nur-Text-Modus
 - [x] Antwortentwurf: aus der beantworteten Mail plus Stichworten des Nutzers
+- [x] Freie Anweisung bei leerem Text erzeugt neuen Text (Entwurf aus Anweisung)
 
 Abnahme: Markierten Absatz in einer HTML-Mail umformulieren und übernehmen, Rest der Mail
 inklusive Formatierung und Signatur unverändert; dasselbe in einer Nur-Text-Mail.
+In einer leeren neuen Mail erzeugt eine freie Anweisung einen Entwurf, der nach Klick eingefügt wird;
+in einer leeren Antwort landet er vor Zitat und Signatur, beide bleiben unverändert.
 Umgesetzt und reviewt; Nachweis in Thunderbird steht aus.
 
 ### Phase 4 – Lesen

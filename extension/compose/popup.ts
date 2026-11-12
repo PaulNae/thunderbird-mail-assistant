@@ -2,10 +2,10 @@ import { localizeDocument } from "../shared/i18n.ts";
 import { errorMessage } from "../shared/errors.ts";
 import { BackendError } from "../backend/backend.ts";
 import { CliBackend } from "../backend/cli-backend.ts";
-import { COMPOSE_MODEL, MAX_COMPOSE_CHARS, buildComposePrompt, buildReplyDraftPrompt, cleanModelOutput } from "../prompts/compose.ts";
+import { DRAFT_MODEL, MAX_COMPOSE_CHARS, REWRITE_MODEL, buildComposePrompt, buildInstructionDraftPrompt, buildReplyDraftPrompt, cleanModelOutput } from "../prompts/compose.ts";
 import { isBlank } from "./editor-text.ts";
 import { applyText, captureSelection } from "./editor-bridge.ts";
-import { controls, describeScope, initialState, reduce, resolveAction, scopeEvent, startEvent } from "./popup-state.ts";
+import { controls, describeScope, initialState, reduce, resolveAction, resolveInstructionJob, scopeEvent, startEvent } from "./popup-state.ts";
 import type { PopupEvent, PopupJob } from "./popup-state.ts";
 import { loadOriginal } from "./original-message.ts";
 import type { OriginalMessage } from "./original-message.ts";
@@ -24,6 +24,7 @@ const actionsEl = $("actions");
 const previewSection = $("preview-section");
 const previewEl = $("preview");
 const instructionEl = $<HTMLInputElement>("instruction");
+const instructionLabelEl = $("instruction-label");
 const runCustomBtn = $<HTMLButtonElement>("run-custom");
 const replySection = $("reply-section");
 const replyNotesEl = $<HTMLInputElement>("reply-notes");
@@ -53,8 +54,10 @@ function dispatch(event: PopupEvent): void {
 function render(): void {
   const c = controls(state);
   for (const b of actionButtons) b.disabled = !c.actionsEnabled;
-  instructionEl.disabled = !c.actionsEnabled;
-  runCustomBtn.disabled = !c.actionsEnabled || instructionEl.value.trim() === "";
+  instructionEl.disabled = !c.instructionEnabled;
+  instructionEl.placeholder = t(c.instructionCreatesDraft ? "composeDraftPlaceholder" : "composeInstructionPlaceholder");
+  instructionLabelEl.hidden = !c.instructionCreatesDraft;
+  runCustomBtn.disabled = !c.instructionEnabled || instructionEl.value.trim() === "";
   replyNotesEl.disabled = !c.replyEnabled;
   runReplyBtn.disabled = !c.replyEnabled;
   previewSection.hidden = !c.previewVisible;
@@ -91,7 +94,13 @@ async function start(job: PopupJob): Promise<void> {
   let original: OriginalMessage | null = null;
   try {
     scope = await refreshScope();
-    if (scope && job.type === "reply" && scope.replyUsable) {
+    if (job.type === "instruction_draft" && scope && !isBlank(scope.text)) {
+      // The own text is no longer empty: the draft would overwrite it, so do not run.
+      setStatus(t("composeStale"));
+      dispatch("prepare_fail");
+      return;
+    }
+    if (scope && job.type !== "compose" && scope.replyUsable && (job.type === "reply" || relatedMessageId !== null)) {
       if (relatedMessageId === null) {
         dispatch("prepare_fail");
         return;
@@ -109,7 +118,7 @@ async function start(job: PopupJob): Promise<void> {
     dispatch("prepare_fail");
     return;
   }
-  if (!scope || !(job.type === "reply" ? scope.replyUsable : scope.usable)) {
+  if (!scope || !(job.type === "compose" ? scope.usable : scope.replyUsable)) {
     dispatch("prepare_fail");
     return;
   }
@@ -130,10 +139,13 @@ async function start(job: PopupJob): Promise<void> {
         ? buildReplyDraftPrompt(original, job.notes)
         : job.type === "compose"
           ? buildComposePrompt(job.action, text)
-          : (() => {
-              throw new Error("Original message missing");
-            })();
-    for await (const chunk of backend.run({ system, prompt, model: COMPOSE_MODEL, signal: ctl.signal })) {
+          : job.type === "instruction_draft"
+            ? buildInstructionDraftPrompt(job.instruction, original ?? undefined)
+            : (() => {
+                throw new Error("Original message missing");
+              })();
+    const model = job.type === "compose" ? REWRITE_MODEL : DRAFT_MODEL;
+    for await (const chunk of backend.run({ system, prompt, model, signal: ctl.signal })) {
       result += chunk;
       previewEl.textContent = result;
     }
@@ -168,6 +180,11 @@ function startChoice(choice: string): void {
   if (action) void start({ type: "compose", action });
 }
 
+function startInstruction(): void {
+  const job = resolveInstructionJob(state, instructionEl.value);
+  if (job) void start(job);
+}
+
 function startReply(): void {
   if (!runReplyBtn.disabled) void start({ type: "reply", notes: replyNotesEl.value });
 }
@@ -182,12 +199,12 @@ replyNotesEl.addEventListener("keydown", (ev) => {
 for (const b of actionButtons) {
   b.addEventListener("click", () => startChoice(b.dataset["action"] ?? ""));
 }
-runCustomBtn.addEventListener("click", () => startChoice("custom"));
+runCustomBtn.addEventListener("click", () => startInstruction());
 instructionEl.addEventListener("input", render);
 instructionEl.addEventListener("keydown", (ev) => {
   if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing) {
     ev.preventDefault();
-    if (!runCustomBtn.disabled) startChoice("custom");
+    if (!runCustomBtn.disabled) startInstruction();
   }
 });
 cancelBtn.addEventListener("click", () => controller?.abort());

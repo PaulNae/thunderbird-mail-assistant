@@ -4,7 +4,10 @@ import { isBlank } from "./editor-text.ts";
 import type { CaptureResult } from "./editor-text.ts";
 
 /** What a run does: a rewrite action on the captured text, or a reply draft from the notes. */
-export type PopupJob = { type: "compose"; action: ComposeAction } | { type: "reply"; notes: string };
+export type PopupJob =
+  | { type: "compose"; action: ComposeAction }
+  | { type: "reply"; notes: string }
+  | { type: "instruction_draft"; instruction: string };
 
 export type Phase = "idle" | "preparing" | "streaming" | "preview" | "error";
 
@@ -56,6 +59,10 @@ export function reduce(state: PopupState, event: PopupEvent): PopupState {
 export interface Controls {
   actionsEnabled: boolean;
   replyEnabled: boolean;
+  /** Instruction field and its run button (rewrite by instruction, or draft if the text is empty). */
+  instructionEnabled: boolean;
+  /** True if the instruction creates new text (own text is empty) instead of rewriting. */
+  instructionCreatesDraft: boolean;
   cancelVisible: boolean;
   previewVisible: boolean;
   previewButtonsVisible: boolean;
@@ -65,6 +72,8 @@ export function controls(state: PopupState): Controls {
   return {
     actionsEnabled: state.canAct && (state.phase === "idle" || state.phase === "error"),
     replyEnabled: state.canReply && (state.phase === "idle" || state.phase === "error"),
+    instructionEnabled: (state.canAct || state.canReply) && (state.phase === "idle" || state.phase === "error"),
+    instructionCreatesDraft: !state.canAct && state.canReply,
     cancelVisible: state.phase === "streaming",
     previewVisible: state.phase === "streaming" || state.phase === "preview",
     previewButtonsVisible: state.phase === "preview",
@@ -92,6 +101,18 @@ export function resolveAction(choice: string, instruction = ""): ComposeAction |
     default:
       return null;
   }
+}
+
+/**
+ * The job for the free instruction field: rewriting (custom) if there is text to work on, an
+ * instruction draft if the own text is empty. Null for a blank instruction or an unusable scope.
+ */
+export function resolveInstructionJob(state: PopupState, instruction: string): PopupJob | null {
+  const text = instruction.trim();
+  if (!text) return null;
+  if (state.canAct) return { type: "compose", action: { kind: "custom", instruction: text } };
+  if (state.canReply) return { type: "instruction_draft", instruction: text };
+  return null;
 }
 
 export interface ScopeInfo {
@@ -125,5 +146,5 @@ export function scopeEvent(info: ScopeInfo): PopupEvent {
 
 /** The state event that starts the given job. */
 export function startEvent(job: PopupJob): PopupEvent {
-  return job.type === "reply" ? "start_reply" : "start";
+  return job.type === "compose" ? "start" : "start_reply";
 }
