@@ -22,5 +22,35 @@
   },
   "popupDisplayPlaceholder": {
     "message": "The reading features will appear here."
+  },
+  "bridgeTestButton": {
+    "message": "Test connection"
+  },
+  "bridgeCancelButton": {
+    "message": "Cancel"
+  },
+  "bridgeTestPrompt": {
+    "message": "Say hello"
+  },
+  "errorHostNotFound": {
+    "message": "The helper service is not installed. Please run `npm run host:install`."
+  },
+  "errorCliNotFound": {
+    "message": "Claude Code was not found. Please install it and run `npm run host:install` again."
+  },
+  "errorNotLoggedIn": {
+    "message": "Claude Code is not logged in. Please start `claude` in a terminal and log in."
+  },
+  "errorRateLimited": {
+    "message": "The usage limit has been reached. Please try again later."
+  },
+  "errorTimeout": {
+    "message": "The request took too long and was stopped."
+  },
+  "errorCancelled": {
+    "message": "Cancelled."
+  },
+  "errorInternal": {
+    "message": "An unexpected error occurred."
   }
 }

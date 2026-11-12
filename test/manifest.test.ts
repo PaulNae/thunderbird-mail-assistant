@@ -62,3 +62,7 @@ test("data-i18n keys exist in both locales and locales have identical keys", () 
     assert.ok(existsSync(path.join(dist, path.dirname(page), "popup.js")), `${page} script missing`);
   }
 });
+
+test("nativeMessaging permission is requested", () => {
+  assert.ok((manifest["permissions"] as string[]).includes("nativeMessaging"));
+});

@@ -15,6 +15,17 @@ declare namespace messenger {
       reason: "install" | "update" | "browser_update" | "shared_module_update";
       previousVersion?: string;
     }
+    interface Port {
+      name: string;
+      error?: { message?: string } | null;
+      postMessage(message: unknown): void;
+      disconnect(): void;
+      onMessage: MessengerEvent<(message: unknown) => void>;
+      onDisconnect: MessengerEvent<(port: Port) => void>;
+    }
+    const lastError: { message?: string } | null | undefined;
+    // Docs list Promise<Port>; Firefox-based builds return the Port synchronously.
+    function connectNative(application: string): Port | Promise<Port>;
     const onInstalled: MessengerEvent<(details: InstalledDetails) => void>;
   }
 }

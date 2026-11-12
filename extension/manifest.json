@@ -28,5 +28,8 @@
     "default_popup": "display/popup.html",
     "default_title": "__MSG_actionDisplayTitle__",
     "default_icon": "icons/icon.svg"
-  }
+  },
+  "permissions": [
+    "nativeMessaging"
+  ]
 }
