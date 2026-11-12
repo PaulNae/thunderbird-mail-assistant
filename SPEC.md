@@ -190,9 +190,11 @@ erst nach einem Neustart als "nicht installiert" gemeldet. Bildschirmleser nicht
       Claude Code und eigenes Konto nötig, Abo laut Consumer Terms nicht für geschäftliche Nutzung)
 - [x] Übrige nach außen sichtbare Texte auf Englisch (Ausgaben des Installers waren es schon, `package.json` ergänzt); SPEC.md und CLAUDE.md
       bleiben deutsch
-- [x] Git-Historie auf die GitHub-Noreply-Adresse umgeschrieben und neu gepusht (2026-11-12). Die alten Commits sind auf GitHub
-      über ihre Kennung weiter abrufbar; vor dem Öffentlichschalten das Repository neu anlegen
-- [ ] GitHub-Release mit der `.xpi`; Repository öffentlich schalten (nur auf ausdrückliches Wort des Nutzers)
+- [x] Git-Historie auf die GitHub-Noreply-Adresse umgeschrieben und neu gepusht (2026-11-12). Das Repository wurde danach neu
+      angelegt, weil GitHub überschriebene Commits über ihre Kennung abrufbar hält; das alte heißt
+      `thunderbird-mail-assistant-old` (privat, vom Nutzer zu löschen)
+- [x] GitHub-Release `v0.6.0` mit der `.xpi`
+- [ ] Repository öffentlich schalten (nur auf ausdrückliches Wort des Nutzers)
 
 ### Phase 8 – Store (addons.thunderbird.net)
 - [ ] `ApiBackend` mit API-Key als Standard der Store-Version (neue Host-Berechtigung für `api.anthropic.com`)
