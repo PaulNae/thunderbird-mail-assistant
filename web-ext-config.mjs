@@ -4,6 +4,11 @@ import { fileURLToPath } from "node:url";
 // in a dedicated, persistent test profile (never the user's real profile).
 export default {
   sourceDir: "dist",
+  // `npm run package`: installable add-on file web-ext-artifacts/mail-assistant-<version>.xpi.
+  build: {
+    filename: "mail-assistant-{version}.xpi",
+    overwriteDest: true,
+  },
   run: {
     target: ["firefox-desktop"],
     firefox: "/Applications/Thunderbird.app/Contents/MacOS/thunderbird",

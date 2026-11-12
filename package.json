@@ -1,6 +1,6 @@
 {
   "name": "thunderbird-mail-assistant",
-  "version": "0.1.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,6 +11,7 @@
     "test": "node --test \"test/**/*.test.ts\"",
     "host:install": "node host/install-macos.mjs",
     "start": "npm run build && web-ext run --config web-ext-config.mjs",
+    "package": "npm run check && web-ext build --config web-ext-config.mjs",
     "check": "npm run build && npm run typecheck && npm run lint && npm run lint:ext && npm run test"
   },
   "devDependencies": {
