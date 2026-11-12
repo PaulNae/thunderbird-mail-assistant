@@ -31,3 +31,21 @@ Buttons des Add-ons erscheinen. Ohne echtes Konto geht es so:
   (nicht im Finder doppelklicken, das öffnet das normale Thunderbird).
 - Verfassen: ein Newsgruppen-Konto mit Fantasiewerten anlegen (z. B. Server
   `news.example.invalid`); es braucht keine Serververbindung, liefert aber eine Absender-Identität.
+
+## Native-Messaging-Host installieren
+
+```sh
+npm run host:install
+```
+
+Das Skript registriert den Host `mail_assistant` für Thunderbird (nur macOS, aktueller Nutzer):
+
+- `host/launcher.sh` (nicht im Git): Startskript mit absoluten Pfaden zu `node` und `claude`,
+  weil Thunderbird den Host ohne Shell-`PATH` startet.
+- `~/Library/Mozilla/NativeMessagingHosts/mail_assistant.json`: Manifest mit Verweis auf den
+  Launcher und der Add-on-ID aus `extension/manifest.json`.
+
+`claude` wird über die Login-Shell, `~/.local/bin`, `/opt/homebrew/bin` und `/usr/local/bin`
+gesucht; mit `--claude <pfad>` lässt sich der Pfad vorgeben. Erneut ausführen, wenn das
+Repository verschoben oder `node` bzw. `claude` gewechselt wird. `--print` zeigt nur an, was
+geschrieben würde; `npm run host:install -- --uninstall` entfernt Manifest und Launcher.
