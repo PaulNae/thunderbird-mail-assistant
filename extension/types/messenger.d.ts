@@ -58,8 +58,26 @@ declare namespace messenger {
   namespace compose {
     interface ComposeDetails {
       isPlainText?: boolean;
+      type?: "draft" | "new" | "reply" | "forward" | "redirect";
+      /** Only set with the messagesRead permission, and not if the original was opened from a file. */
+      relatedMessageId?: number;
     }
     function getComposeDetails(tabId: number): Promise<ComposeDetails>;
+  }
+}
+
+declare namespace messenger {
+  namespace messages {
+    interface MessageHeader {
+      author: string;
+      subject: string;
+    }
+    interface InlineTextPart {
+      contentType: string;
+      content: string;
+    }
+    function get(messageId: number): Promise<MessageHeader>;
+    function listInlineTextParts(messageId: number): Promise<InlineTextPart[]>;
   }
 }
 

@@ -114,5 +114,20 @@
   },
   "composeStale": {
     "message": "Der Text wurde inzwischen geändert, bitte neu starten."
+  },
+  "composeReplyTitle": {
+    "message": "Antwort entwerfen"
+  },
+  "composeReplyNotesPlaceholder": {
+    "message": "Stichworte (optional) …"
+  },
+  "composeReplyRun": {
+    "message": "Entwurf erzeugen"
+  },
+  "composeScopeInsert": {
+    "message": "Noch kein eigener Text. Ein Entwurf wird vor dem Zitat eingefügt."
+  },
+  "composeOriginalFailed": {
+    "message": "Die beantwortete Mail konnte nicht gelesen werden."
   }
 }

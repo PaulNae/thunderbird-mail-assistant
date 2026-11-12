@@ -114,5 +114,20 @@
   },
   "composeStale": {
     "message": "The text has changed in the meantime, please start again."
+  },
+  "composeReplyTitle": {
+    "message": "Draft a reply"
+  },
+  "composeReplyNotesPlaceholder": {
+    "message": "Keywords (optional) …"
+  },
+  "composeReplyRun": {
+    "message": "Create draft"
+  },
+  "composeScopeInsert": {
+    "message": "No text of your own yet. A draft will be inserted above the quote."
+  },
+  "composeOriginalFailed": {
+    "message": "The original message could not be read."
   }
 }

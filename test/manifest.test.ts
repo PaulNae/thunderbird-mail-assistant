@@ -71,4 +71,5 @@ test("scripting and compose permissions are requested", () => {
   const permissions = manifest["permissions"] as string[];
   assert.ok(permissions.includes("scripting"));
   assert.ok(permissions.includes("compose"));
+  assert.ok(permissions.includes("messagesRead"));
 });

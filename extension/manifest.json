@@ -32,6 +32,7 @@
   "permissions": [
     "nativeMessaging",
     "scripting",
-    "compose"
+    "compose",
+    "messagesRead"
   ]
 }
