@@ -69,8 +69,23 @@ declare namespace messenger {
 declare namespace messenger {
   namespace messages {
     interface MessageHeader {
+      id: number;
       author: string;
       subject: string;
+      /** Date header; may be invalid or missing for broken messages. */
+      date?: Date;
+      headerMessageId: string;
+    }
+    interface MessageAttachment {
+      name: string;
+    }
+    /** Only the headers are used. Keys are not documented as lowercase. */
+    interface MessagePart {
+      headers?: Record<string, string[]>;
+    }
+    interface MessageList {
+      id: string | null;
+      messages: MessageHeader[];
     }
     interface InlineTextPart {
       contentType: string;
@@ -78,6 +93,12 @@ declare namespace messenger {
     }
     function get(messageId: number): Promise<MessageHeader>;
     function listInlineTextParts(messageId: number): Promise<InlineTextPart[]>;
+    function listAttachments(messageId: number): Promise<MessageAttachment[]>;
+    function getFull(
+      messageId: number,
+      options?: { decodeHeaders?: boolean; decodeContent?: boolean },
+    ): Promise<MessagePart>;
+    function query(queryInfo: { headerMessageId?: string }): Promise<MessageList>;
   }
 }
 

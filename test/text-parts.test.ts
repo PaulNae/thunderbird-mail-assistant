@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { MAX_ORIGINAL_TEXT, joinParts, selectParts } from "../extension/compose/original-text.ts";
+import { MAX_ORIGINAL_TEXT, joinParts, selectParts } from "../extension/mail/text-parts.ts";
 
 test("prefers text/plain over text/html", () => {
   const sel = selectParts([

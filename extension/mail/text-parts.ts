@@ -1,4 +1,4 @@
-// DOM-free selection logic for the text of the original message (testable in Node).
+// DOM-free selection logic for the text of a message (testable in Node).
 
 export interface TextPart {
   contentType: string;

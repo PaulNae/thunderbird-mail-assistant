@@ -22,7 +22,19 @@ export interface PromptParts {
   prompt: string;
 }
 
-const BLOCK_NAMES = ["email_text", "user_instruction", "original_email", "user_notes"];
+const BLOCK_NAMES = [
+  "email_text",
+  "user_instruction",
+  "original_email",
+  "user_notes",
+  // Reading prompts (prompts/read.ts)
+  "thread",
+  "email",
+  "conversation_history",
+  "earlier_question",
+  "earlier_answer",
+  "user_question",
+];
 
 /**
  * Defuses every opening or closing tag of the block names used in our prompts

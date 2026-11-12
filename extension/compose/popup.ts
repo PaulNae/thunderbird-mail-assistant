@@ -7,8 +7,8 @@ import { isBlank } from "./editor-text.ts";
 import { applyText, captureSelection } from "./editor-bridge.ts";
 import { controls, describeScope, initialState, reduce, resolveAction, resolveInstructionJob, scopeEvent, startEvent } from "./popup-state.ts";
 import type { PopupEvent, PopupJob } from "./popup-state.ts";
-import { loadOriginal } from "./original-message.ts";
-import type { OriginalMessage } from "./original-message.ts";
+import { loadOriginal } from "../mail/message-text.ts";
+import type { OriginalMessage } from "../mail/message-text.ts";
 
 localizeDocument();
 
