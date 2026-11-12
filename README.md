@@ -66,13 +66,38 @@ responsibility to comply with them.
 - **Subscription (Free, Pro, Max):** according to Anthropic's Consumer Terms it is for private,
   non-commercial use only. Requests count against the usage limits of your plan.
 
+The terms that apply to you, depending on the backend:
+
+- [Consumer Terms of Service](https://www.anthropic.com/legal/consumer-terms): Claude subscriptions
+  (Free, Pro, Max), that is the subscription backend.
+- [Commercial Terms of Service](https://www.anthropic.com/legal/commercial-terms): API keys, that is
+  the API backend.
+- [Usage Policy](https://www.anthropic.com/legal/aup): what Claude may be used for, both backends.
+- [Privacy Policy](https://www.anthropic.com/legal/privacy): what Anthropic does with your data.
+- [Claude Code legal and compliance](https://code.claude.com/docs/en/legal-and-compliance): how
+  Claude Code and a subscription may be used with other software.
+
 Anthropic's terms were last checked on 2026-11-12. Anthropic can change them; if using the
 subscription through Claude Code in this way is no longer allowed, that option must no longer be
 used. Anthropic's current terms apply, not this notice.
 
-**No warranty:** the add-on is provided as is under the [MIT License](LICENSE). The model's answers
-can be wrong; check them before you send anything. You are responsible for complying with
-Anthropic's terms and for what mail content you pass on.
+## Disclaimer
+
+- **No warranty, no liability.** Mail Assistant is a free, private project, provided "as is" under
+  the [MIT License](LICENSE), without warranty of any kind. To the extent permitted by law, the
+  author is not liable for any damage arising from its use, for example lost or wrongly worded
+  mail, costs charged by Anthropic, or a restricted or closed Anthropic account.
+- **Check the answers.** The model's output can be wrong, incomplete or misleading. Read it before
+  you send anything; what you send is your responsibility.
+- **Your account, your responsibility.** You are responsible for complying with Anthropic's terms
+  and for the costs and usage on your account.
+- **Your mail, your responsibility.** You decide which mail content you pass to Anthropic,
+  including personal data of other people in your mail.
+- **Not affiliated with Anthropic.** This is an independent project; it is not made, endorsed or
+  supported by Anthropic. "Claude" and "Claude Code" are Anthropic's names and are used here only
+  to describe what the add-on works with.
+- **No legal advice.** The notes on Anthropic's terms in this README describe the author's reading
+  as of the date given above. They are not legal advice and may be out of date.
 
 ## Requirements
 
