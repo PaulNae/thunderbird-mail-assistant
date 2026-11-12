@@ -102,15 +102,16 @@ ohne registrierten Host "Der Hilfsdienst ist nicht installiert …". Host-Manife
 `~/Library/Mozilla/NativeMessagingHosts/` damit bestätigt.
 
 ### Phase 3 – Schreiben
-- [ ] Popup im Verfassen-Fenster: Umformulieren, Kürzen, Ton (freundlich, formell, knapp),
+- [x] Popup im Verfassen-Fenster: Umformulieren, Kürzen, Ton (freundlich, formell, knapp),
       Übersetzen (de/en), freie Anweisung
-- [ ] Arbeitet auf der Markierung, sonst auf dem ganzen Text; Zitate und Signatur bleiben unberührt
-- [ ] Vorschau mit Übernehmen, Verwerfen, Neu erzeugen; Abbrechen während des Streamings
-- [ ] Funktioniert im HTML- und im Nur-Text-Modus
-- [ ] Antwortentwurf: aus der beantworteten Mail plus Stichworten des Nutzers
+- [x] Arbeitet auf der Markierung, sonst auf dem ganzen Text; Zitate und Signatur bleiben unberührt
+- [x] Vorschau mit Übernehmen, Verwerfen, Neu erzeugen; Abbrechen während des Streamings
+- [x] Funktioniert im HTML- und im Nur-Text-Modus
+- [x] Antwortentwurf: aus der beantworteten Mail plus Stichworten des Nutzers
 
 Abnahme: Markierten Absatz in einer HTML-Mail umformulieren und übernehmen, Rest der Mail
 inklusive Formatierung und Signatur unverändert; dasselbe in einer Nur-Text-Mail.
+Umgesetzt und reviewt; Nachweis in Thunderbird steht aus.
 
 ### Phase 4 – Lesen
 - [ ] Popup in der Mailansicht: Zusammenfassung, Frage stellen, "Antwort entwerfen" (öffnet Phase 3)
