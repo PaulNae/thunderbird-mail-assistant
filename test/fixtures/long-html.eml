@@ -1,0 +1,63 @@
+From: Anna Berger <anna.berger@example.invalid>
+To: Test User <test@example.invalid>
+Subject: Projekt Lindenhof: Stand, offene Punkte und naechste Schritte
+Date: Mon, 09 Nov 2026 09:15:00 +0100
+Message-ID: <lindenhof-001@example.invalid>
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><style>td{border:1px solid #999;padding:4px}</style></head>
+<body style="font-family: Arial, sans-serif">
+<p>Hallo zusammen,</p>
+<p>nach dem Treffen am Donnerstag fasse ich hier den <b>aktuellen Stand im Projekt Lindenhof</b> zusammen,
+damit alle mit denselben Informationen in die n&auml;chste Woche gehen. Bitte lest die Mail bis zum
+Ende, weil am Schluss zwei Entscheidungen stehen, f&uuml;r die ich bis <b>Freitag, 13. November</b>
+eine R&uuml;ckmeldung brauche.</p>
+
+<h2>1. Zeitplan</h2>
+<p>Der Rohbau ist abgeschlossen, die Abnahme durch den Statiker erfolgte am 4. November ohne M&auml;ngel.
+Die Elektroinstallation beginnt planm&auml;&szlig;ig am 16. November und dauert voraussichtlich drei Wochen.
+Die Sanit&auml;rarbeiten verschieben sich dagegen um etwa zehn Tage, weil die bestellten Vorwandelemente
+erst Ende November geliefert werden. Dadurch r&uuml;ckt der Estrich in die zweite Dezemberwoche, und der
+Einzugstermin am 1. M&auml;rz ist nur noch knapp zu halten.</p>
+<table>
+<tr><td><b>Gewerk</b></td><td><b>Beginn</b></td><td><b>Ende</b></td><td><b>Status</b></td></tr>
+<tr><td>Rohbau</td><td>01.07.</td><td>30.10.</td><td>fertig</td></tr>
+<tr><td>Elektro</td><td>16.11.</td><td>04.12.</td><td>geplant</td></tr>
+<tr><td>Sanit&auml;r</td><td>26.11.</td><td>18.12.</td><td>verz&ouml;gert</td></tr>
+<tr><td>Estrich</td><td>07.12.</td><td>11.12.</td><td>abh&auml;ngig von Sanit&auml;r</td></tr>
+</table>
+
+<h2>2. Kosten</h2>
+<p>Das Budget liegt bei 1,42 Millionen Euro. Bisher sind 812.000 Euro abgerechnet, das sind rund
+57 Prozent. Zwei Nachtr&auml;ge sind eingegangen: der Fensterbauer verlangt 18.400 Euro mehr wegen
+ge&auml;nderter Schallschutzklasse, und der Elektriker meldet 6.900 Euro f&uuml;r zus&auml;tzliche
+Ladepunkte in der Tiefgarage. Den Fenster-Nachtrag halte ich f&uuml;r berechtigt, weil die Anforderung
+aus dem Schallgutachten nachtr&auml;glich kam. Beim Elektro-Nachtrag m&ouml;chte ich vorher pr&uuml;fen,
+ob die Ladepunkte nicht schon im urspr&uuml;nglichen Leistungsverzeichnis enthalten waren.</p>
+
+<h2>3. Offene Punkte</h2>
+<ul>
+<li>Farbkonzept f&uuml;r das Treppenhaus: drei Varianten liegen vor, Auswahl steht aus.</li>
+<li>Bodenbelag in den Wohnungen: Eiche geb&uuml;rstet oder Vinyl in Holzoptik.</li>
+<li>Briefkastenanlage: Standort am Eingang oder in der Durchfahrt.</li>
+<li>Schl&uuml;sselplan: Entwurf kommt vom Schlosser bis 20. November.</li>
+</ul>
+
+<h2>4. Entscheidungen bis Freitag</h2>
+<ol>
+<li><b>Bodenbelag:</b> Eiche kostet etwa 21.000 Euro mehr, h&auml;lt aber l&auml;nger und l&auml;sst sich
+abschleifen. Vinyl ist g&uuml;nstiger und unempfindlicher gegen Feuchtigkeit.</li>
+<li><b>Fenster-Nachtrag:</b> Freigabe ja oder nein. Ohne Freigabe verz&ouml;gert sich die Bestellung um
+mindestens zwei Wochen.</li>
+</ol>
+
+<p>Im Anhang findet ihr das Protokoll vom Donnerstag und den aktualisierten Bauzeitenplan.
+Wenn etwas unklar ist, ruft mich gern an.</p>
+
+<p>Viele Gr&uuml;&szlig;e<br>Anna Berger<br>Projektleitung Lindenhof</p>
+</body>
+</html>
