@@ -123,7 +123,7 @@ Nachgewiesen am 2026-11-12 in Thunderbird 160: Abnahme vom Nutzer im Testprofil 
 - [x] HTML-Mails zu Text reduzieren, Anhänge nur als Namen nennen
 
 Abnahme: Zusammenfassung einer langen HTML-Mail und eine Folgefrage dazu, jeweils gestreamt.
-Umgesetzt und reviewt; Nachweis in Thunderbird steht aus.
+Nachgewiesen am 2026-11-12 in Thunderbird 160: Abnahme vom Nutzer im Testprofil bestätigt (Zusammenfassung der langen HTML-Mail `test/fixtures/long-html.eml` und Folgefrage, jeweils gestreamt; "Antwort entwerfen" aus einem lokalen Ordner). Aus einer Datei geöffnete Mails: Antwortfenster lässt sich nicht per `beginReply` öffnen, Popup nennt den normalen Antworten-Knopf als Weg.
 
 ### Phase 5 – Postfach-Abfrage
 - [ ] Chat-Tab; Schritt 1: Modell erzeugt aus der Frage Suchparameter (strukturierte Ausgabe)

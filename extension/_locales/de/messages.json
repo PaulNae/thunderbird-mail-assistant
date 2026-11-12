@@ -199,7 +199,7 @@
     "message": "Antwortfenster geöffnet. Der Entwurf startet, sobald du dort auf Mail Assistant klickst."
   },
   "displayReplyFailed": {
-    "message": "Das Antwortfenster konnte nicht geöffnet werden."
+    "message": "Das Antwortfenster konnte nicht geöffnet werden. Bei Mails, die aus einer Datei geöffnet wurden, bitte den normalen Antworten-Knopf verwenden und dort auf Mail Assistant klicken."
   },
   "composeReplyNoBasis": {
     "message": "Die Originalmail konnte nicht gelesen werden und es gibt keine Stichworte. Bitte Stichworte ergänzen oder es erneut versuchen."

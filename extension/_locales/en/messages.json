@@ -199,7 +199,7 @@
     "message": "Reply window opened. The draft starts as soon as you click Mail Assistant there."
   },
   "displayReplyFailed": {
-    "message": "The reply window could not be opened."
+    "message": "The reply window could not be opened. For messages opened from a file, use the normal Reply button and click Mail Assistant there."
   },
   "composeReplyNoBasis": {
     "message": "The original message could not be read and there are no keywords. Add keywords or try again."
