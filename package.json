@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "lint:ext": "web-ext lint --source-dir dist",
     "test": "node --test \"test/**/*.test.ts\"",
+    "start": "npm run build && web-ext run --config web-ext-config.mjs",
     "check": "npm run build && npm run typecheck && npm run lint && npm run lint:ext && npm run test"
   },
   "devDependencies": {

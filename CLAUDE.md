@@ -37,8 +37,12 @@ das Abo des Nutzers verwendet wird. Backend 2 (später) ruft die Claude-API mit 
 
 ## Befehle
 
-Werden in Phase 1 angelegt und hier nachgetragen: `npm run build`, `npm run check`
-(Typprüfung, Lint, `web-ext lint`, Tests), `npm run start` (Thunderbird mit geladenem Add-on).
+- `npm run build`: bündelt `extension/` mit esbuild nach `dist/`.
+- `npm run check`: Build, Typprüfung (`tsc`), ESLint, `web-ext lint` auf `dist/` und Tests.
+- `npm run start`: baut und startet Thunderbird mit `dist/` als temporärem Add-on, im eigenen
+  Testprofil `.tb-dev-profile/` (nicht versioniert, bleibt erhalten, nie das echte Profil);
+  web-ext lädt das Add-on bei Änderungen in `dist/` neu, ein Rebuild muss aber separat laufen.
+  Die Konfiguration steht in `web-ext-config.mjs`.
 
 ## Umgebung
 

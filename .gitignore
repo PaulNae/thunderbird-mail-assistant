@@ -5,3 +5,4 @@ web-ext-artifacts/
 .DS_Store
 .env
 .claude/settings.local.json
+.tb-dev-profile/

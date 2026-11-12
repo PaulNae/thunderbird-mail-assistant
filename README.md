@@ -13,3 +13,16 @@ offiziell ab Thunderbird 128 ESR unterstützt (https://webextension-api.thunderb
 https://developer.thunderbird.net/add-ons/mailextensions, dort: "Supported versions are 2 and 3
 (since Thunderbird 128)"). 128 ist zugleich eine ESR-Linie und damit die älteste sinnvolle Basis;
 entwickelt und getestet wird mit Thunderbird 160.
+
+## Entwicklung
+
+```
+npm install
+npm run check   # Build, Typprüfung, Lint, web-ext lint, Tests
+npm run start   # baut und startet Thunderbird mit dem Add-on
+```
+
+`npm run start` verwendet ein eigenes Testprofil in `.tb-dev-profile/` (nicht im Git), niemals das
+echte Thunderbird-Profil. Beim ersten Start ist dort noch kein Konto eingerichtet: Lege ein
+Testkonto oder ein lokales Konto ("Lokale Ordner") an, damit sich eine Mail anzeigen und ein
+Verfassen-Fenster öffnen lässt, in denen die Buttons des Add-ons erscheinen.
