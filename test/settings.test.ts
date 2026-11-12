@@ -8,7 +8,7 @@ import {
   SETTINGS_KEY,
   TIMEOUT_BOUNDS,
   defaultSettings,
-  migrateLegacySettings,
+  settleBackendChoice,
   modelForKind,
   readSettings,
   sanitizeSettings,
@@ -83,17 +83,51 @@ test("the 0.5 chat setting is read as a fallback and removed on save", async () 
   assert.deepEqual(await readSettings(area), defaultSettings());
 });
 
-test("the 0.5 key is migrated on update without overwriting newer settings", async () => {
+test("the 0.5 key is moved into the settings object when the backend is settled", async () => {
   const area = new FakeLocal();
-  assert.equal(await migrateLegacySettings(area), false);
   area.data.set(LEGACY_MAX_MESSAGES_KEY, 33);
-  assert.equal(await migrateLegacySettings(area), true);
+  assert.equal(await settleBackendChoice(area), "cli");
   assert.equal((area.data.get(SETTINGS_KEY) as { maxMessages: number }).maxMessages, 33);
   assert.equal(area.data.has(LEGACY_MAX_MESSAGES_KEY), false);
-  area.data.set(LEGACY_MAX_MESSAGES_KEY, 2);
-  assert.equal(await migrateLegacySettings(area), true);
-  assert.equal((area.data.get(SETTINGS_KEY) as { maxMessages: number }).maxMessages, 33);
-  assert.equal(area.data.has(LEGACY_MAX_MESSAGES_KEY), false);
+});
+
+test("a new installation starts with the API key, an existing one stays with Claude Code", async () => {
+  assert.equal(defaultSettings().backend, "api");
+  const fresh = new FakeLocal();
+  assert.equal(await settleBackendChoice(fresh), "api");
+  assert.equal((fresh.data.get(SETTINGS_KEY) as { backend: string }).backend, "api");
+  // Later consent or settings do not change the stored choice.
+  fresh.data.set("consent", { version: 2 });
+  assert.equal(await settleBackendChoice(fresh), "api");
+
+  // 0.6 with stored settings (no backend yet).
+  const withSettings = new FakeLocal();
+  withSettings.data.set(SETTINGS_KEY, { models: { rewrite: "opus" }, maxMessages: 20 });
+  assert.equal(await settleBackendChoice(withSettings), "cli");
+  const kept = withSettings.data.get(SETTINGS_KEY) as { backend: string; maxMessages: number; models: { rewrite: string } };
+  assert.equal(kept.backend, "cli");
+  assert.equal(kept.maxMessages, 20);
+  assert.equal(kept.models.rewrite, "opus");
+  assert.equal((await readSettings(withSettings)).backend, "cli");
+
+  // 0.6 with only a consent record (settings never changed).
+  const withConsent = new FakeLocal();
+  withConsent.data.set("consent", { version: 1 });
+  assert.equal(await settleBackendChoice(withConsent), "cli");
+
+  // A stored choice wins.
+  const chosen = new FakeLocal();
+  chosen.data.set(SETTINGS_KEY, { backend: "api" });
+  chosen.data.set("consent", { version: 1 });
+  assert.equal(await settleBackendChoice(chosen), "api");
+});
+
+test("the backend setting is validated and saved with the other settings", async () => {
+  assert.equal(sanitizeSettings({ backend: "cli" }).backend, "cli");
+  for (const v of ["CLI", "", 1, null, "openai"]) assert.equal(sanitizeSettings({ backend: v }).backend, "api");
+  const area = new FakeLocal();
+  assert.equal((await writeSettings(area, { backend: "cli" })).backend, "cli");
+  assert.equal((await readSettings(area)).backend, "cli");
 });
 
 test("job kinds map to their model setting", () => {
@@ -133,17 +167,25 @@ test("the host accepts only a timeout within its bounds", () => {
 });
 
 test("connection test results map to clear states", () => {
-  assert.deepEqual(toCheckResponse({ ok: true, detail: "2.1.3" }), { state: "ok", version: "2.1.3" });
-  assert.deepEqual(toCheckResponse({ ok: true, detail: "<b>x</b>" }), { state: "ok" });
-  assert.deepEqual(toCheckResponse({ ok: false, detail: "not_logged_in" }), { state: "not_logged_in" });
-  assert.deepEqual(toCheckResponse({ ok: false, detail: "cli_not_found" }), { state: "cli_not_found" });
-  assert.deepEqual(toCheckResponse({ ok: false, detail: "ok" }), { state: "internal" });
-  assert.deepEqual(toCheckResponse({ ok: false, detail: "Could not determine" }), { state: "internal" });
-  assert.deepEqual(toCheckResponse({ errorCode: "host_not_found" }), { state: "host_not_found" });
-  assert.deepEqual(toCheckResponse({ errorCode: "timeout" }), { state: "timeout" });
-  assert.deepEqual(toCheckResponse({ errorCode: "weird" }), { state: "internal" });
-  assert.deepEqual(parseCheckResponse({ state: "ok", version: "1.0" }), { state: "ok", version: "1.0" });
-  assert.equal(parseCheckResponse({ state: "evil" }), null);
-  assert.equal(parseCheckResponse({ state: "ok", version: "x".repeat(41) }), null);
+  assert.deepEqual(toCheckResponse("cli", { ok: true, detail: "2.1.3" }), { state: "ok", backend: "cli", version: "2.1.3" });
+  assert.deepEqual(toCheckResponse("cli", { ok: true, detail: "<b>x</b>" }), { state: "ok", backend: "cli" });
+  assert.deepEqual(toCheckResponse("api", { ok: true, detail: "2.1.3" }), { state: "ok", backend: "api" });
+  assert.deepEqual(toCheckResponse("cli", { ok: false, detail: "not_logged_in" }), { state: "not_logged_in", backend: "cli" });
+  assert.deepEqual(toCheckResponse("cli", { ok: false, detail: "cli_not_found" }), { state: "cli_not_found", backend: "cli" });
+  assert.deepEqual(toCheckResponse("cli", { ok: false, detail: "cli_unsupported" }), { state: "cli_unsupported", backend: "cli" });
+  for (const code of ["api_key_missing", "api_key_invalid", "api_billing", "rate_limited", "overloaded", "network_error"]) {
+    assert.deepEqual(toCheckResponse("api", { ok: false, detail: code }), { state: code, backend: "api" });
+  }
+  assert.deepEqual(toCheckResponse("cli", { ok: false, detail: "ok" }), { state: "internal", backend: "cli" });
+  assert.deepEqual(toCheckResponse("cli", { ok: false, detail: "Could not determine" }), { state: "internal", backend: "cli" });
+  assert.deepEqual(toCheckResponse("cli", { errorCode: "host_not_found" }), { state: "host_not_found", backend: "cli" });
+  assert.deepEqual(toCheckResponse("api", { errorCode: "timeout" }), { state: "timeout", backend: "api" });
+  assert.deepEqual(toCheckResponse("api", { errorCode: "weird" }), { state: "internal", backend: "api" });
+  assert.deepEqual(parseCheckResponse({ state: "ok", backend: "cli", version: "1.0" }), { state: "ok", backend: "cli", version: "1.0" });
+  assert.deepEqual(parseCheckResponse({ state: "api_key_invalid", backend: "api" }), { state: "api_key_invalid", backend: "api" });
+  assert.equal(parseCheckResponse({ state: "ok" }), null);
+  assert.equal(parseCheckResponse({ state: "ok", backend: "gpt" }), null);
+  assert.equal(parseCheckResponse({ state: "evil", backend: "api" }), null);
+  assert.equal(parseCheckResponse({ state: "ok", backend: "cli", version: "x".repeat(41) }), null);
   assert.deepEqual(parseRuntimeRequest({ type: "checkBackend", extra: 1 }), { type: "checkBackend" });
 });

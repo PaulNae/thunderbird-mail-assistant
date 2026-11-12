@@ -9,7 +9,10 @@ import type { ThreadLimits } from "../mail/thread-select.ts";
 import { DEFAULT_THREAD_LIMITS } from "../mail/thread-select.ts";
 import { QUERY_MAX_MESSAGE_CHARS } from "../mail/search-select.ts";
 import type { SearchLimits } from "../mail/search-select.ts";
+import { CONSENT_KEY } from "./consent.ts";
 import type { LocalArea } from "./consent.ts";
+import { BACKEND_KINDS } from "../backend/backend.ts";
+import type { BackendKind } from "../backend/backend.ts";
 
 export const SETTINGS_KEY = "settings";
 /** Key of the 0.5 setting "most mails per mailbox question" (chat tab); read as a fallback, removed on save. */
@@ -40,6 +43,8 @@ export const MAX_TEXT_BOUNDS: Bounds = { min: 5000, max: 100000, def: 40000 };
 export const TIMEOUT_BOUNDS: Bounds = { min: 30, max: 600, def: 120 };
 
 export interface Settings {
+  /** Which way the model is reached. New installations start with the API key (see settleBackendChoice). */
+  backend: BackendKind;
   models: Record<ModelTask, ModelChoice>;
   maxMessages: number;
   maxTextChars: number;
@@ -54,14 +59,19 @@ export const DEFAULT_MODELS: Record<ModelTask, ModelChoice> = {
   query: QUERY_ANSWER_MODEL,
 };
 
+export const DEFAULT_BACKEND: BackendKind = "api";
+
 export function defaultSettings(): Settings {
   return {
+    backend: DEFAULT_BACKEND,
     models: { ...DEFAULT_MODELS },
     maxMessages: MAX_MESSAGES_BOUNDS.def,
     maxTextChars: MAX_TEXT_BOUNDS.def,
     timeoutSec: TIMEOUT_BOUNDS.def,
   };
 }
+
+const isBackend = (v: unknown): v is BackendKind => typeof v === "string" && (BACKEND_KINDS as readonly string[]).includes(v);
 
 const isModel = (v: unknown): v is ModelChoice => typeof v === "string" && (MODEL_CHOICES as readonly string[]).includes(v);
 
@@ -82,6 +92,7 @@ export function sanitizeSettings(raw: unknown, legacyMaxMessages?: unknown): Set
     if (isModel(v)) models[task] = v;
   }
   return {
+    backend: isBackend(r["backend"]) ? r["backend"] : DEFAULT_BACKEND,
     models,
     maxMessages: clampInt(r["maxMessages"] ?? legacyMaxMessages, MAX_MESSAGES_BOUNDS),
     maxTextChars: clampInt(r["maxTextChars"], MAX_TEXT_BOUNDS),
@@ -107,13 +118,23 @@ export async function writeSettings(area: Pick<LocalArea, "set" | "remove">, set
   return clean;
 }
 
-/** Moves the 0.5 key into the settings object (only if there is no settings object yet). */
-export async function migrateLegacySettings(area: LocalArea): Promise<boolean> {
-  const got = await area.get([SETTINGS_KEY, LEGACY_MAX_MESSAGES_KEY]);
-  if (!(LEGACY_MAX_MESSAGES_KEY in got)) return false;
-  if (got[SETTINGS_KEY] === undefined) await writeSettings(area, sanitizeSettings(undefined, got[LEGACY_MAX_MESSAGES_KEY]));
-  else await area.remove(LEGACY_MAX_MESSAGES_KEY);
-  return true;
+/**
+ * Fixes the backend once, before anything reads the settings: an installation from 0.6.0 or older (it has
+ * stored settings, the 0.5 key or a consent record, but no backend yet) stays with Claude Code so nothing
+ * breaks after the update; a new installation gets the API key. Does nothing once a backend is stored.
+ * Also moves the 0.5 key "most mails per question" into the settings object.
+ * Returns the backend that applies.
+ */
+export async function settleBackendChoice(area: LocalArea): Promise<BackendKind> {
+  const got = await area.get([SETTINGS_KEY, LEGACY_MAX_MESSAGES_KEY, CONSENT_KEY]);
+  const raw = got[SETTINGS_KEY];
+  const stored = typeof raw === "object" && raw !== null ? (raw as Record<string, unknown>)["backend"] : undefined;
+  if (isBackend(stored)) return stored;
+  const existing = raw !== undefined || LEGACY_MAX_MESSAGES_KEY in got || CONSENT_KEY in got;
+  const backend: BackendKind = existing ? "cli" : "api";
+  await area.set({ [SETTINGS_KEY]: { ...sanitizeSettings(raw, got[LEGACY_MAX_MESSAGES_KEY]), backend } });
+  await area.remove(LEGACY_MAX_MESSAGES_KEY);
+  return backend;
 }
 
 /** The model of a popup job kind. */

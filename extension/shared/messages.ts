@@ -1,6 +1,9 @@
 // Message formats between the popups and the background script, plus the pending-draft store.
 // Pure (no messenger.*) so it can be tested in Node. Only user notes travel here, never mail content.
 
+import { BACKEND_KINDS } from "../backend/backend.ts";
+import type { BackendKind } from "../backend/backend.ts";
+
 export const MAX_NOTES_CHARS = 2000;
 /** How long a started reply draft waits for its compose popup. */
 export const PENDING_TTL_MS = 2 * 60 * 1000;
@@ -31,25 +34,40 @@ export function parseRuntimeRequest(message: unknown): RuntimeRequest | null {
   return null;
 }
 
-/** States the connection test can report on the settings page. */
-export const CHECK_STATES = ["ok", "host_not_found", "cli_not_found", "not_logged_in", "timeout", "internal"] as const;
+/** States the connection test can report on the settings page: ok or the reason it failed. */
+export const CHECK_STATES = [
+  "ok",
+  "host_not_found",
+  "cli_not_found",
+  "not_logged_in",
+  "cli_unsupported",
+  "api_key_missing",
+  "api_key_invalid",
+  "api_billing",
+  "rate_limited",
+  "overloaded",
+  "network_error",
+  "timeout",
+  "internal",
+] as const;
 export type CheckState = (typeof CHECK_STATES)[number];
-export type CheckResponse = { state: CheckState; version?: string };
+export type CheckResponse = { state: CheckState; backend: BackendKind; version?: string };
 
 /** Longest CLI version string passed on. */
 const MAX_VERSION_CHARS = 40;
 
+const toState = (code: unknown): CheckState =>
+  typeof code === "string" && code !== "ok" && (CHECK_STATES as readonly string[]).includes(code) ? (code as CheckState) : "internal";
+
 /** Maps the outcome of Backend.check() (a result or a thrown error code) to a state for the page. */
-export function toCheckResponse(outcome: { ok: boolean; detail?: string } | { errorCode: string }): CheckResponse {
-  if ("errorCode" in outcome) {
-    return { state: (CHECK_STATES as readonly string[]).includes(outcome.errorCode) && outcome.errorCode !== "ok" ? (outcome.errorCode as CheckState) : "internal" };
-  }
+export function toCheckResponse(backend: BackendKind, outcome: { ok: boolean; detail?: string } | { errorCode: string }): CheckResponse {
+  if ("errorCode" in outcome) return { state: toState(outcome.errorCode), backend };
   if (outcome.ok) {
-    const v = typeof outcome.detail === "string" && /^[0-9A-Za-z.+-]{1,40}$/.test(outcome.detail) ? outcome.detail.slice(0, MAX_VERSION_CHARS) : undefined;
-    return v === undefined ? { state: "ok" } : { state: "ok", version: v };
+    // Only the CLI reports a version; the API check has none.
+    const v = backend === "cli" && typeof outcome.detail === "string" && /^[0-9A-Za-z.+-]{1,40}$/.test(outcome.detail) ? outcome.detail.slice(0, MAX_VERSION_CHARS) : undefined;
+    return v === undefined ? { state: "ok", backend } : { state: "ok", backend, version: v };
   }
-  const code = outcome.detail ?? "internal";
-  return { state: (CHECK_STATES as readonly string[]).includes(code) && code !== "ok" ? (code as CheckState) : "internal" };
+  return { state: toState(outcome.detail), backend };
 }
 
 /** Validates the response on the settings page. */
@@ -57,9 +75,12 @@ export function parseCheckResponse(raw: unknown): CheckResponse | null {
   if (typeof raw !== "object" || raw === null) return null;
   const r = raw as Record<string, unknown>;
   if (typeof r["state"] !== "string" || !(CHECK_STATES as readonly string[]).includes(r["state"])) return null;
+  if (typeof r["backend"] !== "string" || !(BACKEND_KINDS as readonly string[]).includes(r["backend"])) return null;
   const v = r["version"];
   if (v !== undefined && (typeof v !== "string" || v.length > MAX_VERSION_CHARS)) return null;
-  return v === undefined ? { state: r["state"] as CheckState } : { state: r["state"] as CheckState, version: v };
+  const res: CheckResponse = { state: r["state"] as CheckState, backend: r["backend"] as BackendKind };
+  if (v !== undefined) res.version = v;
+  return res;
 }
 
 /** Whether a message comes from this extension itself. */

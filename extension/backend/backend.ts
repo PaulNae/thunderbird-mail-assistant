@@ -6,7 +6,15 @@ export type BackendErrorCode =
   | "cancelled"
   | "internal"
   | "host_not_found"
-  | "consent_required";
+  | "consent_required"
+  // CLI backend on a system other than macOS.
+  | "cli_unsupported"
+  // API backend.
+  | "api_key_missing"
+  | "api_key_invalid"
+  | "api_billing"
+  | "overloaded"
+  | "network_error";
 
 /** All codes; lists of accepted error values elsewhere are derived from this. */
 export const BACKEND_ERROR_CODES: readonly BackendErrorCode[] = [
@@ -18,6 +26,12 @@ export const BACKEND_ERROR_CODES: readonly BackendErrorCode[] = [
   "internal",
   "host_not_found",
   "consent_required",
+  "cli_unsupported",
+  "api_key_missing",
+  "api_key_invalid",
+  "api_billing",
+  "overloaded",
+  "network_error",
 ];
 const KNOWN_CODES: readonly string[] = BACKEND_ERROR_CODES;
 
@@ -42,6 +56,10 @@ export interface RunRequest {
   timeoutMs?: number;
   signal: AbortSignal;
 }
+
+/** The two ways of reaching the model; chosen in the settings. */
+export const BACKEND_KINDS = ["api", "cli"] as const;
+export type BackendKind = (typeof BACKEND_KINDS)[number];
 
 export interface Backend {
   // Streams text chunks; throws BackendError with a machine-readable code.
