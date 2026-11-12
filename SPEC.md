@@ -172,7 +172,11 @@ Nachgewiesen am 2026-11-12 in Thunderbird 160: Abnahme vom Nutzer im Testprofil 
 
 Abnahme: Einwilligungsdialog erscheint beim ersten Start und sperrt ohne Zustimmung; ein geändertes Modell und eine
 geänderte Obergrenze sind im Verhalten erkennbar; der Verbindungstest zeigt den richtigen Zustand; dunkles Theme ist
-lesbar; Bedienung per Tastatur geht. Noch nicht in Thunderbird nachgewiesen.
+lesbar; Bedienung per Tastatur geht.
+Nachgewiesen am 2026-11-12 in Thunderbird 160: Abnahme vom Nutzer im Testprofil bestätigt (Einwilligungsdialog und
+Sperre, Widerruf, geändertes Modell und geänderte Obergrenze, Verbindungstest, dunkles Theme, Tastatur). Der
+Verbindungstest nutzt die bestehende Verbindung zum Helfer: ein bei laufendem Thunderbird deinstallierter Helfer wird
+erst nach einem Neustart als "nicht installiert" gemeldet. Bildschirmleser nicht geprüft.
 
 ### Phase 7 – Veröffentlichung
 - [ ] `ApiBackend` mit API-Key (Standard für veröffentlichte Version)
