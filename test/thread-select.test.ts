@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { selectThread, parseMessageIds, MIN_PARTIAL_CHARS } from "../extension/mail/thread-select.ts";
+import { TRUNCATION_MARKER } from "../extension/prompts/compose.ts";
 import type { ThreadLimits } from "../extension/mail/thread-select.ts";
 
 const msg = (id: number, day: number, len: number) => ({
@@ -61,4 +62,24 @@ test("ignores duplicates, tolerates missing dates, requires the displayed mail",
 test("parseMessageIds extracts ids without brackets", () => {
   assert.deepEqual(parseMessageIds(["<a@x> <b@y>\n <c@z>", "<a@x>"]), ["a@x", "b@y", "c@z", "a@x"]);
   assert.deepEqual(parseMessageIds(["no ids"]), []);
+});
+
+test("shortened bodies carry the truncation marker and stay within the cap", () => {
+  const t = selectThread(1, [msg(1, 1, 900)], limits());
+  assert.ok(t.messages[0]!.body.endsWith(TRUNCATION_MARKER));
+  const p = selectThread(2, [msg(1, 1, 700), msg(2, 2, 400)], limits());
+  assert.ok(p.messages[0]!.body.endsWith(TRUNCATION_MARKER));
+  assert.equal(p.messages[0]!.body.length, 600);
+  assert.ok(!p.messages[1]!.body.includes(TRUNCATION_MARKER));
+});
+
+test("no older message is taken after the first omission", () => {
+  // Newest older mail (id 3) does not fit and is omitted; the small id 2 and 1 must not slip in.
+  const t = selectThread(4, [msg(1, 1, 5), msg(2, 2, 5), msg(3, 3, 600), msg(4, 4, 900)], limits({ maxChars: 1000, maxMessageChars: 1000 }));
+  assert.deepEqual(t.messages.map((m) => m.id), [4]);
+  assert.equal(t.omittedCount, 3);
+  // A partly shortened mail also ends the selection.
+  const p = selectThread(4, [msg(1, 1, 5), msg(2, 2, 5), msg(3, 3, 900), msg(4, 4, 100)], limits({ maxChars: 1000, maxMessageChars: 1000 }));
+  assert.deepEqual(p.messages.map((m) => m.id), [3, 4]);
+  assert.equal(p.omittedCount, 2);
 });

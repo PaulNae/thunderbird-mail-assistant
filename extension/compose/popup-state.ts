@@ -177,3 +177,8 @@ export function planJob(job: PopupJob, scope: JobScope | null, hasRelatedMessage
   }
   return hasRelatedMessage ? { needsOriginal: true, wantsOriginal: false } : { ...none, blocked: "unusable" };
 }
+
+/** A reply draft without a readable original and without keywords has nothing to base the text on. */
+export function replyHasNoBasis(job: PopupJob, originalReadable: boolean): boolean {
+  return job.type === "reply" && !originalReadable && job.notes.trim() === "";
+}

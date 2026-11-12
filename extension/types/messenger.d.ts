@@ -112,11 +112,11 @@ declare namespace messenger {
     function get(messageId: number): Promise<MessageHeader>;
     function listInlineTextParts(messageId: number): Promise<InlineTextPart[]>;
     function listAttachments(messageId: number): Promise<MessageAttachment[]>;
-    function getFull(
-      messageId: number,
-      options?: { decodeHeaders?: boolean; decodeContent?: boolean },
-    ): Promise<MessagePart>;
+    /** Options exist only from TB 133 (strict_min_version is 128), so none are passed. */
+    function getFull(messageId: number): Promise<MessagePart>;
     function query(queryInfo: { headerMessageId?: string }): Promise<MessageList>;
+    /** TB 120+. Finalizes a list and stops any process still adding messages. */
+    function abortList(messageListId: string): Promise<void>;
   }
 }
 

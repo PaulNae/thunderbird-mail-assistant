@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { appendHistory, canAsk, controls, initialState, isSubmitKey, reduce, threadNotice, uiLang } from "../extension/display/popup-state.ts";
+import { appendHistory, canAsk, controls, initialState, isSubmitKey, questionTooLong, reduce, threadNotice, uiLang } from "../extension/display/popup-state.ts";
 import type { DisplayEvent } from "../extension/display/popup-state.ts";
 
 const run = (events: DisplayEvent[]) => events.reduce(reduce, initialState());
@@ -64,4 +64,20 @@ test("submit key and ui language", () => {
   assert.equal(isSubmitKey({ key: "Enter", shiftKey: false, isComposing: true }), false);
   assert.equal(uiLang("de-AT"), "de");
   assert.equal(uiLang("fr"), "en");
+});
+
+test("thread load failure: only the reply draft stays usable", () => {
+  const s = run(["loaded_no_thread"]);
+  assert.equal(s.phase, "idle");
+  const c = controls(s);
+  assert.deepEqual([c.summarizeEnabled, c.askEnabled, c.replyEnabled], [false, false, true]);
+  assert.equal(canAsk(s, "Q?"), false);
+  assert.equal(run(["loaded_no_thread", "prepare"]).replyOnly, true);
+  assert.equal(run(["loaded"]).replyOnly, undefined);
+});
+
+test("questionTooLong counts the trimmed question", () => {
+  assert.equal(questionTooLong(" ".repeat(5000) + "hi"), false);
+  assert.equal(questionTooLong("x".repeat(2001)), true);
+  assert.equal(questionTooLong("x".repeat(2000)), false);
 });

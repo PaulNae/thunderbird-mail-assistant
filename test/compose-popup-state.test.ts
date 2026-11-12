@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { controls, describeScope, initialState, reduce, resolveAction, planJob, resolveInstructionJob, scopeEvent, startEvent } from "../extension/compose/popup-state.ts";
+import { controls, describeScope, initialState, reduce, resolveAction, planJob, replyHasNoBasis, resolveInstructionJob, scopeEvent, startEvent } from "../extension/compose/popup-state.ts";
 import type { PopupEvent } from "../extension/compose/popup-state.ts";
 
 const run = (events: PopupEvent[]) => events.reduce(reduce, initialState());
@@ -152,4 +152,11 @@ test("planJob: rewrite needs a usable scope, else stale", () => {
   assert.deepEqual(planJob(rewrite, scope("abc"), true), { needsOriginal: false, wantsOriginal: false });
   assert.equal(planJob(rewrite, scope("", false, true), true).blocked, "stale");
   assert.equal(planJob(rewrite, null, true).blocked, "unusable");
+});
+
+test("replyHasNoBasis: reply without readable original and without notes", () => {
+  assert.equal(replyHasNoBasis({ type: "reply", notes: "  " }, false), true);
+  assert.equal(replyHasNoBasis({ type: "reply", notes: "yes" }, false), false);
+  assert.equal(replyHasNoBasis({ type: "reply", notes: "" }, true), false);
+  assert.equal(replyHasNoBasis({ type: "instruction_draft", instruction: "x" }, false), false);
 });

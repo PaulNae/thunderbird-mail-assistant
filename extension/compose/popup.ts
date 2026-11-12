@@ -6,7 +6,7 @@ import { DRAFT_MODEL, MAX_COMPOSE_CHARS, REWRITE_MODEL, buildComposePrompt, buil
 import { isBlank } from "./editor-text.ts";
 import type { TakePendingResponse } from "../shared/messages.ts";
 import { applyText, captureSelection } from "./editor-bridge.ts";
-import { controls, describeScope, initialState, reduce, resolveAction, planJob, resolveInstructionJob, scopeEvent, startEvent } from "./popup-state.ts";
+import { controls, describeScope, initialState, reduce, resolveAction, planJob, replyHasNoBasis, resolveInstructionJob, scopeEvent, startEvent } from "./popup-state.ts";
 import type { PopupEvent, PopupJob } from "./popup-state.ts";
 import { loadOriginal } from "../mail/message-text.ts";
 import type { OriginalMessage } from "../mail/message-text.ts";
@@ -112,8 +112,8 @@ async function start(job: PopupJob): Promise<void> {
     } catch {
       // Continue without the original, but say so.
       setStatus(t("composeOriginalFailed"));
-      if (job.type === "reply" && job.notes.trim() === "") {
-        // Nothing to base a reply on.
+      if (replyHasNoBasis(job, false)) {
+        setStatus(t("composeReplyNoBasis"));
         dispatch("prepare_fail");
         return;
       }

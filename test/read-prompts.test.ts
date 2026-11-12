@@ -5,6 +5,10 @@ import {
   SUMMARY_MODEL,
   buildQuestionPrompt,
   buildSummaryPrompt,
+  limitHistory,
+  MAX_HISTORY_CHARS,
+  MAX_HISTORY_ENTRIES,
+  MAX_QUESTION_CHARS,
 } from "../extension/prompts/read.ts";
 
 const m = (id: number, current: boolean, body = "Hello") => ({
@@ -67,4 +71,32 @@ test("question prompt: history in own blocks, question last", () => {
 
 test("empty question is rejected", () => {
   assert.throws(() => buildQuestionPrompt(thread, [], "  "));
+});
+
+test("history is limited to the newest entries", () => {
+  const h = Array.from({ length: 10 }, (_, i) => ({ question: `q${i}`, answer: `a${i}` }));
+  const kept = limitHistory(h);
+  assert.equal(kept.length, MAX_HISTORY_ENTRIES);
+  assert.equal(kept[kept.length - 1]!.question, "q9");
+  assert.equal(kept[0]!.question, "q4");
+});
+
+test("history is limited by characters, dropping the oldest first", () => {
+  const big = "x".repeat(MAX_HISTORY_CHARS / 2);
+  const h = [
+    { question: "old", answer: big },
+    { question: "mid", answer: big },
+    { question: "new", answer: "short" },
+  ];
+  assert.equal(h.length, 3);
+  assert.deepEqual(limitHistory(h).map((e) => e.question), ["mid", "new"]);
+  const one = limitHistory([{ question: "q", answer: "x".repeat(MAX_HISTORY_CHARS + 1) }]);
+  assert.deepEqual(one, []);
+});
+
+test("buildQuestionPrompt sends only limited history and rejects too long questions", () => {
+  const h = Array.from({ length: 10 }, (_, i) => ({ question: `qq${i}`, answer: `aa${i}` }));
+  const p = buildQuestionPrompt({ messages: [m(1, true)], truncated: false, omittedCount: 0 }, h, "Q?").prompt;
+  assert.ok(p.includes("qq9") && !p.includes("qq3"));
+  assert.throws(() => buildQuestionPrompt({ messages: [m(1, true)], truncated: false, omittedCount: 0 }, [], "x".repeat(MAX_QUESTION_CHARS + 1)));
 });

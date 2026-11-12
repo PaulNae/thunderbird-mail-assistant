@@ -17,6 +17,13 @@ export interface HistoryEntry {
   answer: string;
 }
 
+/** Longest question the user may ask. */
+export const MAX_QUESTION_CHARS = 2000;
+/** Most earlier question/answer pairs sent along (the newest ones). */
+export const MAX_HISTORY_ENTRIES = 6;
+/** Most characters of earlier questions and answers together. */
+export const MAX_HISTORY_CHARS = 12000;
+
 export const SUMMARY_MODEL = "haiku";
 export const QUESTION_MODEL = "sonnet";
 
@@ -44,6 +51,19 @@ const QUESTION_SYSTEM = [
 ].join("\n");
 
 const n = neutralizeBlockTags;
+
+/** The newest entries within the entry and character limits (a gap-free tail of the history). */
+export function limitHistory(history: readonly HistoryEntry[]): HistoryEntry[] {
+  const kept: HistoryEntry[] = [];
+  let chars = 0;
+  for (let i = history.length - 1; i >= 0 && kept.length < MAX_HISTORY_ENTRIES; i--) {
+    const h = history[i]!;
+    chars += h.question.length + h.answer.length;
+    if (chars > MAX_HISTORY_CHARS) break;
+    kept.unshift(h);
+  }
+  return kept;
+}
 
 function emailBlock(m: ThreadMessage, index: number): string[] {
   return [
@@ -84,11 +104,13 @@ export function buildQuestionPrompt(
 ): PromptParts {
   const q = question.trim();
   if (!q) throw new Error("Question must not be empty");
+  if (q.length > MAX_QUESTION_CHARS) throw new Error("Question too long");
+  const kept = limitHistory(history);
   const historyBlock =
-    history.length > 0
+    kept.length > 0
       ? [
           "<conversation_history>",
-          ...history.flatMap((h) => [
+          ...kept.flatMap((h) => [
             "<earlier_question>",
             n(h.question),
             "</earlier_question>",

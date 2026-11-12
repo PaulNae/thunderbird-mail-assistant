@@ -1,4 +1,5 @@
 // Pure selection and truncation of thread messages (no messenger.*, testable in Node).
+import { TRUNCATION_MARKER } from "../prompts/compose.ts";
 import type { LoadedMessage } from "./types.ts";
 
 /** Most messages in a thread context, including the displayed one. */
@@ -7,6 +8,9 @@ export const MAX_THREAD_MESSAGES = 6;
 export const MAX_THREAD_CHARS = 40000;
 /** Most body characters of one message. */
 export const MAX_MESSAGE_CHARS = 20000;
+/** Marker appended to every shortened body; it counts toward the limits. */
+const MARK = "\n" + TRUNCATION_MARKER;
+
 /** An older message is only kept in shortened form if at least this much budget is left. */
 export const MIN_PARTIAL_CHARS = 500;
 
@@ -55,7 +59,7 @@ export function selectThread(
   const cut = (m: LoadedMessage, max: number): LoadedMessage => {
     if (m.body.length <= max) return m;
     truncated = true;
-    return { ...m, body: m.body.slice(0, max) };
+    return { ...m, body: m.body.slice(0, Math.max(0, max - MARK.length)) + MARK };
   };
 
   const seen = new Set<number>();
@@ -74,8 +78,11 @@ export function selectThread(
     .sort((a, b) => time(b.m) - time(a.m) || b.i - a.i)
     .map((x) => x.m);
   let omittedCount = 0;
+  // After the first omission no older message is taken: the context has no gaps.
+  let gap = false;
   for (const m of others) {
-    if (chosen.size >= limits.maxMessages) {
+    if (gap || chosen.size >= limits.maxMessages) {
+      gap = true;
       omittedCount++;
       continue;
     }
@@ -84,10 +91,12 @@ export function selectThread(
       chosen.set(m.id, full);
       remaining -= full.body.length;
     } else if (remaining >= MIN_PARTIAL_CHARS) {
-      chosen.set(m.id, { ...full, body: full.body.slice(0, remaining) });
+      chosen.set(m.id, { ...full, body: full.body.slice(0, remaining - MARK.length) + MARK });
       truncated = true;
       remaining = 0;
+      gap = true;
     } else {
+      gap = true;
       omittedCount++;
     }
   }

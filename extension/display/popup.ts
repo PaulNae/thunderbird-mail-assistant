@@ -3,11 +3,11 @@ import { errorMessage } from "../shared/errors.ts";
 import { BackendError } from "../backend/backend.ts";
 import { CliBackend } from "../backend/cli-backend.ts";
 import { cleanModelOutput } from "../prompts/compose.ts";
-import { QUESTION_MODEL, SUMMARY_MODEL, buildQuestionPrompt, buildSummaryPrompt } from "../prompts/read.ts";
+import { MAX_QUESTION_CHARS, QUESTION_MODEL, SUMMARY_MODEL, buildQuestionPrompt, buildSummaryPrompt } from "../prompts/read.ts";
 import type { HistoryEntry, PromptParts } from "../prompts/read.ts";
 import { loadThread } from "../mail/thread.ts";
 import type { LoadedThread } from "../mail/thread.ts";
-import { appendHistory, canAsk, controls, initialState, isSubmitKey, reduce, threadNotice, uiLang } from "./popup-state.ts";
+import { appendHistory, canAsk, controls, initialState, isSubmitKey, questionTooLong, reduce, threadNotice, uiLang } from "./popup-state.ts";
 import type { DisplayEvent } from "./popup-state.ts";
 
 localizeDocument();
@@ -39,6 +39,8 @@ let state = initialState();
 let thread: LoadedThread | null = null;
 let displayedId: number | null = null;
 let replyStarting = false;
+// The last successful summary; kept while a new one streams.
+let summaryText = "";
 // Lives only in this popup's memory; never stored or logged.
 let history: HistoryEntry[] = [];
 let controller: AbortController | null = null;
@@ -97,8 +99,10 @@ function renderHistory(): void {
   historySection.hidden = history.length === 0;
 }
 
-// Runs one streamed job into `target`; returns the cleaned text on success, null otherwise.
-async function run(parts: PromptParts, model: string, target: HTMLElement): Promise<string | null> {
+// Runs one streamed job; the text is buffered and shown in `target` while it streams. Only on
+// success it replaces `previous`; on cancel or failure `target` shows `previous` again.
+// Returns the cleaned text on success, null otherwise.
+async function run(parts: PromptParts, model: string, target: HTMLElement, previous = ""): Promise<string | null> {
   const ctl = new AbortController();
   controller = ctl;
   statusEl.textContent = "";
@@ -113,7 +117,7 @@ async function run(parts: PromptParts, model: string, target: HTMLElement): Prom
     if (ctl.signal.aborted) throw new BackendError("cancelled");
     text = cleanModelOutput(text);
     if (text.trim() === "") {
-      target.textContent = "";
+      target.textContent = previous;
       statusEl.textContent = t("composeEmptyResult");
       dispatch("fail");
       return null;
@@ -122,7 +126,7 @@ async function run(parts: PromptParts, model: string, target: HTMLElement): Prom
     dispatch("done");
     return text;
   } catch (e) {
-    target.textContent = "";
+    target.textContent = previous;
     statusEl.textContent = errorMessage(e);
     dispatch(e instanceof BackendError && e.code === "cancelled" ? "cancel" : "fail");
     return null;
@@ -139,14 +143,21 @@ function summarize(): void {
     return;
   }
   summarySection.hidden = false;
-  void run(buildSummaryPrompt(thread, uiLang(messenger.i18n.getUILanguage())), SUMMARY_MODEL, summaryEl).then((ok) => {
-    if (ok === null) summarySection.hidden = summaryEl.textContent === "";
+  const previous = summaryText;
+  void run(buildSummaryPrompt(thread, uiLang(messenger.i18n.getUILanguage())), SUMMARY_MODEL, summaryEl, previous).then((text) => {
+    if (text !== null) summaryText = text;
+    summarySection.hidden = summaryText === "";
   });
 }
 
 function ask(): void {
   const question = questionEl.value.trim();
   if (!canAsk(state, question)) return;
+  if (questionTooLong(question)) {
+    statusEl.textContent = t("displayQuestionTooLong", [String(MAX_QUESTION_CHARS)]);
+    return;
+  }
+  statusEl.textContent = "";
   dispatch("prepare");
   if (state.phase !== "preparing" || !thread) {
     dispatch("prepare_fail");
@@ -199,8 +210,15 @@ void (async () => {
       dispatch("unavailable");
       return;
     }
-    thread = await loadThread(only.id);
+    // Set first: the reply draft works even if loading the thread fails.
     displayedId = only.id;
+    try {
+      thread = await loadThread(only.id);
+    } catch (e) {
+      statusEl.textContent = errorMessage(e);
+      dispatch("loaded_no_thread");
+      return;
+    }
     infoEl.textContent = t("displayThreadCount", [String(thread.messages.length)]);
     const notice = threadNotice(thread);
     if (notice) {

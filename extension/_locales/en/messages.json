@@ -196,9 +196,20 @@
     "message": "Draft reply"
   },
   "displayReplyOpened": {
-    "message": "Reply window opened - click Mail Assistant there."
+    "message": "Reply window opened. The draft starts as soon as you click Mail Assistant there."
   },
   "displayReplyFailed": {
     "message": "The reply window could not be opened."
+  },
+  "composeReplyNoBasis": {
+    "message": "The original message could not be read and there are no keywords. Add keywords or try again."
+  },
+  "displayQuestionTooLong": {
+    "message": "The question is too long (more than $MAX$ characters). Please shorten it.",
+    "placeholders": {
+      "max": {
+        "content": "$1"
+      }
+    }
   }
 }
