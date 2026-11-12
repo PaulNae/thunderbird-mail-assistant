@@ -19,6 +19,10 @@
   "icons": {
     "32": "icons/icon.svg"
   },
+  "action": {
+    "default_title": "__MSG_actionChatTitle__",
+    "default_icon": "icons/icon.svg"
+  },
   "compose_action": {
     "default_popup": "compose/popup.html",
     "default_title": "__MSG_actionComposeTitle__",

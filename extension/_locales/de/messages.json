@@ -211,5 +211,132 @@
         "content": "$1"
       }
     }
+  },
+  "actionChatTitle": {
+    "message": "Postfach fragen"
+  },
+  "chatTitle": {
+    "message": "Postfach fragen"
+  },
+  "chatIntro": {
+    "message": "Deine Frage wird in Suchbegriffe übersetzt, die passendsten Mails gehen an Claude. Verweise wie [1] öffnen die Mail."
+  },
+  "chatAskPlaceholder": {
+    "message": "Frage zu deinem Postfach, z. B. Was hat Anna zum Angebot geschrieben?"
+  },
+  "chatMaxLabel": {
+    "message": "Höchstens so viele Mails je Frage an das Modell:"
+  },
+  "chatClear": {
+    "message": "Neuer Chat"
+  },
+  "chatStageParams": {
+    "message": "Suchbegriffe werden ermittelt …"
+  },
+  "chatStageSearch": {
+    "message": "Postfach wird durchsucht …"
+  },
+  "chatStageLoad": {
+    "message": "Mails werden gelesen …"
+  },
+  "chatStageAnswer": {
+    "message": "Antwort wird geschrieben …"
+  },
+  "chatNoResults": {
+    "message": "Keine passenden Mails gefunden, auch nicht mit einer gelockerten Suche. Versuche es mit anderen Begriffen, einem Namen oder einem Zeitraum."
+  },
+  "chatSearchFailed": {
+    "message": "Die Suche im Postfach ist fehlgeschlagen."
+  },
+  "chatOpenFailed": {
+    "message": "Die Mail konnte nicht geöffnet werden. Vielleicht wurde sie verschoben oder gelöscht."
+  },
+  "chatDisconnected": {
+    "message": "Die Verbindung zum Hintergrundskript wurde getrennt, der bisherige Verlauf ist verloren. Neue Fragen funktionieren wieder."
+  },
+  "chatNoSubject": {
+    "message": "(kein Betreff)"
+  },
+  "chatOpenMail": {
+    "message": "Mail $INDEX$ öffnen: $SUBJECT$",
+    "placeholders": {
+      "index": {
+        "content": "$1"
+      },
+      "subject": {
+        "content": "$2"
+      }
+    }
+  },
+  "chatSources": {
+    "message": "Quellen"
+  },
+  "chatSent": {
+    "message": "$SENT$ von $FOUND$ gefundenen Mails gingen an das Modell.",
+    "placeholders": {
+      "sent": {
+        "content": "$1"
+      },
+      "found": {
+        "content": "$2"
+      }
+    }
+  },
+  "chatSentMore": {
+    "message": "$SENT$ von mindestens $FOUND$ gefundenen Mails gingen an das Modell (Suche an der Obergrenze beendet).",
+    "placeholders": {
+      "sent": {
+        "content": "$1"
+      },
+      "found": {
+        "content": "$2"
+      }
+    }
+  },
+  "chatTruncated": {
+    "message": "Texte wurden gekürzt."
+  },
+  "chatSearchUsed": {
+    "message": "Gesucht: $TERMS$",
+    "placeholders": {
+      "terms": {
+        "content": "$1"
+      }
+    }
+  },
+  "chatOr": {
+    "message": "oder"
+  },
+  "chatSearchFallback": {
+    "message": "(Wörter der Frage, die Suchbegriffe konnten nicht ermittelt werden)"
+  },
+  "chatSearchRelaxed": {
+    "message": "(gelockerte Suche, die erste fand nichts)"
+  },
+  "chatFieldText": {
+    "message": "Text"
+  },
+  "chatFieldFrom": {
+    "message": "von"
+  },
+  "chatFieldTo": {
+    "message": "an"
+  },
+  "chatFieldSubject": {
+    "message": "Betreff"
+  },
+  "chatFieldAfter": {
+    "message": "ab"
+  },
+  "chatFieldBefore": {
+    "message": "bis"
+  },
+  "chatQuoted": {
+    "message": "„$VALUE$“",
+    "placeholders": {
+      "value": {
+        "content": "$1"
+      }
+    }
   }
 }

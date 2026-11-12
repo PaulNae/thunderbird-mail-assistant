@@ -211,5 +211,132 @@
         "content": "$1"
       }
     }
+  },
+  "actionChatTitle": {
+    "message": "Ask mailbox"
+  },
+  "chatTitle": {
+    "message": "Ask your mailbox"
+  },
+  "chatIntro": {
+    "message": "Your question is turned into search terms and the best matching emails are sent to Claude. References like [1] open the email."
+  },
+  "chatAskPlaceholder": {
+    "message": "Question about your mailbox, e.g. What did Anna write about the offer?"
+  },
+  "chatMaxLabel": {
+    "message": "At most this many emails per question to the model:"
+  },
+  "chatClear": {
+    "message": "New chat"
+  },
+  "chatStageParams": {
+    "message": "Working out search terms …"
+  },
+  "chatStageSearch": {
+    "message": "Searching the mailbox …"
+  },
+  "chatStageLoad": {
+    "message": "Reading emails …"
+  },
+  "chatStageAnswer": {
+    "message": "Writing the answer …"
+  },
+  "chatNoResults": {
+    "message": "No matching emails found, not even with a looser search. Try other terms, a name or a time span."
+  },
+  "chatSearchFailed": {
+    "message": "The mailbox search failed."
+  },
+  "chatOpenFailed": {
+    "message": "The email could not be opened. It may have been moved or deleted."
+  },
+  "chatDisconnected": {
+    "message": "The connection to the background script was lost and the conversation so far is gone. New questions work again."
+  },
+  "chatNoSubject": {
+    "message": "(no subject)"
+  },
+  "chatOpenMail": {
+    "message": "Open email $INDEX$: $SUBJECT$",
+    "placeholders": {
+      "index": {
+        "content": "$1"
+      },
+      "subject": {
+        "content": "$2"
+      }
+    }
+  },
+  "chatSources": {
+    "message": "Sources"
+  },
+  "chatSent": {
+    "message": "$SENT$ of $FOUND$ matching emails were sent to the model.",
+    "placeholders": {
+      "sent": {
+        "content": "$1"
+      },
+      "found": {
+        "content": "$2"
+      }
+    }
+  },
+  "chatSentMore": {
+    "message": "$SENT$ of at least $FOUND$ matching emails were sent to the model (search stopped at the limit).",
+    "placeholders": {
+      "sent": {
+        "content": "$1"
+      },
+      "found": {
+        "content": "$2"
+      }
+    }
+  },
+  "chatTruncated": {
+    "message": "Texts were shortened."
+  },
+  "chatSearchUsed": {
+    "message": "Searched for: $TERMS$",
+    "placeholders": {
+      "terms": {
+        "content": "$1"
+      }
+    }
+  },
+  "chatOr": {
+    "message": "or"
+  },
+  "chatSearchFallback": {
+    "message": "(words of the question, search terms could not be determined)"
+  },
+  "chatSearchRelaxed": {
+    "message": "(looser search, the first one found nothing)"
+  },
+  "chatFieldText": {
+    "message": "text"
+  },
+  "chatFieldFrom": {
+    "message": "from"
+  },
+  "chatFieldTo": {
+    "message": "to"
+  },
+  "chatFieldSubject": {
+    "message": "subject"
+  },
+  "chatFieldAfter": {
+    "message": "after"
+  },
+  "chatFieldBefore": {
+    "message": "until"
+  },
+  "chatQuoted": {
+    "message": "“$VALUE$”",
+    "placeholders": {
+      "value": {
+        "content": "$1"
+      }
+    }
   }
 }

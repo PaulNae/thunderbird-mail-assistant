@@ -68,6 +68,9 @@ declare namespace messenger {
       windowId?: number;
     }
     function query(queryInfo: { active?: boolean; currentWindow?: boolean }): Promise<Tab[]>;
+    /** Content tab; a relative url is relative to the extension root. Only in normal windows. */
+    function create(createProperties: { url?: string; active?: boolean; windowId?: number }): Promise<Tab>;
+    function update(tabId: number, updateProperties: { active?: boolean }): Promise<Tab>;
     const onRemoved: MessengerEvent<(tabId: number, removeInfo: { windowId: number; isWindowClosing: boolean }) => void>;
   }
   namespace messageDisplay {
@@ -75,6 +78,8 @@ declare namespace messenger {
     function getDisplayedMessages(tabId?: number): Promise<messages.MessageList>;
     /** Needs messagesRead. Fired for a single message and for multiple selected messages. */
     const onMessagesDisplayed: MessengerEvent<(tab: tabs.Tab, displayedMessages: messages.MessageList) => void>;
+    /** TB 102+, needs messagesRead. Exactly one of messageId, headerMessageId, file. */
+    function open(openProperties: { messageId?: number; location?: "tab" | "window"; active?: boolean; windowId?: number }): Promise<tabs.Tab>;
   }
   namespace compose {
     interface ComposeDetails {
@@ -109,6 +114,8 @@ declare namespace messenger {
       bccList?: string[];
       /** Only present with accountsRead; accountId is a string since TB 121. */
       folder?: { accountId: string };
+      /** TB 106+: message opened from a file or attachment. */
+      external?: boolean;
     }
     interface MessageAttachment {
       name: string;
@@ -130,7 +137,30 @@ declare namespace messenger {
     function listAttachments(messageId: number): Promise<MessageAttachment[]>;
     /** Options exist only from TB 133 (strict_min_version is 128), so none are passed. */
     function getFull(messageId: number): Promise<MessagePart>;
-    function query(queryInfo: { headerMessageId?: string; accountId?: string | string[] }): Promise<MessageList>;
+    interface QueryInfo {
+      headerMessageId?: string;
+      /** TB 121+. */
+      accountId?: string | string[];
+      /** Subject, body or author contains the string. */
+      fullText?: string;
+      /** Address matches completely, name partially, case-insensitive. */
+      author?: string;
+      /** Semicolon-separated addresses or names; all must match. */
+      recipients?: string;
+      subject?: string;
+      /** Messages dated after this value. */
+      fromDate?: Date;
+      /** Messages dated before this value. */
+      toDate?: Date;
+      /** TB 120+, default 100. */
+      messagesPerPage?: number;
+      /** TB 120+: resolve to the list id instead of the first page; pages via continueList. */
+      returnMessageListId?: boolean;
+    }
+    function query(queryInfo: QueryInfo & { returnMessageListId: true }): Promise<string>;
+    function query(queryInfo: QueryInfo): Promise<MessageList>;
+    /** Next page of a list; the last page has a falsy id. */
+    function continueList(messageListId: string): Promise<MessageList>;
     /** TB 120+. Finalizes a list and stops any process still adding messages. */
     function abortList(messageListId: string): Promise<void>;
   }
@@ -156,7 +186,22 @@ declare namespace messenger {
 }
 
 declare namespace messenger {
+  namespace action {
+    /** Not fired if the action has a popup. */
+    const onClicked: MessengerEvent<(tab: tabs.Tab, info?: { modifiers?: string[]; button?: number }) => void>;
+  }
+  namespace windows {
+    function update(windowId: number, updateInfo: { focused?: boolean }): Promise<unknown>;
+  }
+}
+
+declare namespace messenger {
   namespace storage {
+    /** Persistent; only used for settings, never for mail content. */
+    const local: {
+      get(keys: string | string[] | null): Promise<Record<string, unknown>>;
+      set(items: Record<string, unknown>): Promise<void>;
+    };
     /** Kept in memory only, until Thunderbird or the add-on is closed or reloaded (TB 115+, needs "storage"). */
     const session: {
       get(keys: string | string[] | null): Promise<Record<string, unknown>>;

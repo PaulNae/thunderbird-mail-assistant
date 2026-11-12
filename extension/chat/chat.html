@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Mail Assistant</title>
+    <link rel="stylesheet" href="../shared/popup.css" />
+    <script type="module" src="chat.js"></script>
+  </head>
+  <body class="chat">
+    <main>
+      <h1 data-i18n="chatTitle"></h1>
+      <p data-i18n="chatIntro"></p>
+
+      <ol id="log" class="chat-log"></ol>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+
+      <div class="row">
+        <input type="text" id="question" data-i18n-placeholder="chatAskPlaceholder" />
+        <button type="button" id="ask" data-i18n="displayAsk" disabled></button>
+        <button type="button" id="cancel" data-i18n="composeCancel" hidden></button>
+      </div>
+
+      <div class="row settings">
+        <label for="max-messages" data-i18n="chatMaxLabel"></label>
+        <input type="number" id="max-messages" min="1" max="50" step="1" />
+        <button type="button" id="clear" data-i18n="chatClear"></button>
+      </div>
+    </main>
+  </body>
+</html>
