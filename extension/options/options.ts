@@ -3,7 +3,6 @@
 // read and write. The stored key is never shown again, only whether there is one.
 import { localizeDocument } from "../shared/i18n.ts";
 import { renderConsentText } from "../shared/consent-ui.ts";
-import { settleBackendChoice } from "../shared/settings.ts";
 import { CONSENT_KEY, grantConsent, readConsent, revokeConsent } from "../shared/consent.ts";
 import {
   MAX_MESSAGES_BOUNDS,
@@ -14,6 +13,7 @@ import {
   TIMEOUT_BOUNDS,
   defaultSettings,
   readSettings,
+  settleBackendChoice,
   writeSettings,
 } from "../shared/settings.ts";
 import type { Bounds, ModelTask, Settings } from "../shared/settings.ts";
@@ -132,7 +132,8 @@ for (const sel of selects.values()) sel.addEventListener("change", () => void sa
 for (const r of Object.values(radios)) r.addEventListener("change", () => void save());
 for (const f of numbers) f.el.addEventListener("change", () => void save());
 resetBtn.addEventListener("click", () => {
-  show(defaultSettings());
+  // The backend is the user's choice, not a limit: resetting keeps it.
+  show({ ...defaultSettings(), backend });
   void save();
 });
 

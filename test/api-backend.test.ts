@@ -125,7 +125,8 @@ test("HTTP errors map to clear codes and never carry the key or the response tex
     [400, { type: "error", error: { type: "invalid_request_error", message: "prompt is too long" } }, "internal"],
     [429, { type: "error", error: { type: "rate_limit_error", message: "slow down" } }, "rate_limited"],
     [529, { type: "error", error: { type: "overloaded_error", message: "Overloaded" } }, "overloaded"],
-    [500, "not json", "internal"],
+    [500, "not json", "overloaded"],
+    [500, { type: "error", error: { type: "api_error", message: "x" } }, "overloaded"],
     [404, { type: "error", error: { type: "not_found_error", message: "model" } }, "internal"],
   ];
   for (const [status, body, code] of cases) {
@@ -169,6 +170,20 @@ test("a network failure and an error event in the stream give their codes", asyn
   );
   assert.deepEqual(got, ["Teil"]);
   assert.equal(code, "rate_limited");
+
+  // An answer cut off at the output limit is reported, not shown as complete.
+  const long = new ApiBackend({
+    getKey: async () => KEY,
+    fetch: async () =>
+      streamResponse([
+        sse([
+          ["content_block_delta", { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "Lang" } }],
+          ["message_delta", { type: "message_delta", delta: { stop_reason: "max_tokens" } }],
+          ["message_stop", { type: "message_stop" }],
+        ]),
+      ]),
+  });
+  assert.equal(await codeOf(collect(run(long))), "output_truncated");
 
   // A stream that ends without message_stop is incomplete.
   const cut = new ApiBackend({ getKey: async () => KEY, fetch: async () => streamResponse([sse([["message_start", { type: "message_start" }]])]) });

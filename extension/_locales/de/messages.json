@@ -482,7 +482,7 @@
     "message": "Für dein API-Konto ist kein Guthaben oder keine Zahlungsart hinterlegt. Bitte in der Claude Console prüfen."
   },
   "errorOverloaded": {
-    "message": "Anthropics Dienst ist gerade überlastet. Bitte in einigen Minuten erneut versuchen."
+    "message": "Anthropics Dienst ist gerade überlastet oder gestört. Bitte in einigen Minuten erneut versuchen."
   },
   "errorNetwork": {
     "message": "Keine Verbindung zu Anthropic. Bitte die Internetverbindung prüfen und erneut versuchen."
@@ -674,5 +674,8 @@
   },
   "guideNoticeLiabilityHeading": {
     "message": "Haftung"
+  },
+  "errorOutputTruncated": {
+    "message": "Die Antwort war zu lang und wurde abgebrochen. Bitte einen kürzeren Text wählen oder die Aufgabe aufteilen."
   }
 }

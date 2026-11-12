@@ -12,6 +12,7 @@ export const ERROR_KEYS: Record<BackendErrorCode, string> = {
   rate_limited: "errorRateLimited",
   overloaded: "errorOverloaded",
   network_error: "errorNetwork",
+  output_truncated: "errorOutputTruncated",
   timeout: "errorTimeout",
   cancelled: "errorCancelled",
   internal: "errorInternal",

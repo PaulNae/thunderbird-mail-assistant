@@ -70,6 +70,8 @@ export function codeForApiError(status: number | undefined, errorType?: string, 
   if (status === 400 && typeof errorMessage === "string" && /credit balance/i.test(errorMessage)) return "api_billing";
   if (errorType === "rate_limit_error" || status === 429) return "rate_limited";
   if (errorType === "overloaded_error" || status === 529) return "overloaded";
+  // Temporary server errors on Anthropic's side.
+  if (errorType === "api_error" || (status !== undefined && status >= 500)) return "overloaded";
   return "internal";
 }
 
@@ -144,6 +146,8 @@ export function interpretEvent(ev: SseEvent): StreamStep {
     return null;
   }
   if (type === "message_stop") return { done: true };
+  // An answer cut off at the output limit must not look complete.
+  if (type === "message_delta" && (data["delta"] as Record<string, unknown> | undefined)?.["stop_reason"] === "max_tokens") return { error: "output_truncated" };
   if (type === "error") {
     const err = data["error"] as Record<string, unknown> | undefined;
     return { error: codeForApiError(undefined, typeof err?.["type"] === "string" ? err["type"] : undefined) };

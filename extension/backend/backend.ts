@@ -14,7 +14,9 @@ export type BackendErrorCode =
   | "api_key_invalid"
   | "api_billing"
   | "overloaded"
-  | "network_error";
+  | "network_error"
+  // The answer hit the output limit and is incomplete.
+  | "output_truncated";
 
 /** All codes; lists of accepted error values elsewhere are derived from this. */
 export const BACKEND_ERROR_CODES: readonly BackendErrorCode[] = [
@@ -32,6 +34,7 @@ export const BACKEND_ERROR_CODES: readonly BackendErrorCode[] = [
   "api_billing",
   "overloaded",
   "network_error",
+  "output_truncated",
 ];
 const KNOWN_CODES: readonly string[] = BACKEND_ERROR_CODES;
 

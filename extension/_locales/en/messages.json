@@ -482,7 +482,7 @@
     "message": "Your API account has no credit or payment method. Please check in the Claude Console."
   },
   "errorOverloaded": {
-    "message": "Anthropic's service is overloaded right now. Please try again in a few minutes."
+    "message": "Anthropic's service is overloaded or having problems right now. Please try again in a few minutes."
   },
   "errorNetwork": {
     "message": "No connection to Anthropic. Please check the internet connection and try again."
@@ -674,5 +674,8 @@
   },
   "guideNoticeLiabilityHeading": {
     "message": "Liability"
+  },
+  "errorOutputTruncated": {
+    "message": "The answer was too long and was cut off. Please choose a shorter text or split the task."
   }
 }
