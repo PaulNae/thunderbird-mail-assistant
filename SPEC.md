@@ -88,11 +88,11 @@ Abnahme: Beide Buttons erscheinen und öffnen ein Popup; `web-ext lint` ohne Feh
 Nachgewiesen am 2026-11-12 in Thunderbird 160: beide Buttons öffnen ihr Popup (Nutzer-Test im Testprofil).
 
 ### Phase 2 – Bridge
-- [ ] Voraussetzung prüfen: `claude` installiert und eingeloggt (sonst Nutzer fragen)
-- [ ] `host/host.mjs` mit Protokoll, Streaming, Timeout, Abbruch, Fehlercodes
-- [ ] `host/install-macos.mjs` (Pfad des Host-Manifests in der Doku nachschlagen und testen)
-- [ ] `Backend`-Schnittstelle und `CliBackend`
-- [ ] Tests für den Host mit einem Fake-`claude`-Skript (Framing, Streaming, Abbruch, Fehler)
+- [x] Voraussetzung prüfen: `claude` installiert und eingeloggt (sonst Nutzer fragen)
+- [x] `host/host.mjs` mit Protokoll, Streaming, Timeout, Abbruch, Fehlercodes
+- [x] `host/install-macos.mjs` (Pfad des Host-Manifests in der Doku nachschlagen und testen)
+- [x] `Backend`-Schnittstelle und `CliBackend`
+- [x] Tests für den Host mit einem Fake-`claude`-Skript (Framing, Streaming, Abbruch, Fehler)
 
 Abnahme: Ein Testknopf im Popup schickt "Sag Hallo" und zeigt die gestreamte Antwort;
 ohne installierte CLI erscheint eine verständliche Fehlermeldung.
