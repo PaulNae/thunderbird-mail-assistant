@@ -96,6 +96,10 @@ Nachgewiesen am 2026-11-12 in Thunderbird 160: beide Buttons öffnen ihr Popup (
 
 Abnahme: Ein Testknopf im Popup schickt "Sag Hallo" und zeigt die gestreamte Antwort;
 ohne installierte CLI erscheint eine verständliche Fehlermeldung.
+Nachgewiesen am 2026-11-12 in Thunderbird 160 (Nutzer-Test im Testprofil, Verfassen-Fenster): gestreamte
+Antwort auf "Sag Hallo"; mit falschem `claude`-Pfad die Meldung "Claude Code wurde nicht gefunden …",
+ohne registrierten Host "Der Hilfsdienst ist nicht installiert …". Host-Manifest-Ort
+`~/Library/Mozilla/NativeMessagingHosts/` damit bestätigt.
 
 ### Phase 3 – Schreiben
 - [ ] Popup im Verfassen-Fenster: Umformulieren, Kürzen, Ton (freundlich, formell, knapp),

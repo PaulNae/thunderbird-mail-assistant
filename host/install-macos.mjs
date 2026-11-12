@@ -12,6 +12,7 @@ export const HOST_NAME = "mail_assistant";
 // Thunderbird resolves user manifests via XREUserNativeManifests, which on macOS is
 // ~/Library/Mozilla/NativeMessagingHosts (Thunderbird's data root is ~/Library, not
 // ~/Library/Application Support).
+// Confirmed by a live connectNative test in Thunderbird 160 on 2026-11-12.
 export const DEFAULT_MANIFEST_DIR = path.join(
   os.homedir(),
   "Library",
