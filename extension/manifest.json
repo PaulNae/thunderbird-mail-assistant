@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_extensionName__",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
+  "version": "0.1.0",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "mail-assistant@placeholder.invalid",
+      "strict_min_version": "128.0"
+    }
+  },
+  "background": {
+    "scripts": ["background/background.js"],
+    "type": "module"
+  }
+}
