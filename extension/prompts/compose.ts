@@ -34,6 +34,11 @@ const BLOCK_NAMES = [
   "earlier_question",
   "earlier_answer",
   "user_question",
+  // Mailbox query prompts (prompts/query.ts)
+  "search_results",
+  "mail",
+  "today",
+  "earlier_questions",
 ];
 
 /**
