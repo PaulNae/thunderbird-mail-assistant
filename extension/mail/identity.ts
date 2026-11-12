@@ -44,6 +44,15 @@ export interface ReplyContext {
  * returns an empty object when the account cannot be determined (e.g. a message opened from a
  * file). Errors are swallowed without logging, as they could carry mail data.
  */
+/** Account of a message, or undefined (e.g. opened from a file). Never throws. */
+export async function findAccountId(messageId: number): Promise<string | undefined> {
+  try {
+    return (await messenger.messages.get(messageId)).folder?.accountId;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function findReplyContext(messageId: number): Promise<ReplyContext> {
   try {
     const header = await messenger.messages.get(messageId);

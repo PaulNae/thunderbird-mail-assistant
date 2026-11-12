@@ -146,10 +146,14 @@ export class JobStore {
   start(key: string, req: StartRequest): Promise<void> {
     return this.serial(async () => {
       let entry = await this.load(key);
-      if (entry?.ctl) return;
       if (entry && req.messageId !== undefined && entry.snapshot.messageId !== undefined && entry.snapshot.messageId !== req.messageId) {
         await this.drop(key);
         entry = null;
+      }
+      if (entry?.ctl) {
+        // A job already runs: resend its snapshot so the popup that asked does not wait forever.
+        this.emit(key, { type: "snapshot", snapshot: entry.snapshot });
+        return;
       }
       if (!entry) {
         await this.makeRoom(key);
@@ -224,9 +228,12 @@ export class JobStore {
     this.publish(key, entry);
   }
 
-  /** Aborts a running job (synchronous). */
-  cancel(key: string): void {
+  /** Aborts a running job; queued behind a pending start so a quick cancel is not lost. */
+  cancel(key: string): Promise<void> {
     this.entries.get(key)?.ctl?.abort();
+    return this.serial(async () => {
+      this.entries.get(key)?.ctl?.abort();
+    });
   }
 
   /** Aborts and forgets an entry, in memory and in the mirror. */

@@ -50,7 +50,7 @@ export function handleConnection(store: JobStore, port: PortLike, ownId: string)
         void store.start(key, req.start);
         break;
       case "cancel":
-        store.cancel(key);
+        void store.cancel(key);
         break;
       case "discard":
       case "applied":

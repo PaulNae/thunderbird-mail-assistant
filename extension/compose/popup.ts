@@ -319,7 +319,9 @@ async function initScope(): Promise<void> {
   }
   const snap = jobPort ? await first : null;
   if (snap) snapshot = snap;
-  const holdsRange = snap?.phase === "streaming" || snap?.phase === "done";
+  // Without a snapshot (background slow to wake) a preview may still exist, so only peek; start()
+  // captures anyway before every run.
+  const holdsRange = snap === null || snap.phase === "streaming" || snap.phase === "done";
   if (holdsRange) showScope(await peekSelection(tabId, isPlainText));
   else await refreshScope();
 }

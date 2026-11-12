@@ -164,7 +164,7 @@ test("questions build the history; a failed or cancelled answer is not added", a
   await flush();
   await store.start(key, question("q3"));
   await flush();
-  store.cancel(key);
+  void store.cancel(key);
   await flush();
   const c = collect();
   await store.open(key, c.sub, 1);
@@ -478,4 +478,42 @@ test("connection: compose discard and applied delete; display cannot send them",
   d.send({ type: "discard" });
   await flush();
   assert.ok(session!.data.has("job:display:9"));
+});
+
+test("start for another message while a job runs drops the old job and starts the new one", async () => {
+  const { store, backend } = setup();
+  const key = displayKey(7);
+  await store.start(key, summary(1));
+  await store.start(key, summary(2));
+  await flush();
+  assert.equal(backend.runs.length, 2);
+  assert.equal(backend.runs[0]!.req.signal.aborted, true);
+  const c = collect();
+  await store.open(key, c.sub, 2);
+  assert.equal(c.last().phase, "streaming");
+  assert.equal(c.last().messageId, 2);
+});
+
+test("start while the same job runs is ignored but resends the snapshot", async () => {
+  const { store, backend } = setup();
+  const key = displayKey(8);
+  const c = collect();
+  await store.open(key, c.sub, 1);
+  await store.start(key, summary(1));
+  const before = c.events.length;
+  await store.start(key, question("q", 1));
+  assert.equal(backend.runs.length, 1);
+  assert.ok(c.events.length > before);
+  assert.equal(c.last().phase, "streaming");
+});
+
+test("a cancel queued behind a pending start still aborts the run", async () => {
+  const { store, backend } = setup();
+  const key = composeKey(9);
+  const started = store.start(key, rewrite);
+  const cancelled = store.cancel(key);
+  await started;
+  await cancelled;
+  await flush();
+  assert.equal(backend.runs[0]!.req.signal.aborted, true);
 });
