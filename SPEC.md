@@ -196,11 +196,45 @@ erst nach einem Neustart als "nicht installiert" gemeldet. Bildschirmleser nicht
 - [x] GitHub-Release `v0.6.0` mit der `.xpi`
 - [x] Repository öffentlich geschaltet (2026-11-12, auf Wort des Nutzers)
 
-### Phase 8 – Store (addons.thunderbird.net)
-- [ ] `ApiBackend` mit API-Key als Standard der Store-Version (neue Host-Berechtigung für `api.anthropic.com`)
-- [ ] Backend-Umschalter in den Einstellungen
-- [ ] Host-Installer für Windows und Linux (nur falls das CLI-Backend im Store bleibt)
-- [ ] Datenschutzerklärung als Volltext, Store-Texte, `data_collection_permissions` klären, Einreichung
+### Phase 8 – API-Key-Backend, Umschalter, Hinweise (Vorbereitung Store)
+
+Entschieden am 2026-11-12: Die Store-Version bekommt beide Backends mit Umschalter. Voreinstellung ist der API-Key,
+das Abo über Claude Code ist eine bewusst zu wählende Option. Der Nutzer hat der neuen Host-Berechtigung für
+`https://api.anthropic.com/*` zugestimmt; weitere neue Berechtigungen nur nach Rückfrage.
+
+- [ ] `ApiBackend`: Messages-API per `fetch` mit Streaming, gleiche `Backend`-Schnittstelle und gleiche Fehlercodes
+      wie `CliBackend` (dazu ein Code für fehlenden oder ungültigen Schlüssel), Abbruch und Zeitlimit. Keine Tools.
+      Modellnamen der Einstellungen (`haiku`, `sonnet`, …) auf API-Modellkennungen abbilden; die Kennungen und das
+      Anfrageformat in der offiziellen API-Doku nachschlagen, nicht aus dem Gedächtnis.
+- [ ] API-Key: Eingabe in den Einstellungen (Passwortfeld), gespeichert in `storage.local`, nie in Logs,
+      Fehlermeldungen oder `storage.sync`; geht nur an `api.anthropic.com`. Verbindungstest auch für dieses Backend.
+- [ ] Backend-Umschalter in den Einstellungen. Neue Installation: API-Key. Bestehende Installation (0.6.0 und älter,
+      erkennbar an vorhandenen Einstellungen) bleibt beim CLI-Backend, damit beim Nutzer nichts bricht.
+- [ ] Einrichtungsanleitung im Add-on (de/en), als eigene Seite, erreichbar aus den Einstellungen, aus dem
+      Einwilligungsdialog und aus Fehlermeldungen (`host_not_found`, `cli_not_found`, `not_logged_in`, fehlender
+      Schlüssel). Für den API-Key: wo man ihn erstellt, wo man ihn einträgt, dass Kosten nach Verbrauch entstehen.
+      Für Claude Code: Voraussetzungen (macOS, Node 22, Claude Code installiert und angemeldet), Helfer aus dem
+      GitHub-Repository installieren (`npm run host:install`), Verbindungstest. Das CLI-Backend bleibt vorerst nur
+      macOS; auf anderen Systemen sagt das die Anleitung und der Umschalter.
+- [ ] Hinweis am Umschalter und in der Anleitung: Das Abo (Free, Pro, Max) ist laut Anthropics Consumer Terms nur
+      für private, nicht geschäftliche Nutzung; für geschäftliche Mails den API-Key verwenden. Eigenes Konto nötig,
+      kein offizielles Anthropic-Produkt.
+- [ ] Haftungshinweis im Einwilligungsdialog und in der Anleitung (de/en): Bereitstellung ohne Gewähr; Antworten
+      des Modells können falsch sein und sind vor dem Senden zu prüfen; der Nutzer ist für die Einhaltung der
+      Anthropic-Bedingungen und für die Weitergabe von Mailinhalten selbst verantwortlich; Verweis auf die
+      MIT-Lizenz. Wer schon eingewilligt hat, muss den erweiterten Text einmal neu bestätigen (Versionsnummer der
+      Einwilligung erhöhen).
+- [ ] README (englisch) und Datenschutz-Abschnitt an beide Backends anpassen; Version 0.7.0
+- [ ] Prüfen, ob Thunderbird `data_collection_permissions` im Manifest verlangt (Doku), und danach handeln
+
+Abnahme: Mit API-Key funktionieren Umformulieren, Zusammenfassen und Postfach-Frage ohne installierten Helfer; der
+Umschalter wechselt das Backend erkennbar; ein fehlender oder falscher Schlüssel führt zu einer verständlichen
+Meldung mit Verweis auf die Anleitung; Anleitung, Privat-Hinweis und Haftungshinweis sind in Deutsch und Englisch
+sichtbar; eine bestehende 0.6.0-Installation arbeitet nach dem Update unverändert mit Claude Code weiter.
+
+### Phase 9 – Einreichung im Store
+- [ ] Datenschutzerklärung als Volltext, Store-Texte (en/de), Quelltext-Paket mit Bauanleitung
+- [ ] Einreichung bei addons.thunderbird.net (macht der Nutzer selbst)
 
 ## Offene Entscheidungen
 
