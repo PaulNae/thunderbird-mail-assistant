@@ -194,7 +194,7 @@ erst nach einem Neustart als "nicht installiert" gemeldet. Bildschirmleser nicht
       angelegt, weil GitHub überschriebene Commits über ihre Kennung abrufbar hält; das alte heißt
       `thunderbird-mail-assistant-old` (privat, vom Nutzer zu löschen)
 - [x] GitHub-Release `v0.6.0` mit der `.xpi`
-- [ ] Repository öffentlich schalten (nur auf ausdrückliches Wort des Nutzers)
+- [x] Repository öffentlich geschaltet (2026-11-12, auf Wort des Nutzers)
 
 ### Phase 8 – Store (addons.thunderbird.net)
 - [ ] `ApiBackend` mit API-Key als Standard der Store-Version (neue Host-Berechtigung für `api.anthropic.com`)
