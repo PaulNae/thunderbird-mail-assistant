@@ -1,6 +1,12 @@
 {
   "name": "thunderbird-mail-assistant",
   "version": "0.6.0",
+  "description": "Thunderbird add-on that brings an AI writing and reading assistant to mail",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PaulNae/thunderbird-mail-assistant.git"
+  },
   "private": true,
   "type": "module",
   "scripts": {

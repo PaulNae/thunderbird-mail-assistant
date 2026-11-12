@@ -184,11 +184,11 @@ erst nach einem Neustart als "nicht installiert" gemeldet. Bildschirmleser nicht
       Nutzer installierte, unveränderte Claude Code auf, in dem dieser selbst angemeldet ist. Ein ausdrückliches Verbot
       dafür steht dort nicht; Anthropic empfiehlt Entwicklern aber API-Keys und behält sich Durchsetzung ohne
       Vorankündigung vor. Daher: CLI-Backend nur im GitHub-Repository, Store-Version mit API-Key (Phase 8).
-- [ ] Lizenzdatei (MIT), Urheber "PaulNae"
-- [ ] README auf Englisch, mit Abschnitten zu Datenschutz (was wann wohin geht, Verweis auf Anthropics
+- [x] Lizenzdatei (MIT), Urheber "PaulNae"
+- [x] README auf Englisch, mit Abschnitten zu Datenschutz (was wann wohin geht, Verweis auf Anthropics
       Datenschutzerklärung, Hinweis auf Daten Dritter in Mails) und zu Anthropic (kein offizielles Produkt, eigenes
       Claude Code und eigenes Konto nötig, Abo laut Consumer Terms nicht für geschäftliche Nutzung)
-- [ ] Übrige nach außen sichtbare Texte auf Englisch (Ausgaben des Installers, `package.json`); SPEC.md und CLAUDE.md
+- [x] Übrige nach außen sichtbare Texte auf Englisch (Ausgaben des Installers waren es schon, `package.json` ergänzt); SPEC.md und CLAUDE.md
       bleiben deutsch
 - [ ] Git-Historie auf die GitHub-Noreply-Adresse umschreiben und neu pushen (überschreibt `origin/main`)
 - [ ] GitHub-Release mit der `.xpi`; Repository öffentlich schalten (nur auf ausdrückliches Wort des Nutzers)

@@ -1,95 +1,144 @@
-# Thunderbird Mail Assistant
+# Mail Assistant for Thunderbird
 
-Thunderbird-Add-on, das Claude beim Schreiben und Lesen von Mails einbindet: Umformulieren im
-Verfassen-Fenster, Zusammenfassen und Fragen zu Mails, Abfragen über das Postfach.
+A Thunderbird add-on that brings an AI assistant to your mail: rewrite text in the compose window,
+summarize a message or thread, ask questions about it, and ask questions across your mailbox.
 
-Status: Version 0.6.0, Phasen 1 bis 6 umgesetzt (Schreiben, Lesen, Postfach-Abfrage, Härtung), nur macOS und
-nur mit lokal installiertem Claude Code. Spezifikation und Phasen stehen in
-[SPEC.md](SPEC.md), die Arbeitsregeln für die Entwicklung mit Claude Code in [CLAUDE.md](CLAUDE.md).
+The add-on does not talk to a model itself. It hands each request to the copy of
+[Claude Code](https://code.claude.com/docs) installed on your computer, so requests run under your
+own Anthropic account. **This is an independent project. It is not made, endorsed or supported by
+Anthropic.**
 
-## Mindestversion
+Status: version 0.6.0. macOS only, and only with a locally installed Claude Code. The user interface
+is available in English and German. The specification ([SPEC.md](SPEC.md)) and the development rules
+([CLAUDE.md](CLAUDE.md)) are written in German.
 
-`strict_min_version` ist `128.0`. Laut Thunderbird-Doku wird Manifest V3 für MailExtensions
-offiziell ab Thunderbird 128 ESR unterstützt (https://webextension-api.thunderbird.net/en/mv3/ und
-https://developer.thunderbird.net/add-ons/mailextensions, dort: "Supported versions are 2 and 3
-(since Thunderbird 128)"). 128 ist zugleich eine ESR-Linie und damit die älteste sinnvolle Basis;
-entwickelt und getestet wird mit Thunderbird 160.
+## What it does
 
-## Entwicklung
+- **Compose window:** rewrite, shorten, change the tone of or translate the selected text (or the
+  whole message), or draft a message from an instruction. Quoted text and the signature are left
+  alone.
+- **Message view:** summarize the displayed message or thread, ask questions about it, draft a reply.
+- **Mailbox:** ask a question in a separate tab; the add-on searches your mail and answers from the
+  messages it found.
 
-```
-npm install
-npm run check   # Build, Typprüfung, Lint, web-ext lint, Tests
-npm run start   # baut und startet Thunderbird mit dem Add-on
-```
+Nothing happens without a click, and the add-on never sends, deletes or moves a message.
 
-`npm run start` verwendet ein eigenes Testprofil in `.tb-dev-profile/` (nicht im Git), niemals das
-echte Thunderbird-Profil. Beim ersten Start ist dort noch kein Konto eingerichtet: Lege ein
-Testkonto an, damit sich eine Mail anzeigen und ein Verfassen-Fenster öffnen lässt, in denen die
-Buttons des Add-ons erscheinen. Ohne echtes Konto geht es so:
+## Privacy
 
-- Mailansicht: Datei → Öffnen → Gespeicherte Nachricht… → `test/fixtures/hello.eml`
-  (nicht im Finder doppelklicken, das öffnet das normale Thunderbird).
-- Verfassen: ein Newsgruppen-Konto mit Fantasiewerten anlegen (z. B. Server
-  `news.example.invalid`); es braucht keine Serververbindung, liefert aber eine Absender-Identität.
+Read this before you use the add-on with a real mailbox.
 
-## Native-Messaging-Host installieren
+- **What leaves your computer:** the text you selected, the message or thread on display, or, for a
+  mailbox question, up to 15 messages found by the search (configurable up to 50).
+- **When:** only when you trigger an action, and only after you agreed in the consent dialog shown
+  before the first action. You can withdraw consent in the settings at any time.
+- **Where it goes:** to Anthropic, through your local Claude Code and under your own account. What
+  Anthropic does with it (retention, use for model training, which you can switch off in your
+  account settings) is governed by your agreement with Anthropic and its
+  [privacy policy](https://www.anthropic.com/legal/privacy).
+- **What the author of this add-on receives:** nothing. There is no server, no telemetry and no
+  analytics.
+- **What is stored:** your settings and your consent, locally in Thunderbird. Mail content and
+  results are kept in memory only and are discarded when you display another message, close the tab
+  or window, or quit Thunderbird. Nothing of it is written to disk or to logs by the add-on.
+- **Other people's data:** mail contains personal data of the people you correspond with. Whether
+  you may pass it to Anthropic, especially at work, is for you to decide.
+
+Message content is passed to the model as clearly delimited data, not as instructions, and the model
+gets no tools. A message can therefore not make the assistant do anything beyond producing text.
+
+## Anthropic terms
+
+You need your own Claude Code installation and you sign in to it yourself. The add-on never sees or
+handles your credentials; it only starts the unmodified `claude` command. Your use is subject to
+[Anthropic's terms](https://code.claude.com/docs/en/legal-and-compliance), and it is your
+responsibility to comply with them. Two points worth knowing:
+
+- Requests count against the usage limits of your plan.
+- Anthropic's consumer terms (Free, Pro, Max) cover personal, non-commercial use. For business mail,
+  check which terms apply to your account.
+
+Anthropic may change its terms or how it enforces them. If this way of using Claude Code stops being
+permitted, the add-on will stop working until it is adapted.
+
+## Requirements
+
+- macOS
+- Thunderbird 128 or newer (developed and tested with Thunderbird 160)
+- Node 22
+- Claude Code (`claude`), installed and signed in
+
+`strict_min_version` is `128.0`: Manifest V3 for MailExtensions is officially supported from
+Thunderbird 128 ESR on (https://webextension-api.thunderbird.net/en/mv3/).
+
+## Install
+
+1. Build: `npm install`, then `npm run package`. This runs all checks and writes
+   `web-ext-artifacts/mail-assistant-0.6.0.xpi`. A prebuilt `.xpi` is attached to each
+   [release](https://github.com/PaulNae/thunderbird-mail-assistant/releases); you still need this
+   repository for step 2.
+2. Install the helper: `npm run host:install` (see below).
+3. In Thunderbird: Tools → Add-ons and Themes → gear icon → "Install Add-on From File…" → choose
+   the `.xpi` and confirm. Thunderbird does not require a signature (see below), and the add-on
+   stays installed after a restart.
+4. The buttons appear in the compose window, in the message view, and as "Ask mailbox" in the
+   toolbar of the main window (if it is not visible: right-click the toolbar → Customize).
+
+Settings are under Add-ons and Themes → Mail Assistant → Preferences: the model for each task, the
+limits (messages per mailbox question, amount of text, time limit), a connection test for the
+helper, and your consent.
+
+**Update:** build the new `.xpi` and install it the same way. After changes to `host/host.mjs`, run
+`npm run host:install` again. There are no automatic updates.
+
+**Remove:** Add-ons and Themes → Mail Assistant → "…" → Remove, then delete the helper with
+`npm run host:install -- --uninstall`.
+
+**Signature:** Thunderbird is built without mandatory add-on signing
+(`imply_option("MOZ_REQUIRE_SIGNING", False)` in
+[`mail/moz.configure`](https://searchfox.org/comm-central/source/mail/moz.configure)), so an
+unsigned `.xpi` can be installed permanently.
+
+### The helper (native messaging host)
 
 ```sh
 npm run host:install
 ```
 
-Das Skript registriert den Host `mail_assistant` für Thunderbird (nur macOS, aktueller Nutzer):
+Thunderbird starts a small helper program on demand, which in turn runs `claude`. The script
+registers it as native messaging host `mail_assistant` for the current user:
 
-- `~/Library/Application Support/mail-assistant/host.mjs`: **Kopie** von `host/host.mjs`
-  (Thunderbird soll keine Dateien aus `~/Documents` ausführen, sonst fragt macOS nach Zugriff).
-  Nach jeder Änderung an `host/host.mjs` das Installationsskript erneut ausführen!
-- `~/Library/Application Support/mail-assistant/launcher.sh`: Startskript mit absoluten Pfaden
-  zu `node` und `claude`, weil Thunderbird den Host ohne Shell-`PATH` startet.
-- `~/Library/Mozilla/NativeMessagingHosts/mail_assistant.json`: Manifest mit Verweis auf den
-  Launcher und der Add-on-ID aus `extension/manifest.json`.
+- `~/Library/Application Support/mail-assistant/host.mjs`: a **copy** of `host/host.mjs`
+  (Thunderbird should not execute files from `~/Documents`, otherwise macOS asks for access).
+- `~/Library/Application Support/mail-assistant/launcher.sh`: start script with absolute paths to
+  `node` and `claude`, because Thunderbird starts the helper without your shell's `PATH`.
+- `~/Library/Mozilla/NativeMessagingHosts/mail_assistant.json`: the manifest pointing to the
+  launcher, restricted to this add-on's ID.
 
-`claude` wird über die Login-Shell, `~/.local/bin`, `/opt/homebrew/bin` und `/usr/local/bin`
-gesucht; mit `--claude <pfad>` lässt sich der Pfad vorgeben. Mit `--install-dir <ordner>` lässt sich das Installationsverzeichnis ändern. Erneut ausführen, wenn
-`host.mjs` geändert oder `node` bzw. `claude` gewechselt wird. `--print` zeigt nur an, was
-geschrieben würde; `npm run host:install -- --uninstall` entfernt Manifest, Launcher und Host-Kopie.
+`claude` is looked up through your login shell, `~/.local/bin`, `/opt/homebrew/bin` and
+`/usr/local/bin`; `--claude <path>` sets the path explicitly and `--install-dir <dir>` changes the
+installation directory. Run the script again whenever `host.mjs` changes or you switch `node` or
+`claude`. `--print` only shows what would be written.
 
-## Im eigenen Thunderbird installieren
+## Development
 
-Name "Mail Assistant", Add-on-ID `mail-assistant@paulnae.github.io`.
+```sh
+npm install
+npm run check   # build, type check, lint, web-ext lint, tests
+npm run start   # builds and starts Thunderbird with the add-on
+```
 
-**Was dabei mit dem echten Postfach passiert:** Sobald du eine Aktion auslöst (Umformulieren,
-Zusammenfassen, Frage zu einer Mail, Postfach-Frage), gehen die betroffenen Mailinhalte über das
-lokale Claude Code an Anthropic; bei einer Postfach-Frage sind das bis zu 15 (in den Einstellungen bis 50)
-gefundene Mails. Ohne Klick passiert nichts, und das Add-on sendet, löscht oder verschiebt nie eine
-Mail. Vor der ersten Aktion fragt ein Einwilligungsdialog nach deiner Zustimmung; ohne sie sendet das
-Add-on nichts. Widerrufen lässt sie sich in den Einstellungen (Add-ons und Themes → Mail Assistant →
-Einstellungen, oder im Abfrage-Tab über „Einstellungen“). Dort stehen auch die Modelle je Aufgabe, die
-Obergrenzen (Mails je Postfach-Frage, Textmenge, Zeitlimit) und ein Verbindungstest zum Helfer.
+`npm run start` uses its own test profile in `.tb-dev-profile/` (not in Git), never your real
+Thunderbird profile. On first start that profile has no account. Without a real account you can
+still try the add-on:
 
-Voraussetzungen: Thunderbird 128 oder neuer, Node 22, Claude Code (`claude`) installiert und
-eingeloggt.
+- Message view: File → Open → Saved Message… → `test/fixtures/hello.eml` (do not double-click it in
+  Finder, that opens your regular Thunderbird).
+- Compose: create a newsgroup account with made-up values (for example server
+  `news.example.invalid`); it needs no server connection but provides a sender identity.
 
-1. Bauen: `npm install`, dann `npm run package`. Das prüft alles (`npm run check`) und schreibt
-   `web-ext-artifacts/mail-assistant-0.6.0.xpi`.
-2. Helfer installieren: `npm run host:install` (schreibt nur nach
-   `~/Library/Mozilla/NativeMessagingHosts/` und `~/Library/Application Support/mail-assistant/`;
-   gilt für alle Thunderbird-Profile, also auch für das Testprofil von `npm run start`).
-3. In Thunderbird: Extras → Add-ons und Themes → Zahnrad → "Add-on aus Datei installieren…" →
-   die `.xpi` wählen und bestätigen. Thunderbird verlangt keine Signatur (siehe unten); das Add-on
-   bleibt nach einem Neustart installiert.
-4. Die Knöpfe erscheinen im Verfassen-Fenster, in der Mailansicht und als "Postfach fragen" in der
-   Werkzeugleiste des Hauptfensters (falls nicht sichtbar: Rechtsklick auf die Leiste → Anpassen).
+The helper installed by `npm run host:install` serves all Thunderbird profiles, including the test
+profile.
 
-Aktualisieren: neue `.xpi` bauen und genauso installieren (gleiche ID, höhere Versionsnummer in
-`extension/manifest.json`). Nach Änderungen an `host/host.mjs` zusätzlich `npm run host:install`.
+## License
 
-Entfernen: Add-ons und Themes → Mail Assistant → "…" → Entfernen; danach den Helfer mit
-`npm run host:install -- --uninstall` löschen (dann funktioniert auch das Testprofil nicht mehr,
-bis der Helfer wieder installiert ist).
-
-Signatur: Thunderbird wird ohne Signaturpflicht gebaut (`imply_option("MOZ_REQUIRE_SIGNING", False)`
-in [`mail/moz.configure`](https://searchfox.org/comm-central/source/mail/moz.configure)), daher
-lässt sich eine unsignierte `.xpi` dauerhaft installieren. Die Entwicklerdoku beschreibt die
-Installation einer `.xpi` über das Zahnrad-Menü
-(https://developer.thunderbird.net/add-ons/hello-world-add-on), sagt aber nichts zur Signatur.
+[MIT](LICENSE)
