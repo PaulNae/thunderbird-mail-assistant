@@ -13,11 +13,13 @@ das Abo des Nutzers verwendet wird. Backend 2 (später) ruft die Claude-API mit 
 
 ## Arbeitsweise (verbindlich)
 
-- Die Hauptsession (Opus) **orchestriert**: Sie liest SPEC.md, zerlegt die aktuelle Phase in kleine
-  Aufgaben, gibt jede an den Subagenten `implementer` (Sonnet) und prüft das Ergebnis am Diff.
-  Sie schreibt selbst keinen Feature-Code, nur Korrekturen von wenigen Zeilen.
-- Jede Aufgabe an `implementer` nennt: Ziel, betroffene Dateien, Abnahmekriterium, Prüfbefehl.
-- Nach jeder Phase prüft der Subagent `reviewer` (Opus) den gesamten Phasen-Diff gegen SPEC.md.
+- Die Hauptsession (Opus) **setzt die Phase selbst um**, ohne Implementierungs-Subagenten.
+  Die Auswertung der Phasen 1 bis 4 hat gezeigt, dass die Orchestrierung mehr Tokens kostet als
+  die delegierte Arbeit. Der Agent `implementer` wird nicht mehr verwendet.
+- Eine frische Sitzung je Phase. Keine Zwischenberichte und kein Beenden des Turns für
+  Statusmeldungen: durcharbeiten bis zu dem Punkt, an dem der Nutzer in Thunderbird testen muss.
+- Am Ende der Phase prüft der Subagent `reviewer` (Opus) genau einmal den gesamten Phasen-Diff
+  gegen SPEC.md; die Befunde behebt die Hauptsession selbst.
 - Eine Phase gilt erst als fertig, wenn `npm run check` grün ist und die Abnahmekriterien der Phase
   in Thunderbird nachgewiesen sind. Was nicht in Thunderbird geprüft wurde, wird so benannt.
 - Ein Commit pro abgeschlossener Aufgabe, Phasen-Fortschritt in SPEC.md abhaken.
