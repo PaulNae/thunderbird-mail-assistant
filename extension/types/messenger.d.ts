@@ -47,6 +47,22 @@ declare namespace messenger {
   }
 }
 
+declare namespace messenger {
+  namespace tabs {
+    // Only `id` is used; url/title would need the "tabs" permission.
+    interface Tab {
+      id?: number;
+    }
+    function query(queryInfo: { active?: boolean; currentWindow?: boolean }): Promise<Tab[]>;
+  }
+  namespace compose {
+    interface ComposeDetails {
+      isPlainText?: boolean;
+    }
+    function getComposeDetails(tabId: number): Promise<ComposeDetails>;
+  }
+}
+
 // Set by the compose editor content script (extension/compose/editor.ts).
 // eslint-disable-next-line no-var
 declare var mailAssistantEditor: import("../compose/editor-text.ts").EditorApi | undefined;

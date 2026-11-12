@@ -14,9 +14,6 @@
   "popupComposeTitle": {
     "message": "Write"
   },
-  "popupComposePlaceholder": {
-    "message": "The writing features will appear here."
-  },
   "popupDisplayTitle": {
     "message": "Read"
   },
@@ -52,5 +49,70 @@
   },
   "errorInternal": {
     "message": "An unexpected error occurred."
+  },
+  "composeScopeSelection": {
+    "message": "Selection ($COUNT$ characters)",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "composeScopeBody": {
+    "message": "Your whole text (without quote and signature)"
+  },
+  "composeProtected": {
+    "message": "The selection contains a quote or signature and cannot be edited. Please select only your own text."
+  },
+  "composeEmpty": {
+    "message": "No text of your own yet. Please write or select some text."
+  },
+  "composeRephrase": {
+    "message": "Rephrase"
+  },
+  "composeShorten": {
+    "message": "Shorten"
+  },
+  "composeToneLabel": {
+    "message": "Tone:"
+  },
+  "composeToneFriendly": {
+    "message": "Friendly"
+  },
+  "composeToneFormal": {
+    "message": "Formal"
+  },
+  "composeToneConcise": {
+    "message": "Concise"
+  },
+  "composeTranslateLabel": {
+    "message": "Translate:"
+  },
+  "composeTranslateDe": {
+    "message": "German"
+  },
+  "composeTranslateEn": {
+    "message": "English"
+  },
+  "composeInstructionPlaceholder": {
+    "message": "Custom instruction …"
+  },
+  "composeRun": {
+    "message": "Run"
+  },
+  "composeCancel": {
+    "message": "Cancel"
+  },
+  "composeApply": {
+    "message": "Apply"
+  },
+  "composeDiscard": {
+    "message": "Discard"
+  },
+  "composeRegenerate": {
+    "message": "Regenerate"
+  },
+  "composeStale": {
+    "message": "The text has changed in the meantime, please start again."
   }
 }

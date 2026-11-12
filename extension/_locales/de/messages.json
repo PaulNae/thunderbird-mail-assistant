@@ -14,9 +14,6 @@
   "popupComposeTitle": {
     "message": "Schreiben"
   },
-  "popupComposePlaceholder": {
-    "message": "Hier entstehen die Schreibfunktionen."
-  },
   "popupDisplayTitle": {
     "message": "Lesen"
   },
@@ -52,5 +49,70 @@
   },
   "errorInternal": {
     "message": "Ein unerwarteter Fehler ist aufgetreten."
+  },
+  "composeScopeSelection": {
+    "message": "Markierung ($COUNT$ Zeichen)",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "composeScopeBody": {
+    "message": "Ganzer eigener Text (ohne Zitat und Signatur)"
+  },
+  "composeProtected": {
+    "message": "Die Markierung enthält Zitat oder Signatur und kann nicht bearbeitet werden. Bitte nur eigenen Text markieren."
+  },
+  "composeEmpty": {
+    "message": "Kein eigener Text vorhanden. Bitte Text schreiben oder markieren."
+  },
+  "composeRephrase": {
+    "message": "Umformulieren"
+  },
+  "composeShorten": {
+    "message": "Kürzen"
+  },
+  "composeToneLabel": {
+    "message": "Ton:"
+  },
+  "composeToneFriendly": {
+    "message": "Freundlich"
+  },
+  "composeToneFormal": {
+    "message": "Formell"
+  },
+  "composeToneConcise": {
+    "message": "Knapp"
+  },
+  "composeTranslateLabel": {
+    "message": "Übersetzen:"
+  },
+  "composeTranslateDe": {
+    "message": "Deutsch"
+  },
+  "composeTranslateEn": {
+    "message": "Englisch"
+  },
+  "composeInstructionPlaceholder": {
+    "message": "Eigene Anweisung …"
+  },
+  "composeRun": {
+    "message": "Ausführen"
+  },
+  "composeCancel": {
+    "message": "Abbrechen"
+  },
+  "composeApply": {
+    "message": "Übernehmen"
+  },
+  "composeDiscard": {
+    "message": "Verwerfen"
+  },
+  "composeRegenerate": {
+    "message": "Neu erzeugen"
+  },
+  "composeStale": {
+    "message": "Der Text wurde inzwischen geändert, bitte neu starten."
   }
 }

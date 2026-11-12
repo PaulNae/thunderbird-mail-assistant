@@ -1,17 +1,6 @@
-import { BackendError } from "../backend/backend.ts";
-import type { BackendErrorCode } from "../backend/backend.ts";
 import { CliBackend } from "../backend/cli-backend.ts";
+import { errorMessage } from "./errors.ts";
 import { BRIDGE_TEST_MODEL, BRIDGE_TEST_SYSTEM, bridgeTestPrompt } from "../prompts/bridge-test.ts";
-
-const ERROR_KEYS: Record<BackendErrorCode, string> = {
-  host_not_found: "errorHostNotFound",
-  cli_not_found: "errorCliNotFound",
-  not_logged_in: "errorNotLoggedIn",
-  rate_limited: "errorRateLimited",
-  timeout: "errorTimeout",
-  cancelled: "errorCancelled",
-  internal: "errorInternal",
-};
 
 const backend = new CliBackend();
 
@@ -40,8 +29,7 @@ export function setupBridgeTest(doc: Document = document): void {
           out.textContent = (out.textContent ?? "") + chunk;
         }
       } catch (e) {
-        const code: BackendErrorCode = e instanceof BackendError ? e.code : "internal";
-        out.textContent = messenger.i18n.getMessage(ERROR_KEYS[code]);
+        out.textContent = errorMessage(e);
       } finally {
         controller = null;
         testBtn.disabled = false;

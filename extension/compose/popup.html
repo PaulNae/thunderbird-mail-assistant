@@ -6,11 +6,41 @@
     <link rel="stylesheet" href="../shared/popup.css" />
     <script type="module" src="popup.js"></script>
   </head>
-  <body>
+  <body class="compose">
     <h1 data-i18n="popupComposeTitle"></h1>
-    <p data-i18n="popupComposePlaceholder"></p>
-    <p><button id="bridge-test" data-i18n="bridgeTestButton"></button>
-      <button id="bridge-cancel" data-i18n="bridgeCancelButton" hidden></button></p>
-    <pre id="bridge-output" aria-live="polite"></pre>
+    <p id="scope" class="scope"></p>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+
+    <section id="actions">
+      <div class="row">
+        <button type="button" data-action="rephrase" data-i18n="composeRephrase"></button>
+        <button type="button" data-action="shorten" data-i18n="composeShorten"></button>
+      </div>
+      <div class="row">
+        <span class="label" data-i18n="composeToneLabel"></span>
+        <button type="button" data-action="tone:friendly" data-i18n="composeToneFriendly"></button>
+        <button type="button" data-action="tone:formal" data-i18n="composeToneFormal"></button>
+        <button type="button" data-action="tone:concise" data-i18n="composeToneConcise"></button>
+      </div>
+      <div class="row">
+        <span class="label" data-i18n="composeTranslateLabel"></span>
+        <button type="button" data-action="translate:de" data-i18n="composeTranslateDe"></button>
+        <button type="button" data-action="translate:en" data-i18n="composeTranslateEn"></button>
+      </div>
+      <div class="row">
+        <input type="text" id="instruction" data-i18n-placeholder="composeInstructionPlaceholder" />
+        <button type="button" id="run-custom" data-i18n="composeRun" disabled></button>
+      </div>
+    </section>
+
+    <section id="preview-section" hidden>
+      <pre id="preview" tabindex="0" aria-live="polite"></pre>
+      <div class="row">
+        <button type="button" id="cancel" data-i18n="composeCancel" hidden></button>
+        <button type="button" id="apply" data-i18n="composeApply" hidden></button>
+        <button type="button" id="discard" data-i18n="composeDiscard" hidden></button>
+        <button type="button" id="regenerate" data-i18n="composeRegenerate" hidden></button>
+      </div>
+    </section>
   </body>
 </html>
