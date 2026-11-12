@@ -157,11 +157,22 @@ verlinkt die Mail.
 Nachgewiesen am 2026-11-12 in Thunderbird 160: Abnahme vom Nutzer im Testprofil bestätigt (Testmails aus `test/fixtures/query/` in einem lokalen Ordner: Frage nach dem Preis des Angebots korrekt beantwortet, Verweis öffnet die Mail; Folgefrage nach über einer Minute Pause beantwortet; Frage ohne Treffer führt zur Meldung "nichts gefunden"). Nicht geprüft: Volltextsuche in IMAP-Ordnern ohne Offline-Kopie, Reihenfolge der Treffer bei großen Postfächern, von Thunderbird wiederhergestellter Chat-Tab.
 
 ### Phase 6 – Härtung
-- [ ] Einwilligungsdialog beim ersten Start (welche Daten wohin gehen)
-- [ ] Einstellungsseite: Backend, Modelle, Limits, Backend-Check
-- [ ] Prompt-Injection-Tests mit präparierten Mails
-- [ ] Lokalisierung de/en vollständig, Tastaturbedienung, helles und dunkles Theme
-- [ ] `security-review` über das gesamte Projekt
+- [x] Einwilligungsdialog beim ersten Start (welche Daten wohin gehen); durchgesetzt im Hintergrundskript
+      (`background/gated-backend.ts`), widerrufbar, ein Widerruf bricht laufende Aufträge ab; gespeichert wird nur
+      `{version}` unter `consent` in `storage.local`
+- [x] Einstellungsseite (`options/`): Modelle je Aufgabe, Obergrenzen (Mails je Postfach-Frage, Textmenge,
+      Zeitlimit je Modellaufruf), Verbindungstest, Einwilligung. Der Backend-Umschalter folgt erst mit Phase 7.
+      Eine Textmenge ersetzt die früheren getrennten Konstanten (Standard 40 000 Zeichen, vorher Verlauf 40 000,
+      eigener Text und Originalmail 30 000, Postfach-Treffer 50 000). Bei der Postfach-Abfrage gilt das Modell für die
+      Antwort, die Suchbegriffe ermittelt immer Haiku.
+- [x] Prompt-Injection-Tests mit präparierten Mails (`test/fixtures/injection/`, `test/injection.test.ts`) und
+      ein manueller Durchlauf gegen Claude Code über den Helfer
+- [x] Lokalisierung de/en vollständig (`test/locales.test.ts`), Tastaturbedienung, helles und dunkles Theme
+- [x] `security-review` über das gesamte Projekt (keine HIGH/MEDIUM-Befunde, LOW-Befunde behoben)
+
+Abnahme: Einwilligungsdialog erscheint beim ersten Start und sperrt ohne Zustimmung; ein geändertes Modell und eine
+geänderte Obergrenze sind im Verhalten erkennbar; der Verbindungstest zeigt den richtigen Zustand; dunkles Theme ist
+lesbar; Bedienung per Tastatur geht. Noch nicht in Thunderbird nachgewiesen.
 
 ### Phase 7 – Veröffentlichung
 - [ ] `ApiBackend` mit API-Key (Standard für veröffentlichte Version)

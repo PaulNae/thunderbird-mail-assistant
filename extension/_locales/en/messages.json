@@ -430,7 +430,7 @@
     "message": "Amount of text per request (characters)"
   },
   "optionsTimeout": {
-    "message": "Time limit per request (seconds)"
+    "message": "Time limit per model call (seconds)"
   },
   "optionsRange": {
     "message": "($MIN$ to $MAX$, default $DEF$)",

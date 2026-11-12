@@ -8,6 +8,7 @@ import {
   SETTINGS_KEY,
   TIMEOUT_BOUNDS,
   defaultSettings,
+  migrateLegacySettings,
   modelForKind,
   readSettings,
   sanitizeSettings,
@@ -39,13 +40,15 @@ class FakeLocal {
   }
 }
 
-test("defaults are the previous constants", () => {
+test("model and limit defaults are the previous constants; the text limit is the former thread budget", () => {
   assert.deepEqual(DEFAULT_MODELS, { rewrite: REWRITE_MODEL, draft: DRAFT_MODEL, summary: SUMMARY_MODEL, question: QUESTION_MODEL, query: QUERY_ANSWER_MODEL });
   assert.deepEqual(DEFAULT_MODELS, { rewrite: "haiku", draft: "sonnet", summary: "haiku", question: "sonnet", query: "sonnet" });
   const d = defaultSettings();
   assert.equal(d.maxMessages, 15);
   assert.equal(d.timeoutSec, 120);
-  assert.equal(d.maxTextChars, MAX_TEXT_BOUNDS.def);
+  // One text limit replaces three constants (thread 40 000, own text and original 30 000, hits 50 000).
+  assert.equal(d.maxTextChars, 40000);
+  assert.equal(MAX_TEXT_BOUNDS.def, 40000);
 });
 
 test("anything unusable falls back to the default; numbers are clamped and rounded", () => {
@@ -78,6 +81,19 @@ test("the 0.5 chat setting is read as a fallback and removed on save", async () 
   assert.equal((await readSettings(area)).maxMessages, 9);
   area.fail = true;
   assert.deepEqual(await readSettings(area), defaultSettings());
+});
+
+test("the 0.5 key is migrated on update without overwriting newer settings", async () => {
+  const area = new FakeLocal();
+  assert.equal(await migrateLegacySettings(area), false);
+  area.data.set(LEGACY_MAX_MESSAGES_KEY, 33);
+  assert.equal(await migrateLegacySettings(area), true);
+  assert.equal((area.data.get(SETTINGS_KEY) as { maxMessages: number }).maxMessages, 33);
+  assert.equal(area.data.has(LEGACY_MAX_MESSAGES_KEY), false);
+  area.data.set(LEGACY_MAX_MESSAGES_KEY, 2);
+  assert.equal(await migrateLegacySettings(area), true);
+  assert.equal((area.data.get(SETTINGS_KEY) as { maxMessages: number }).maxMessages, 33);
+  assert.equal(area.data.has(LEGACY_MAX_MESSAGES_KEY), false);
 });
 
 test("job kinds map to their model setting", () => {

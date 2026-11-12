@@ -3,7 +3,8 @@ import { PendingReplyDrafts, isOwnSender, parseRuntimeRequest } from "../shared/
 import { findReplyContext } from "../mail/identity.ts";
 import { CliBackend } from "../backend/cli-backend.ts";
 import { ConsentGatedBackend } from "./gated-backend.ts";
-import { readConsent } from "../shared/consent.ts";
+import { CONSENT_KEY, isConsentGiven, readConsent } from "../shared/consent.ts";
+import type { ChatSession } from "./chat.ts";
 import { handleConnection } from "./connection.ts";
 import { JobStore } from "./jobs.ts";
 import { handleChatConnection } from "./chat.ts";
@@ -12,7 +13,7 @@ import { ChatTabTracker } from "./chat-tab.ts";
 import { loadMessage } from "../mail/message-text.ts";
 import { searchHeaders } from "../mail/search.ts";
 import { PORT_CHAT } from "../shared/chat-messages.ts";
-import { readSettings } from "../shared/settings.ts";
+import { migrateLegacySettings, readSettings } from "../shared/settings.ts";
 import { toCheckResponse } from "../shared/messages.ts";
 import type { CheckResponse, StartReplyDraftResponse, TakePendingResponse } from "../shared/messages.ts";
 import { BackendError } from "../backend/backend.ts";
@@ -46,8 +47,11 @@ const chatTab = new ChatTabTracker({
   },
 });
 
+// Open chat sessions, so a withdrawn consent can stop their runs.
+const chatSessions = new Set<ChatSession>();
+
 messenger.runtime.onConnect.addListener((port) => {
-  if (port.name === PORT_CHAT) handleChatConnection(port, chatDeps, messenger.runtime.id, (tabId) => void chatTab.adopt(tabId));
+  if (port.name === PORT_CHAT) handleChatConnection(port, chatDeps, messenger.runtime.id, (tabId) => void chatTab.adopt(tabId), chatSessions);
   else handleConnection(jobs, port, messenger.runtime.id);
 });
 
@@ -66,6 +70,15 @@ messenger.tabs.onRemoved.addListener((tabId) => {
 
 messenger.runtime.onInstalled.addListener((details) => {
   console.log(`Mail Assistant installed (${details.reason})`);
+  // 0.5 kept "most mails per question" under its own key; move it into the settings object.
+  if (details.reason === "update") void migrateLegacySettings(messenger.storage.local).catch(() => undefined);
+});
+
+// Withdrawing the consent stops every running run at once (new runs are blocked by the gate anyway).
+messenger.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local" || !(CONSENT_KEY in changes) || isConsentGiven(changes[CONSENT_KEY]?.newValue)) return;
+  jobs.cancelAll();
+  for (const s of chatSessions) s.cancel();
 });
 
 async function startReplyDraft(messageId: number, notes: string): Promise<StartReplyDraftResponse> {

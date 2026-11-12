@@ -138,3 +138,63 @@ test("a mailbox question without consent ends with consent_required before any m
   assert.equal(loaded, 0);
   assert.equal(inner.runs.length, 0);
 });
+
+/** A backend whose runs hang until aborted; records how many runs reached it. */
+class HangingBackend implements Backend {
+  runs = 0;
+  async *run(req: RunRequest): AsyncGenerator<string, void, undefined> {
+    this.runs++;
+    yield "partial";
+    await new Promise<void>((resolve) => req.signal.addEventListener("abort", () => resolve(), { once: true }));
+    throw new BackendError("cancelled");
+  }
+  async check(): Promise<{ ok: boolean }> {
+    return { ok: true };
+  }
+}
+
+test("withdrawing consent: cancelAll stops running popup jobs, and the next run is blocked", async () => {
+  const area = new FakeLocal();
+  await grantConsent(area);
+  const inner = new HangingBackend();
+  const store = new JobStore({ backend: new ConsentGatedBackend(inner, () => readConsent(area)) });
+  const events: PortEvent[] = [];
+  await store.open("display:1", (e) => events.push(e), 5);
+  await store.start("display:1", { kind: "summary", system: "s", prompt: "mail", messageId: 5 });
+  for (let i = 0; i < 10; i++) await tick();
+  assert.equal(inner.runs, 1);
+  await revokeConsent(area);
+  store.cancelAll(); // what the background script does on storage.onChanged
+  for (let i = 0; i < 10; i++) await tick();
+  const snaps = events.filter((e): e is { type: "snapshot"; snapshot: JobSnapshot } => e.type === "snapshot");
+  assert.equal(snaps.at(-1)?.snapshot.phase, "cancelled");
+  await store.start("display:1", { kind: "summary", system: "s", prompt: "mail", messageId: 5 });
+  for (let i = 0; i < 10; i++) await tick();
+  assert.equal(inner.runs, 1, "no further run reached the backend");
+  assert.equal(events.filter((e): e is { type: "snapshot"; snapshot: JobSnapshot } => e.type === "snapshot").at(-1)?.snapshot.error, "consent_required");
+});
+
+test("withdrawing consent between the steps of a mailbox question blocks the answer step", async () => {
+  const area = new FakeLocal();
+  await grantConsent(area);
+  const inner = new RecordingBackend();
+  const session = new ChatSession(
+    {
+      backend: new ConsentGatedBackend(
+        { run: (req) => (async function* () { inner.runs.push(req); yield inner.runs.length === 1 ? '{"text":"x"}' : "answer"; })(), check: () => inner.check() },
+        () => readConsent(area),
+      ),
+      search: async () => {
+        await revokeConsent(area); // withdrawn while searching
+        return { headers: [{ id: 1 }], complete: true };
+      },
+      load: async (id) => ({ id, from: "a", subject: "b", date: "", body: "c", attachments: [] }),
+      settings: async () => defaultSettings(),
+    },
+    () => undefined,
+  );
+  session.ask("Frage");
+  for (let i = 0; i < 50 && session.running; i++) await tick();
+  assert.equal(inner.runs.length, 1, "only step 1 ran");
+  assert.equal(session.snapshot().turns[0]?.error, "consent_required");
+});

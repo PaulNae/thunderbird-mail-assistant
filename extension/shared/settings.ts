@@ -30,7 +30,11 @@ export interface Bounds {
 
 /** Most mails sent to the model per mailbox question. */
 export const MAX_MESSAGES_BOUNDS: Bounds = { min: 1, max: 50, def: 15 };
-/** Most characters of mail text per request (thread, search hits, own text, original mail). */
+/**
+ * Most characters of mail text per request (thread, search hits, own text, original mail). One value
+ * replaces the earlier separate constants; its default is the former thread budget (40 000), so the own
+ * text and the original mail may now be longer (was 30 000) and the search hits shorter (was 50 000).
+ */
 export const MAX_TEXT_BOUNDS: Bounds = { min: 5000, max: 100000, def: 40000 };
 /** Time limit of one model run in seconds (within the host's bounds of 10 s to 600 s). */
 export const TIMEOUT_BOUNDS: Bounds = { min: 30, max: 600, def: 120 };
@@ -101,6 +105,15 @@ export async function writeSettings(area: Pick<LocalArea, "set" | "remove">, set
   await area.set({ [SETTINGS_KEY]: clean });
   await area.remove(LEGACY_MAX_MESSAGES_KEY);
   return clean;
+}
+
+/** Moves the 0.5 key into the settings object (only if there is no settings object yet). */
+export async function migrateLegacySettings(area: LocalArea): Promise<boolean> {
+  const got = await area.get([SETTINGS_KEY, LEGACY_MAX_MESSAGES_KEY]);
+  if (!(LEGACY_MAX_MESSAGES_KEY in got)) return false;
+  if (got[SETTINGS_KEY] === undefined) await writeSettings(area, sanitizeSettings(undefined, got[LEGACY_MAX_MESSAGES_KEY]));
+  else await area.remove(LEGACY_MAX_MESSAGES_KEY);
+  return true;
 }
 
 /** The model of a popup job kind. */

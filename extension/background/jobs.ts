@@ -245,6 +245,11 @@ export class JobStore {
     });
   }
 
+  /** Aborts every running job (e.g. the consent was withdrawn); finished results stay. */
+  cancelAll(): void {
+    for (const entry of this.entries.values()) entry.ctl?.abort();
+  }
+
   /** Aborts and forgets an entry, in memory and in the mirror. */
   private async drop(key: string): Promise<void> {
     const entry = this.entries.get(key);

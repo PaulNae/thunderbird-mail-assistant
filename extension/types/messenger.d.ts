@@ -40,8 +40,6 @@ declare namespace messenger {
       id?: string;
       /** The tab that opened the connection, if any. */
       tab?: tabs.Tab;
-      /** URL of the page or frame that sent the message. */
-      url?: string;
     }
     function sendMessage(message: unknown): Promise<unknown>;
     // Return true to call sendResponse asynchronously.

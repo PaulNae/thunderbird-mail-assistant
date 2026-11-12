@@ -17,8 +17,17 @@ export function renderConsentText(el: HTMLElement, headingLevel: "h1" | "h2" = "
   for (const key of CONSENT_TEXT_KEYS) {
     const p = document.createElement("p");
     p.textContent = t(key);
+    p.id = `${el.id || "consent"}-${key}`;
     el.append(p);
   }
+}
+
+/** The ids of the paragraphs written by renderConsentText into `el`. */
+const paragraphIds = (el: HTMLElement): string => CONSENT_TEXT_KEYS.map((k) => `${el.id || "consent"}-${k}`).join(" ");
+
+/** First enabled control of `root`, for moving the focus there. */
+function firstControl(root: HTMLElement): HTMLElement | null {
+  return root.querySelector<HTMLElement>("button:not([disabled]):not([hidden]), input:not([disabled]):not([hidden]), select:not([disabled]), [tabindex=\"0\"]");
 }
 
 export interface ConsentGate {
@@ -44,6 +53,8 @@ export function setupConsent(panel: HTMLElement, app: HTMLElement, opts: { onDec
   accept.type = "button";
   accept.className = "primary";
   accept.textContent = t("consentAccept");
+  // Focus lands on this button; the description makes screen readers read the consent text with it.
+  accept.setAttribute("aria-describedby", paragraphIds(panel));
   const decline = document.createElement("button");
   decline.type = "button";
   decline.textContent = t("consentDecline");
@@ -55,11 +66,17 @@ export function setupConsent(panel: HTMLElement, app: HTMLElement, opts: { onDec
   app.hidden = true;
   let given: boolean | null = null;
   const show = (now: boolean): void => {
-    const changed = given !== now;
+    const before = given;
     given = now;
     panel.hidden = now;
     app.hidden = !now;
-    if (changed && !now) accept.focus();
+    if (before !== now && !now) accept.focus();
+    // Just agreed: the button is gone, so the focus moves into the page instead of falling to <body>.
+    if (before === false && now) {
+      const target = firstControl(app) ?? app.querySelector<HTMLElement>("h1");
+      if (target && target.tagName === "H1") target.tabIndex = -1;
+      target?.focus();
+    }
     opts.onChange?.(now);
   };
   const refresh = async (): Promise<boolean> => {

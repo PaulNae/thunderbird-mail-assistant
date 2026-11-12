@@ -237,7 +237,7 @@ export class ChatSession {
 }
 
 /** Connects a chat tab's port to its own session; the session ends with the port. */
-export function handleChatConnection(port: PortLike, deps: ChatDeps, ownId: string, onTab?: (tabId: number) => void): void {
+export function handleChatConnection(port: PortLike, deps: ChatDeps, ownId: string, onTab?: (tabId: number) => void, sessions?: Set<ChatSession>): void {
   if (port.name !== PORT_CHAT || !isOwnSender(port.sender?.id, ownId)) {
     port.disconnect();
     return;
@@ -261,8 +261,10 @@ export function handleChatConnection(port: PortLike, deps: ChatDeps, ownId: stri
     else if (req.type === "cancel") session.cancel();
     else session.clear();
   });
+  sessions?.add(session);
   port.onDisconnect.addListener(() => {
     closed = true;
+    sessions?.delete(session);
     session.dispose();
   });
   try {

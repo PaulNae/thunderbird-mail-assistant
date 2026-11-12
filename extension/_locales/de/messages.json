@@ -430,7 +430,7 @@
     "message": "Textmenge je Auftrag (Zeichen)"
   },
   "optionsTimeout": {
-    "message": "Zeitlimit je Auftrag (Sekunden)"
+    "message": "Zeitlimit je Modellaufruf (Sekunden)"
   },
   "optionsRange": {
     "message": "($MIN$ bis $MAX$, Standard $DEF$)",

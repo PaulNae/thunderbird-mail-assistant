@@ -174,6 +174,7 @@ function buildChildEnv(claudePath) {
 
 export function startHost({ input = process.stdin, output = process.stdout, exit = process.exit } = {}) {
   const claudePath = process.env.MAIL_ASSISTANT_CLAUDE;
+  // Default time limit of a run; the add-on normally sends its own (setting "time limit"), which wins.
   const timeoutMs = Number(process.env.MAIL_ASSISTANT_TIMEOUT_MS) > 0
     ? Number(process.env.MAIL_ASSISTANT_TIMEOUT_MS)
     : DEFAULT_TIMEOUT_MS;
@@ -375,11 +376,13 @@ export function startHost({ input = process.stdin, output = process.stdout, exit
     if (!claudePath) return fail("cli_not_found");
     const ver = await capture(["--version"]);
     if (ver.spawnFailed) return fail("cli_not_found");
+    if (ver.timedOut) return fail("timeout");
     const m = /\d+\.\d+\.\d+\S*/.exec(ver.stdout);
     if (ver.code !== 0 || !m) return fail("internal", "Could not determine CLI version");
     const version = m[0];
     const auth = await capture(["auth", "status"]);
     if (auth.spawnFailed) return fail("cli_not_found");
+    if (auth.timedOut) return fail("timeout");
     let status;
     try {
       status = JSON.parse(auth.stdout);
