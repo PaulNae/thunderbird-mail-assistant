@@ -11,7 +11,22 @@
     }
   },
   "background": {
-    "scripts": ["background/background.js"],
+    "scripts": [
+      "background/background.js"
+    ],
     "type": "module"
+  },
+  "icons": {
+    "32": "icons/icon.svg"
+  },
+  "compose_action": {
+    "default_popup": "compose/popup.html",
+    "default_title": "__MSG_actionComposeTitle__",
+    "default_icon": "icons/icon.svg"
+  },
+  "message_display_action": {
+    "default_popup": "display/popup.html",
+    "default_title": "__MSG_actionDisplayTitle__",
+    "default_icon": "icons/icon.svg"
   }
 }

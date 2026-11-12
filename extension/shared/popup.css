@@ -1,0 +1,8 @@
+:root { color-scheme: light dark; --bg: #fff; --fg: #1c1b22; --muted: #5b5b66; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #2b2a33; --fg: #fbfbfe; --muted: #b1b1b9; }
+}
+body { margin: 0; padding: 16px; min-width: 280px; background: var(--bg); color: var(--fg);
+  font: message-box; }
+h1 { margin: 0 0 8px; font-size: 1.2em; }
+p { margin: 0; color: var(--muted); }

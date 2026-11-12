@@ -30,3 +30,35 @@ test("background.scripts point to existing files", () => {
   assert.ok(scripts.length > 0);
   for (const s of scripts) assert.ok(existsSync(path.join(dist, s)), `${s} missing`);
 });
+
+test("every file referenced by the manifest exists in dist", () => {
+  const refs: string[] = [];
+  const icons = (v: unknown): void => {
+    if (typeof v === "string") refs.push(v);
+    else if (v && typeof v === "object") Object.values(v).forEach(icons);
+  };
+  icons(manifest["icons"]);
+  for (const key of ["compose_action", "message_display_action"]) {
+    const action = manifest[key] as { default_popup: string; default_icon: unknown };
+    assert.ok(action, `${key} missing`);
+    refs.push(action.default_popup);
+    icons(action.default_icon);
+  }
+  for (const r of refs) assert.ok(existsSync(path.join(dist, r)), `${r} missing`);
+});
+
+test("data-i18n keys exist in both locales and locales have identical keys", () => {
+  const de = readJson("_locales/de/messages.json");
+  const en = readJson("_locales/en/messages.json");
+  assert.deepEqual(Object.keys(de).sort(), Object.keys(en).sort());
+  for (const page of ["compose/popup.html", "display/popup.html"]) {
+    const html = readFileSync(path.join(dist, page), "utf8");
+    const keys = [...html.matchAll(/data-i18n="([^"]+)"/g)].map((m) => m[1] as string);
+    assert.ok(keys.length > 0, `${page} has no data-i18n`);
+    for (const key of keys) {
+      assert.ok(key in de, `de misses ${key}`);
+      assert.ok(key in en, `en misses ${key}`);
+    }
+    assert.ok(existsSync(path.join(dist, path.dirname(page), "popup.js")), `${page} script missing`);
+  }
+});

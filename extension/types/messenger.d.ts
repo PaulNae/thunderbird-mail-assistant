@@ -7,6 +7,9 @@ interface MessengerEvent<T extends (...args: never[]) => void> {
 }
 
 declare namespace messenger {
+  namespace i18n {
+    function getMessage(messageName: string, substitutions?: string | string[]): string;
+  }
   namespace runtime {
     interface InstalledDetails {
       reason: "install" | "update" | "browser_update" | "shared_module_update";

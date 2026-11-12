@@ -1,4 +1,26 @@
 {
-  "extensionName": { "message": "Mail Assistant" },
-  "extensionDescription": { "message": "Rewrite, summarize and ask questions about your mail with Claude." }
+  "extensionName": {
+    "message": "Mail Assistant"
+  },
+  "extensionDescription": {
+    "message": "Rewrite, summarize and ask questions about your mail with Claude."
+  },
+  "actionComposeTitle": {
+    "message": "Mail Assistant"
+  },
+  "actionDisplayTitle": {
+    "message": "Mail Assistant"
+  },
+  "popupComposeTitle": {
+    "message": "Write"
+  },
+  "popupComposePlaceholder": {
+    "message": "The writing features will appear here."
+  },
+  "popupDisplayTitle": {
+    "message": "Read"
+  },
+  "popupDisplayPlaceholder": {
+    "message": "The reading features will appear here."
+  }
 }

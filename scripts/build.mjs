@@ -11,10 +11,19 @@ const dist = path.join(root, "dist");
 // Add further entry points (e.g. popups) here, one line each.
 const entryPoints = {
   "background/background": "extension/background/background.ts",
+  "compose/popup": "extension/compose/popup.ts",
+  "display/popup": "extension/display/popup.ts",
 };
 
 // Static files and folders copied as-is, relative to extension/.
-const staticFiles = ["manifest.json", "_locales"];
+const staticFiles = [
+  "manifest.json",
+  "_locales",
+  "icons",
+  "shared/popup.css",
+  "compose/popup.html",
+  "display/popup.html",
+];
 
 await rm(dist, { recursive: true, force: true });
 await mkdir(dist, { recursive: true });
@@ -33,7 +42,7 @@ await build({
 });
 
 for (const file of staticFiles) {
+  await mkdir(path.dirname(path.join(dist, file)), { recursive: true });
   await cp(path.join(src, file), path.join(dist, file), { recursive: true });
 }
 
-// Later: copy popup HTML/CSS next to their bundled scripts.

@@ -1,4 +1,26 @@
 {
-  "extensionName": { "message": "Mail Assistant" },
-  "extensionDescription": { "message": "Mails mit Claude umformulieren, zusammenfassen und Fragen dazu stellen." }
+  "extensionName": {
+    "message": "Mail Assistant"
+  },
+  "extensionDescription": {
+    "message": "Mails mit Claude umformulieren, zusammenfassen und Fragen dazu stellen."
+  },
+  "actionComposeTitle": {
+    "message": "Mail Assistant"
+  },
+  "actionDisplayTitle": {
+    "message": "Mail Assistant"
+  },
+  "popupComposeTitle": {
+    "message": "Schreiben"
+  },
+  "popupComposePlaceholder": {
+    "message": "Hier entstehen die Schreibfunktionen."
+  },
+  "popupDisplayTitle": {
+    "message": "Lesen"
+  },
+  "popupDisplayPlaceholder": {
+    "message": "Hier entstehen die Lesefunktionen."
+  }
 }
