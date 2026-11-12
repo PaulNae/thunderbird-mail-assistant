@@ -144,7 +144,7 @@ Nachgewiesen am 2026-11-12 in Thunderbird 160: Abnahme vom Nutzer im Testprofil 
 Abnahme: Zusammenfassung starten, rausklicken, Popup wieder öffnen, Ergebnis ist da; andere Mail anklicken,
 Ergebnis ist weg; dasselbe mit einem Entwurf im Verfassen-Fenster; Antwort auf eine Mail an eine
 Nicht-Standard-Adresse nutzt diese Adresse.
-Noch nicht in Thunderbird nachgewiesen (nur Zustandslogik mit Tests geprüft).
+Nachgewiesen am 2026-11-12 in Thunderbird 160: Abnahme vom Nutzer im Testprofil bestätigt (Ergebnis überlebt Schließen des Popups, verschwindet bei Mailwechsel; Entwurf im Verfassen-Fenster). Ob die Identitätswahl mit einem Konto mit mehreren Adressen geprüft wurde, ist nicht belegt.
 
 ### Phase 5 – Postfach-Abfrage
 - [ ] Chat-Tab; Schritt 1: Modell erzeugt aus der Frage Suchparameter (strukturierte Ausgabe)
