@@ -24,5 +24,10 @@ npm run start   # baut und startet Thunderbird mit dem Add-on
 
 `npm run start` verwendet ein eigenes Testprofil in `.tb-dev-profile/` (nicht im Git), niemals das
 echte Thunderbird-Profil. Beim ersten Start ist dort noch kein Konto eingerichtet: Lege ein
-Testkonto oder ein lokales Konto ("Lokale Ordner") an, damit sich eine Mail anzeigen und ein
-Verfassen-Fenster öffnen lässt, in denen die Buttons des Add-ons erscheinen.
+Testkonto an, damit sich eine Mail anzeigen und ein Verfassen-Fenster öffnen lässt, in denen die
+Buttons des Add-ons erscheinen. Ohne echtes Konto geht es so:
+
+- Mailansicht: Datei → Öffnen → Gespeicherte Nachricht… → `test/fixtures/hello.eml`
+  (nicht im Finder doppelklicken, das öffnet das normale Thunderbird).
+- Verfassen: ein Newsgruppen-Konto mit Fantasiewerten anlegen (z. B. Server
+  `news.example.invalid`); es braucht keine Serververbindung, liefert aber eine Absender-Identität.

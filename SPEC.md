@@ -79,12 +79,13 @@ Nachrichten vom Host sind auf 1 MB begrenzt, deshalb immer in Stücken streamen.
 Jede Phase endet mit `npm run check` grün, Review durch `reviewer` und einem Nachweis in Thunderbird.
 
 ### Phase 1 – Gerüst
-- [ ] `package.json`, TypeScript strikt, esbuild-Build nach `dist/`, ESLint, `web-ext`
-- [ ] `manifest.json` (MV3, Add-on-ID, `strict_min_version` nach Doku festlegen und begründen)
-- [ ] Hintergrundskript und leere `compose_action` / `message_display_action` mit Popup
-- [ ] `npm run start` öffnet Thunderbird mit geladenem Add-on
+- [x] `package.json`, TypeScript strikt, esbuild-Build nach `dist/`, ESLint, `web-ext`
+- [x] `manifest.json` (MV3, Add-on-ID, `strict_min_version` nach Doku festlegen und begründen)
+- [x] Hintergrundskript und leere `compose_action` / `message_display_action` mit Popup
+- [x] `npm run start` öffnet Thunderbird mit geladenem Add-on
 
 Abnahme: Beide Buttons erscheinen und öffnen ein Popup; `web-ext lint` ohne Fehler.
+Nachgewiesen am 2026-11-12 in Thunderbird 160: beide Buttons öffnen ihr Popup (Nutzer-Test im Testprofil).
 
 ### Phase 2 – Bridge
 - [ ] Voraussetzung prüfen: `claude` installiert und eingeloggt (sonst Nutzer fragen)
