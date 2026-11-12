@@ -80,3 +80,22 @@ test("no visible text is set from string literals in the code", () => {
     }
   }
 });
+
+test("every error code of both backends has a text in both languages, and the guide covers the setup errors", async () => {
+  const { BACKEND_ERROR_CODES } = await import("../extension/backend/backend.ts");
+  const { ERROR_KEYS, GUIDE_SECTIONS } = await import("../extension/shared/errors.ts");
+  const { CHECK_STATES } = await import("../extension/shared/messages.ts");
+  for (const code of BACKEND_ERROR_CODES) {
+    const key = ERROR_KEYS[code];
+    assert.ok(key && key in de && key in en, `no text for ${code}`);
+    // Messages name the cause; commands like npm belong in the guide.
+    assert.ok(!/npm/.test(de[key]!.message) && !/npm/.test(en[key]!.message), `${key} names a command`);
+  }
+  for (const code of ["host_not_found", "cli_not_found", "not_logged_in", "cli_unsupported", "api_key_missing", "api_key_invalid", "api_billing"] as const) {
+    assert.ok(GUIDE_SECTIONS[code], `${code} does not link the guide`);
+  }
+  for (const state of CHECK_STATES) if (state !== "ok") assert.ok((BACKEND_ERROR_CODES as readonly string[]).includes(state), state);
+  const guide = readFileSync(path.join(root, "guide", "guide.html"), "utf8");
+  for (const section of new Set(Object.values(GUIDE_SECTIONS))) assert.match(guide, new RegExp(`<section id="${section}"`));
+  assert.match(guide, /<section id="notices"/);
+});

@@ -84,3 +84,9 @@ test("scripting and compose permissions are requested", () => {
   assert.ok(permissions.includes("messagesRead"));
   assert.ok(permissions.includes("accountsRead"));
 });
+
+test("the only host permission is Anthropic's API", () => {
+  assert.deepEqual(manifest["host_permissions"], ["https://api.anthropic.com/*"]);
+  assert.equal(manifest["version"], "0.7.0");
+  assert.ok(existsSync(path.join(dist, "guide", "guide.html")) && existsSync(path.join(dist, "guide", "guide.js")), "guide page missing in dist");
+});

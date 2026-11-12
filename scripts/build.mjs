@@ -15,6 +15,7 @@ const entryPoints = {
   "display/popup": "extension/display/popup.ts",
   "chat/chat": "extension/chat/chat.ts",
   "options/options": "extension/options/options.ts",
+  "guide/guide": "extension/guide/guide.ts",
 };
 
 // Static files and folders copied as-is, relative to extension/.
@@ -27,6 +28,7 @@ const staticFiles = [
   "display/popup.html",
   "chat/chat.html",
   "options/options.html",
+  "guide/guide.html",
 ];
 
 await rm(dist, { recursive: true, force: true });

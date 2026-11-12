@@ -18,16 +18,16 @@
     "message": "Read"
   },
   "errorHostNotFound": {
-    "message": "The helper service is not installed. Please run \"npm run host:install\"."
+    "message": "The helper for Claude Code is not set up on this computer."
   },
   "errorCliNotFound": {
-    "message": "Claude Code was not found. Please install it and run \"npm run host:install\" again."
+    "message": "The helper cannot find Claude Code. Is Claude Code installed?"
   },
   "errorNotLoggedIn": {
-    "message": "Claude Code is not logged in. Please start \"claude\" in a terminal and log in."
+    "message": "Claude Code is not signed in."
   },
   "errorRateLimited": {
-    "message": "The usage limit has been reached. Please try again later."
+    "message": "The usage or request limit has been reached. Please try again a little later."
   },
   "errorTimeout": {
     "message": "The request took too long and was stopped."
@@ -345,14 +345,11 @@
   "consentWhat": {
     "message": "What is sent: the text you are working on and the email concerned, with sender, subject, date, text and the names of attachments. When reading, earlier emails of the same conversation are added; for a mailbox question, the emails found (at most as many as set in the settings)."
   },
-  "consentWhere": {
-    "message": "Where it goes: through Claude Code installed on this computer to Anthropic, under your Claude account. The terms and privacy rules of your Anthropic account apply there."
-  },
   "consentNoAction": {
     "message": "Nothing happens without your click. The add-on never sends, deletes or moves an email by itself; results are only applied when you choose to."
   },
   "consentNoDisk": {
-    "message": "Email content and results are kept in memory only and never written to disk. Only your settings and this consent are stored."
+    "message": "Mail content and results stay in memory only and never reach the disk. Only your settings, your API key (if entered) and this consent are stored."
   },
   "consentRevoke": {
     "message": "You can withdraw your consent at any time in the add-on settings."
@@ -382,7 +379,7 @@
     "message": "Consent"
   },
   "optionsConsentGiven": {
-    "message": "You agreed that email content goes through Claude Code to Anthropic when you start an action."
+    "message": "You have agreed that mail content goes to Anthropic on the way chosen above when you start an action."
   },
   "optionsConsentMissing": {
     "message": "No consent: Mail Assistant is locked and sends nothing."
@@ -450,7 +447,7 @@
     "message": "Restore defaults"
   },
   "optionsCheckHeading": {
-    "message": "Connection to the helper"
+    "message": "Connection test"
   },
   "optionsCheckRun": {
     "message": "Test connection"
@@ -459,26 +456,223 @@
     "message": "Testing the connection …"
   },
   "optionsCheckOk": {
-    "message": "All good: Claude Code $VERSION$ is reachable and logged in.",
+    "message": "OK: Claude Code $VERSION$ is reachable and signed in.",
     "placeholders": {
       "version": {
         "content": "$1"
       }
     }
   },
-  "optionsCheckHostNotFound": {
-    "message": "The helper is not installed. Please run “npm run host:install”."
-  },
-  "optionsCheckCliNotFound": {
-    "message": "The helper runs but cannot find Claude Code. Please install Claude Code and run “npm run host:install” again."
-  },
-  "optionsCheckNotLoggedIn": {
-    "message": "Claude Code is not logged in. Please start “claude” in a terminal and log in."
-  },
   "optionsCheckTimeout": {
-    "message": "The helper did not answer in time."
+    "message": "No answer in time. Please try again."
   },
   "optionsCheckInternal": {
-    "message": "The state could not be determined (unexpected answer from Claude Code)."
+    "message": "The state could not be determined (unexpected answer)."
+  },
+  "errorCliUnsupported": {
+    "message": "Using Claude Code is only supported on macOS. Please choose the API key in the settings."
+  },
+  "errorApiKeyMissing": {
+    "message": "No API key has been entered. Please enter a key in the settings."
+  },
+  "errorApiKeyInvalid": {
+    "message": "Anthropic rejected the API key (invalid, deleted or without permission)."
+  },
+  "errorApiBilling": {
+    "message": "Your API account has no credit or payment method. Please check in the Claude Console."
+  },
+  "errorOverloaded": {
+    "message": "Anthropic's service is overloaded right now. Please try again in a few minutes."
+  },
+  "errorNetwork": {
+    "message": "No connection to Anthropic. Please check the internet connection and try again."
+  },
+  "guideOpen": {
+    "message": "Open the setup guide"
+  },
+  "consentWhereApi": {
+    "message": "Where to: directly to Anthropic's API, over an encrypted connection and under your own API key. The terms and privacy rules of your Anthropic API account apply there. If you choose Claude Code in the settings, the data goes to Anthropic through the Claude Code installed on this computer instead."
+  },
+  "consentWhereCli": {
+    "message": "Where to: to Anthropic through the Claude Code installed on this computer, under your Claude account. The terms and privacy rules of your Anthropic account apply there. If you choose the API key in the settings, the data goes directly to Anthropic's API instead."
+  },
+  "noticeLiability": {
+    "message": "Liability: Mail Assistant is provided without warranty (MIT License). The model's answers can be wrong or incomplete; check them before you send anything. You are responsible yourself for complying with Anthropic's terms and for passing on mail content, including data of other people in your mails."
+  },
+  "optionsBackendHeading": {
+    "message": "Connection to Claude"
+  },
+  "optionsBackendLegend": {
+    "message": "How Mail Assistant reaches Claude:"
+  },
+  "optionsBackendApi": {
+    "message": "API key (recommended)"
+  },
+  "optionsBackendApiHint": {
+    "message": "Directly to Anthropic's API with your own key. Costs are charged by usage to your API account. Also suitable for business mail."
+  },
+  "optionsBackendCli": {
+    "message": "Claude subscription via Claude Code (macOS only)"
+  },
+  "optionsBackendCliHint": {
+    "message": "Uses the Claude Code installed and signed in on this Mac. The helper from the GitHub repository must be set up for this."
+  },
+  "optionsBackendCliUnsupported": {
+    "message": "Not available on this system: using Claude Code is only supported on macOS."
+  },
+  "noticePrivateUse": {
+    "message": "According to Anthropic's Consumer Terms, the Claude subscription (Free, Pro, Max) is for private, non-business use only. Please use the API key for business mail."
+  },
+  "noticeOwnAccount": {
+    "message": "Both ways need your own account with Anthropic. Mail Assistant is not an official Anthropic product."
+  },
+  "termsNotice": {
+    "message": "Anthropic's terms last checked on $DATE$. Anthropic can change them; if using the subscription through Claude Code in this way is no longer allowed, this option must no longer be used. Anthropic's current terms apply, not this notice.",
+    "placeholders": {
+      "date": {
+        "content": "$1"
+      }
+    }
+  },
+  "termsLink": {
+    "message": "Anthropic's terms"
+  },
+  "optionsApiKeyHeading": {
+    "message": "API key"
+  },
+  "optionsApiKeyLabel": {
+    "message": "New key"
+  },
+  "optionsApiKeySave": {
+    "message": "Save"
+  },
+  "optionsApiKeyRemove": {
+    "message": "Delete key"
+  },
+  "optionsApiKeyHint": {
+    "message": "The key is stored only in this Thunderbird profile, never shown and sent only to api.anthropic.com."
+  },
+  "optionsApiKeyStored": {
+    "message": "A key is stored."
+  },
+  "optionsApiKeyNone": {
+    "message": "No key stored."
+  },
+  "optionsApiKeySaved": {
+    "message": "Key saved. Use “Test connection” to check it."
+  },
+  "optionsApiKeyInvalidFormat": {
+    "message": "That does not look like an API key. Please paste the whole key from the Claude Console."
+  },
+  "optionsApiKeyRemoved": {
+    "message": "Key deleted."
+  },
+  "optionsCheckHint": {
+    "message": "Checks the way chosen above without sending any mail content."
+  },
+  "optionsCheckOkApi": {
+    "message": "OK: the API key is valid and Anthropic's API is reachable."
+  },
+  "guideTitle": {
+    "message": "Mail Assistant – Setup"
+  },
+  "guideIntro": {
+    "message": "Mail Assistant reaches Claude in one of two ways: with your own API key (the default) or through a Claude subscription with Claude Code (macOS only). You choose the way in the settings."
+  },
+  "guideApiHeading": {
+    "message": "Way 1: API key"
+  },
+  "guideApiWhat": {
+    "message": "When you start an action, mail content goes directly to Anthropic's API. The API account is a separate account in the Claude Console, apart from any Claude subscription; a subscription does not include API usage."
+  },
+  "guideApiStep1": {
+    "message": "Create an account in the Claude Console and add credit or a payment method."
+  },
+  "guideApiStep2": {
+    "message": "Under “API Keys”, create a new key just for Mail Assistant and copy it."
+  },
+  "guideApiConsoleLink": {
+    "message": "API keys in the Claude Console"
+  },
+  "guideApiStep3": {
+    "message": "In Mail Assistant's settings, choose “API key”, paste the key and save it."
+  },
+  "guideApiStep4": {
+    "message": "Click “Test connection”. When the test shows “OK”, everything is set up."
+  },
+  "guideApiCostsHeading": {
+    "message": "Costs"
+  },
+  "guideApiCosts": {
+    "message": "Every action is charged by usage (amount of text in and out) to your API account. Haiku is the cheapest, Opus the most expensive; you set the model per task in the settings. A spend limit in the Claude Console protects against surprises."
+  },
+  "guideApiKeyHeading": {
+    "message": "Handling the key"
+  },
+  "guideApiKeySafety": {
+    "message": "The key is stored unencrypted in the Thunderbird profile and goes only to api.anthropic.com. Anyone with access to your profile can read it. So create a key just for Mail Assistant and delete it in the Claude Console when you no longer need it or suspect misuse."
+  },
+  "guideCliHeading": {
+    "message": "Way 2: Claude subscription via Claude Code (macOS only)"
+  },
+  "guideCliWhat": {
+    "message": "Mail Assistant calls the Claude Code installed on your Mac through a small helper; your Claude subscription applies. The helper is not part of the add-on but is set up from the GitHub repository."
+  },
+  "guideCliUnsupported": {
+    "message": "This way is not available on this system: it is only supported on macOS. Please use the API key."
+  },
+  "guideCliReqHeading": {
+    "message": "Requirements"
+  },
+  "guideCliReqMac": {
+    "message": "macOS"
+  },
+  "guideCliReqNode": {
+    "message": "Node.js 22 or newer"
+  },
+  "guideCliReqClaude": {
+    "message": "Claude Code installed and signed in (run “claude” once in Terminal and log in)"
+  },
+  "guideCliStepsHeading": {
+    "message": "Setup"
+  },
+  "guideCliStep1": {
+    "message": "Download or clone the repository from GitHub."
+  },
+  "guideCliRepoLink": {
+    "message": "Repository on GitHub"
+  },
+  "guideCliStep2": {
+    "message": "In Terminal, change into the folder and run “npm run host:install”. This sets up the helper for Thunderbird and looks for Claude Code."
+  },
+  "guideCliStep3": {
+    "message": "Restart Thunderbird, choose “Claude subscription via Claude Code” in the settings and click “Test connection”."
+  },
+  "guideCliTroubleHeading": {
+    "message": "If it does not work"
+  },
+  "guideCliTroubleHost": {
+    "message": "“Helper not set up”: run step 2 and restart Thunderbird."
+  },
+  "guideCliTroubleCli": {
+    "message": "“Claude Code not found”: install Claude Code and repeat step 2 so the helper knows its path."
+  },
+  "guideCliTroubleLogin": {
+    "message": "“Not signed in”: run “claude” in Terminal and log in."
+  },
+  "guideNoticesHeading": {
+    "message": "Notices"
+  },
+  "guideNoticeDataHeading": {
+    "message": "Data"
+  },
+  "guideNoticeData": {
+    "message": "Mail content goes to Anthropic only when you start an action and have agreed beforehand; the consent dialog lists which data that is. Mail content and results stay in memory only."
+  },
+  "guideNoticeSubscriptionHeading": {
+    "message": "Claude subscription and terms"
+  },
+  "guideNoticeLiabilityHeading": {
+    "message": "Liability"
   }
 }

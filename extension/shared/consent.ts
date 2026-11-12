@@ -7,8 +7,9 @@ export const CONSENT_KEY = "consent";
 /**
  * Version of the consent text (`consent*` keys in _locales). Raise it whenever the text changes in
  * substance (other data, other recipient): earlier consent then no longer counts and is asked again.
+ * Version 2 (0.7.0): both backends and the liability notice.
  */
-export const CONSENT_VERSION = 1;
+export const CONSENT_VERSION = 2;
 
 export interface ConsentRecord {
   version: number;

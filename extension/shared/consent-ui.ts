@@ -2,24 +2,37 @@
 // The page's own content stays hidden until the user agrees. The background script enforces the
 // consent independently (background/gated-backend.ts); this is only the explanation and the switch.
 import { CONSENT_KEY, grantConsent, readConsent } from "./consent.ts";
+import { SETTINGS_KEY, readSettings } from "./settings.ts";
+import type { BackendKind } from "../backend/backend.ts";
+import { guideButton } from "./guide.ts";
 
-/** The paragraphs of the consent text, in order. Changing them in substance means raising CONSENT_VERSION. */
-export const CONSENT_TEXT_KEYS = ["consentIntro", "consentWhat", "consentWhere", "consentNoAction", "consentNoDisk", "consentRevoke"] as const;
+/**
+ * The paragraphs of the consent text, in order. "consentWhere" stands for the paragraph of the chosen
+ * backend (WHERE_KEYS). Changing them in substance means raising CONSENT_VERSION.
+ */
+export const CONSENT_TEXT_KEYS = ["consentIntro", "consentWhat", "consentWhere", "consentNoAction", "consentNoDisk", "noticeLiability", "consentRevoke"] as const;
+export const WHERE_KEYS: Record<BackendKind, string> = { api: "consentWhereApi", cli: "consentWhereCli" };
 
 const t = (key: string): string => messenger.i18n.getMessage(key);
 
-/** Appends the heading and the paragraphs of the consent text to `el` (textContent only). */
-export function renderConsentText(el: HTMLElement, headingLevel: "h1" | "h2" = "h2"): void {
+/**
+ * Appends the heading, the paragraphs of the consent text for `backend` and a link to the guide to `el`
+ * (textContent only). `afterGuide` runs once the guide is open.
+ */
+export function renderConsentText(el: HTMLElement, headingLevel: "h1" | "h2", backend: BackendKind, afterGuide?: () => void): void {
   const heading = document.createElement(headingLevel);
   heading.textContent = t("consentHeading");
   heading.id = `${el.id || "consent"}-heading`;
   el.append(heading);
   for (const key of CONSENT_TEXT_KEYS) {
     const p = document.createElement("p");
-    p.textContent = t(key);
+    p.textContent = t(key === "consentWhere" ? WHERE_KEYS[backend] : key);
     p.id = `${el.id || "consent"}-${key}`;
     el.append(p);
   }
+  const row = document.createElement("p");
+  row.append(guideButton("notices", afterGuide));
+  el.append(row);
 }
 
 /** The ids of the paragraphs written by renderConsentText into `el`. */
@@ -39,11 +52,24 @@ export interface ConsentGate {
  * Builds the dialog into `panel` and toggles it against `app`. `onDecline` runs for "Not now"
  * (popups close themselves); `onChange` runs whenever the state may have changed.
  */
-export function setupConsent(panel: HTMLElement, app: HTMLElement, opts: { onDecline?: () => void; onChange?: (given: boolean) => void } = {}): ConsentGate {
+export function setupConsent(
+  panel: HTMLElement,
+  app: HTMLElement,
+  opts: { onDecline?: () => void; onChange?: (given: boolean) => void; afterGuide?: () => void } = {},
+): ConsentGate {
   panel.replaceChildren();
   panel.setAttribute("role", "region");
-  renderConsentText(panel);
-  panel.setAttribute("aria-labelledby", `${panel.id || "consent"}-heading`);
+  // The text names the chosen backend; it is filled once the settings are read and on every change.
+  const text = document.createElement("div");
+  text.id = `${panel.id || "consent"}-text`;
+  const renderText = async (): Promise<void> => {
+    const { backend } = await readSettings(messenger.storage.local);
+    text.replaceChildren();
+    renderConsentText(text, "h2", backend, opts.afterGuide);
+  };
+  panel.append(text);
+  void renderText();
+  panel.setAttribute("aria-labelledby", `${text.id}-heading`);
   const status = document.createElement("p");
   status.className = "status";
   status.setAttribute("role", "status");
@@ -54,7 +80,7 @@ export function setupConsent(panel: HTMLElement, app: HTMLElement, opts: { onDec
   accept.className = "primary";
   accept.textContent = t("consentAccept");
   // Focus lands on this button; the description makes screen readers read the consent text with it.
-  accept.setAttribute("aria-describedby", paragraphIds(panel));
+  accept.setAttribute("aria-describedby", paragraphIds(text));
   const decline = document.createElement("button");
   decline.type = "button";
   decline.textContent = t("consentDecline");
@@ -102,7 +128,9 @@ export function setupConsent(panel: HTMLElement, app: HTMLElement, opts: { onDec
   });
   // Granted or revoked in another window (or the settings page).
   messenger.storage.onChanged.addListener((changes, area) => {
-    if (area === "local" && CONSENT_KEY in changes) void refresh();
+    if (area !== "local") return;
+    if (CONSENT_KEY in changes) void refresh();
+    if (SETTINGS_KEY in changes) void renderText();
   });
   return { refresh };
 }

@@ -4,6 +4,7 @@
 import { localizeDocument } from "../shared/i18n.ts";
 import { setupConsent } from "../shared/consent-ui.ts";
 import { errorMessage } from "../shared/errors.ts";
+import { showError } from "../shared/guide.ts";
 import { BackendError } from "../backend/backend.ts";
 import { openPort } from "../shared/job-client.ts";
 import type { JobPort } from "../shared/job-client.ts";
@@ -159,9 +160,12 @@ function renderTurn(turn: ChatTurn, live: boolean): HTMLLIElement {
     li.append(p("answer", t("chatNoResults")));
   } else if (turn.status === "error") {
     if (turn.error === "consent_required") void consent.refresh();
-    const msg =
-      turn.error === "search_failed" ? t("chatSearchFailed") : turn.error === "empty_result" ? t("composeEmptyResult") : errorMessage(new BackendError(turn.error ?? "internal"));
-    li.append(p("answer", msg));
+    if (turn.error === "search_failed" || turn.error === "empty_result") li.append(p("answer", t(turn.error === "search_failed" ? "chatSearchFailed" : "composeEmptyResult")));
+    else {
+      const el = p("answer", "");
+      showError(el, new BackendError(turn.error ?? "internal"));
+      li.append(el);
+    }
   } else if (turn.status === "cancelled") {
     li.append(p("answer", errorMessage(new BackendError("cancelled"))));
   }

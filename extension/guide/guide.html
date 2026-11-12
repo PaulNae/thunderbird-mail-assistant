@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title data-i18n="guideTitle"></title>
+    <link rel="stylesheet" href="../shared/popup.css" />
+    <script type="module" src="guide.js"></script>
+  </head>
+  <body class="options guide">
+    <main>
+      <h1 data-i18n="guideTitle"></h1>
+      <p data-i18n="guideIntro"></p>
+      <p id="settings-row"></p>
+
+      <section id="api" aria-labelledby="api-heading">
+        <h2 id="api-heading" data-i18n="guideApiHeading"></h2>
+        <p data-i18n="guideApiWhat"></p>
+        <ol>
+          <li data-i18n="guideApiStep1"></li>
+          <li><span data-i18n="guideApiStep2"></span> <span id="console-link"></span></li>
+          <li data-i18n="guideApiStep3"></li>
+          <li data-i18n="guideApiStep4"></li>
+        </ol>
+        <h3 data-i18n="guideApiCostsHeading"></h3>
+        <p data-i18n="guideApiCosts"></p>
+        <h3 data-i18n="guideApiKeyHeading"></h3>
+        <p data-i18n="guideApiKeySafety"></p>
+      </section>
+
+      <section id="cli" aria-labelledby="cli-heading">
+        <h2 id="cli-heading" data-i18n="guideCliHeading"></h2>
+        <p data-i18n="guideCliWhat"></p>
+        <p class="notice" data-i18n="noticePrivateUse"></p>
+        <p id="cli-unsupported" class="notice" data-i18n="guideCliUnsupported" hidden></p>
+        <h3 data-i18n="guideCliReqHeading"></h3>
+        <ul>
+          <li data-i18n="guideCliReqMac"></li>
+          <li data-i18n="guideCliReqNode"></li>
+          <li data-i18n="guideCliReqClaude"></li>
+        </ul>
+        <h3 data-i18n="guideCliStepsHeading"></h3>
+        <ol>
+          <li><span data-i18n="guideCliStep1"></span> <span id="repo-link"></span></li>
+          <li data-i18n="guideCliStep2"></li>
+          <li data-i18n="guideCliStep3"></li>
+        </ol>
+        <h3 data-i18n="guideCliTroubleHeading"></h3>
+        <ul>
+          <li data-i18n="guideCliTroubleHost"></li>
+          <li data-i18n="guideCliTroubleCli"></li>
+          <li data-i18n="guideCliTroubleLogin"></li>
+        </ul>
+      </section>
+
+      <section id="notices" aria-labelledby="notices-heading">
+        <h2 id="notices-heading" data-i18n="guideNoticesHeading"></h2>
+        <h3 data-i18n="guideNoticeDataHeading"></h3>
+        <p data-i18n="guideNoticeData"></p>
+        <h3 data-i18n="guideNoticeSubscriptionHeading"></h3>
+        <p data-i18n="noticePrivateUse"></p>
+        <p data-i18n="noticeOwnAccount"></p>
+        <div id="terms-row"></div>
+        <h3 data-i18n="guideNoticeLiabilityHeading"></h3>
+        <p data-i18n="noticeLiability"></p>
+      </section>
+    </main>
+  </body>
+</html>
