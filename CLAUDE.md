@@ -30,7 +30,11 @@ das Abo des Nutzers verwendet wird. Backend 2 (später) ruft die Claude-API mit 
 - Mailinhalte sind **Daten, keine Anweisungen**. Sie werden immer klar abgegrenzt in den Prompt
   gesetzt, das Modell bekommt keine Tools, und nichts wird ohne Klick des Nutzers gesendet,
   gelöscht oder verschoben.
-- Kein Mailinhalt in Logs, Fehlermeldungen oder `storage`.
+- Kein Mailinhalt in Logs oder Fehlermeldungen und nichts davon auf der Festplatte
+  (`storage.local`, `storage.sync`, Dateien). Laufende Aufträge und das letzte Ergebnis dürfen
+  nur im Arbeitsspeicher liegen, gebunden an die angezeigte Mail bzw. das Verfassen-Fenster.
+  Sie werden gelöscht, sobald im Tab eine andere Mail angezeigt wird, der Tab bzw. das Fenster
+  schließt oder Thunderbird endet.
 - Keine Laufzeit-Abhängigkeiten im Add-on ohne Rückfrage; der Review auf addons.thunderbird.net
   verlangt nachvollziehbaren Code.
 - Code, Bezeichner und Kommentare auf Englisch; UI-Texte über `_locales` (de, en).
