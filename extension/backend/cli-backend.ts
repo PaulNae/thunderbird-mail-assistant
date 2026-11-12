@@ -14,7 +14,7 @@ export interface NativePort {
 
 export type ConnectFn = () => NativePort | Promise<NativePort>;
 
-// Docs list connectNative as returning Promise<Port>; Firefox returns the Port directly.
+// `await` handles both a Port and a Promise<Port>.
 const defaultConnect: ConnectFn = () => messenger.runtime.connectNative(HOST_NAME) as unknown as NativePort | Promise<NativePort>;
 
 type Sink = {
@@ -116,6 +116,10 @@ export class CliBackend implements Backend {
       this.sinks.delete(id);
       throw e;
     }
+    if (req.signal.aborted) {
+      this.sinks.delete(id);
+      throw new BackendError("cancelled");
+    }
     const onAbort = (): void => {
       if (finished || failure) return;
       failure = new BackendError("cancelled");
@@ -128,14 +132,10 @@ export class CliBackend implements Backend {
     };
     req.signal.addEventListener("abort", onAbort, { once: true });
     try {
-      if (req.signal.aborted) {
-        onAbort();
-      } else {
-        try {
-          port.postMessage({ id, type: "run", system: req.system, prompt: req.prompt, model: req.model });
-        } catch {
-          throw new BackendError("host_not_found");
-        }
+      try {
+        port.postMessage({ id, type: "run", system: req.system, prompt: req.prompt, model: req.model });
+      } catch {
+        throw new BackendError("host_not_found");
       }
       for (;;) {
         while (queue.length > 0) yield queue.shift() as string;
@@ -148,24 +148,33 @@ export class CliBackend implements Backend {
     } finally {
       req.signal.removeEventListener("abort", onAbort);
       this.sinks.delete(id);
+      if (!finished && !failure) {
+        // Consumer stopped iterating early: tell the host to stop the run.
+        try {
+          port.postMessage({ id, type: "cancel" });
+        } catch {
+          // port already gone
+        }
+      }
     }
   }
 
   async check(): Promise<{ ok: boolean; detail?: string }> {
     const port = await this.getPort();
     return new Promise((resolve, reject) => {
-      this.checkSinks.push({
+      const sink: Sink = {
         message: (m) => {
           const ok = m["ok"] === true;
           const detail = ok ? m["version"] : (m["code"] ?? m["message"]);
           resolve(typeof detail === "string" ? { ok, detail } : { ok });
         },
         fail: reject,
-      });
+      };
+      this.checkSinks.push(sink);
       try {
         port.postMessage({ type: "check" });
       } catch {
-        this.checkSinks = [];
+        this.checkSinks = this.checkSinks.filter((s) => s !== sink);
         reject(new BackendError("host_not_found"));
       }
     });

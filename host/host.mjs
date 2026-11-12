@@ -3,7 +3,8 @@
 // stdout carries ONLY protocol frames. Diagnostics go to stderr and never contain
 // prompt, system or model text.
 import { spawn } from "node:child_process";
-import { mkdtempSync, realpathSync, rmSync } from "node:fs";
+import { mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -77,7 +78,7 @@ export function splitDelta(id, text, maxBytes = MAX_FRAME_BYTES) {
 
 function classifyResultError(obj, text) {
   if (obj.api_error_status === 429 || /rate limit|usage limit/i.test(text)) return "rate_limited";
-  if (/not logged in|login/i.test(text)) return "not_logged_in";
+  if (/not logged in|please run \/login/i.test(text)) return "not_logged_in";
   return "internal";
 }
 
@@ -132,7 +133,20 @@ const ERROR_MESSAGES = {
   internal: "Internal error",
 };
 
-function buildChildEnv() {
+/** Directories needed so that an npm-installed `#!/usr/bin/env node` claude can find node. */
+function extraPathDirs(claudePath) {
+  const dirs = [path.dirname(process.execPath)];
+  if (claudePath) {
+    try {
+      dirs.push(path.dirname(realpathSync(claudePath)));
+    } catch {
+      // claude not resolvable; the spawn error is reported later
+    }
+  }
+  return [...new Set(dirs)];
+}
+
+function buildChildEnv(claudePath) {
   let info = {};
   try {
     info = os.userInfo();
@@ -143,7 +157,7 @@ function buildChildEnv() {
     HOME: process.env.HOME || info.homedir || os.homedir(),
     USER: process.env.USER || info.username || "",
     LOGNAME: process.env.LOGNAME || process.env.USER || info.username || "",
-    PATH: "/usr/bin:/bin:/usr/sbin:/sbin",
+    PATH: [...extraPathDirs(claudePath), "/usr/bin", "/bin", "/usr/sbin", "/sbin"].join(path.delimiter),
   };
   if (process.env.LANG) env.LANG = process.env.LANG;
   return env;
@@ -154,25 +168,28 @@ export function startHost({ input = process.stdin, output = process.stdout, exit
   const timeoutMs = Number(process.env.MAIL_ASSISTANT_TIMEOUT_MS) > 0
     ? Number(process.env.MAIL_ASSISTANT_TIMEOUT_MS)
     : DEFAULT_TIMEOUT_MS;
-  const env = buildChildEnv();
+  const env = buildChildEnv(claudePath);
+  // Empty working directory for the child; system prompt files live in a separate 0700 dir.
   const cwd = mkdtempSync(path.join(os.tmpdir(), "mail-assistant-"));
+  const sysDir = mkdtempSync(path.join(os.tmpdir(), "mail-assistant-sys-"));
   /** @type {Map<string, {child: import("node:child_process").ChildProcess}>} */
   const runs = new Map();
   const children = new Set();
   const decoder = new FrameDecoder();
 
   const log = (msg) => process.stderr.write(`[host] ${msg}\n`);
-  const send = (message) => {
+  const send = (message, cb) => {
     try {
-      output.write(encodeFrame(message));
+      output.write(encodeFrame(message), cb);
     } catch {
       log("write to stdout failed");
+      cb?.();
     }
   };
-  const sendError = (id, code, message) => {
+  const sendError = (id, code, message, cb) => {
     const m = { type: "error", code, message: message ?? ERROR_MESSAGES[code] };
     if (id !== undefined) m.id = id;
-    send(m);
+    send(m, cb);
   };
 
   function killChild(child) {
@@ -208,10 +225,19 @@ export function startHost({ input = process.stdin, output = process.stdout, exit
     }
     if (!claudePath) return sendError(id, "cli_not_found");
 
+    // The system prompt may contain mail content: keep it out of argv (visible via ps).
+    const sysFile = path.join(sysDir, `system-${randomUUID()}.txt`);
+    const removeSysFile = () => rmSync(sysFile, { force: true });
+    try {
+      writeFileSync(sysFile, msg.system, { mode: 0o600, flag: "wx" });
+    } catch {
+      removeSysFile();
+      return sendError(id, "internal", "Could not write system prompt file");
+    }
     const args = [
       "-p", "--output-format", "stream-json", "--include-partial-messages", "--verbose",
-      "--tools", "", "--system-prompt", msg.system, "--no-session-persistence",
-      "--setting-sources", "", "--strict-mcp-config", "--disable-slash-commands",
+      "--tools", "", "--system-prompt-file", sysFile, "--no-session-persistence",
+      "--setting-sources", "", "--strict-mcp-config", "--disable-slash-commands", "--safe-mode",
     ];
     if (msg.model) args.push("--model", msg.model);
 
@@ -219,8 +245,11 @@ export function startHost({ input = process.stdin, output = process.stdout, exit
     try {
       child = spawnClaude(args);
     } catch {
+      removeSysFile();
       return sendError(id, "cli_not_found");
     }
+    child.on("close", removeSysFile);
+    child.on("error", removeSysFile);
 
     let finished = false;
     let assistantCode = null;
@@ -240,7 +269,11 @@ export function startHost({ input = process.stdin, output = process.stdout, exit
       clearTimeout(timer);
       runs.delete(id);
       if (code) sendError(id, code, message);
-      else send({ id, type: "done" });
+      else {
+        send({ id, type: "done" });
+        // The run is complete; make sure a lingering child does not outlive it.
+        setTimeout(() => killChild(child), KILL_GRACE_MS).unref();
+      }
       return true;
     }
     run.cancel = () => {
@@ -281,6 +314,7 @@ export function startHost({ input = process.stdin, output = process.stdout, exit
       lineBuf = "";
       if (ignoredLines) log(`run ${id}: ${ignoredLines} non-JSON line(s) ignored`);
       log(`run ${id}: claude exited code=${exitCode} signal=${signal}`);
+      if (!assistantCode && exitCode === 127) return void finish("cli_not_found");
       finish(assistantCode ?? "internal", assistantCode ? undefined : `claude exited without result (code ${exitCode ?? signal})`);
     });
     child.stdin.on("error", () => {}); // EPIPE if the child dies early
@@ -320,6 +354,15 @@ export function startHost({ input = process.stdin, output = process.stdout, exit
   async function handleCheck() {
     const fail = (code, message) =>
       send({ type: "check", ok: false, code, message: message ?? ERROR_MESSAGES[code] });
+    const failInternal = () => fail("internal");
+    try {
+      return await doCheck(fail);
+    } catch {
+      return failInternal();
+    }
+  }
+
+  async function doCheck(fail) {
     if (!claudePath) return fail("cli_not_found");
     const ver = await capture(["--version"]);
     if (ver.spawnFailed) return fail("cli_not_found");
@@ -356,12 +399,11 @@ export function startHost({ input = process.stdin, output = process.stdout, exit
       case "cancel":
         return runs.get(id)?.cancel();
       case "check":
-        return void handleCheck().catch(() => fail_internal());
+        return void handleCheck();
       default:
         return sendError(id, "internal", "Unknown message type");
     }
   }
-  const fail_internal = () => send({ type: "check", ok: false, code: "internal", message: ERROR_MESSAGES.internal });
 
   let shuttingDown = false;
   function shutdown() {
@@ -376,6 +418,7 @@ export function startHost({ input = process.stdin, output = process.stdout, exit
     }
     try {
       rmSync(cwd, { recursive: true, force: true });
+      rmSync(sysDir, { recursive: true, force: true });
     } catch {
       // best effort
     }
@@ -387,8 +430,7 @@ export function startHost({ input = process.stdin, output = process.stdout, exit
     try {
       frames = decoder.push(chunk);
     } catch {
-      sendError(undefined, "internal", "Invalid frame");
-      return shutdown();
+      return sendError(undefined, "internal", "Invalid frame", shutdown);
     }
     for (const f of frames) handleMessage(f);
   });

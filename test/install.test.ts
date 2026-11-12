@@ -38,9 +38,10 @@ test("buildLauncher and buildManifest produce expected text", () => {
 test("installer writes manifest and executable launcher, uninstall removes them", () => {
   const tmp = mkdtempSync(path.join(os.tmpdir(), "install-test-"));
   try {
-    const launcher = path.join(tmp, "launcher dir", "launcher.sh");
+    const installDir = path.join(tmp, "install dir");
+    const launcher = path.join(installDir, "launcher.sh");
     const dir = path.join(tmp, "nmh");
-    const base = ["--manifest-dir", dir, "--launcher", launcher];
+    const base = ["--manifest-dir", dir, "--install-dir", installDir];
     execFileSync(process.execPath, [script, ...base, "--claude", process.execPath], { stdio: "pipe" });
 
     const manifest = JSON.parse(readFileSync(path.join(dir, "mail_assistant.json"), "utf8"));
@@ -50,11 +51,19 @@ test("installer writes manifest and executable launcher, uninstall removes them"
     assert.equal(manifest.path, launcher);
     assert.deepEqual(manifest.allowed_extensions, [extManifest.browser_specific_settings.gecko.id]);
     accessSync(launcher, constants.X_OK);
-    assert.match(readFileSync(launcher, "utf8"), /^#!\/bin\/sh\n/);
+    const text = readFileSync(launcher, "utf8");
+    assert.match(text, /^#!\/bin\/sh\n/);
+    assert.ok(text.includes(installer.shQuote(path.join(installDir, "host.mjs"))));
+    assert.equal(
+      readFileSync(path.join(installDir, "host.mjs"), "utf8"),
+      readFileSync(path.resolve(import.meta.dirname, "..", "host", "host.mjs"), "utf8"),
+    );
 
     execFileSync(process.execPath, [script, ...base, "--uninstall"], { stdio: "pipe" });
     assert.equal(existsSync(path.join(dir, "mail_assistant.json")), false);
     assert.equal(existsSync(launcher), false);
+    assert.equal(existsSync(path.join(installDir, "host.mjs")), false);
+    assert.equal(existsSync(installDir), false);
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }

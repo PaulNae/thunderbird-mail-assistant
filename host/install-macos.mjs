@@ -9,8 +9,9 @@ import { fileURLToPath } from "node:url";
 
 export const HOST_NAME = "mail_assistant";
 
-// Thunderbird's per-user native messaging manifest directory on macOS
-// (pending confirmation by a live connect test, see README).
+// Thunderbird resolves user manifests via XREUserNativeManifests, which on macOS is
+// ~/Library/Mozilla/NativeMessagingHosts (Thunderbird's data root is ~/Library, not
+// ~/Library/Application Support).
 export const DEFAULT_MANIFEST_DIR = path.join(
   os.homedir(),
   "Library",
@@ -20,7 +21,9 @@ export const DEFAULT_MANIFEST_DIR = path.join(
 
 const hostDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(hostDir, "..");
-export const DEFAULT_LAUNCHER = path.join(hostDir, "launcher.sh");
+// Host and launcher are copied here: Thunderbird must not execute files from ~/Documents
+// (macOS privacy prompts).
+export const DEFAULT_INSTALL_DIR = path.join(os.homedir(), "Library", "Application Support", "mail-assistant");
 export const HOST_SCRIPT = path.join(hostDir, "host.mjs");
 const MANIFEST_JSON = path.join(repoRoot, "extension", "manifest.json");
 
@@ -102,7 +105,7 @@ export function resolveClaude(explicit) {
 
 export function parseArgs(argv) {
   const opts = { uninstall: false, print: false };
-  const valueFlags = { "--claude": "claude", "--manifest-dir": "manifestDir", "--launcher": "launcher" };
+  const valueFlags = { "--claude": "claude", "--manifest-dir": "manifestDir", "--install-dir": "installDir" };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "--uninstall") opts.uninstall = true;
@@ -123,22 +126,31 @@ export function main(argv) {
     throw new Error("This installer supports macOS only (use --manifest-dir to override).");
   }
   const manifestDir = path.resolve(opts.manifestDir ?? DEFAULT_MANIFEST_DIR);
-  const launcherPath = path.resolve(opts.launcher ?? DEFAULT_LAUNCHER);
+  const installDir = path.resolve(opts.installDir ?? DEFAULT_INSTALL_DIR);
+  const launcherPath = path.join(installDir, "launcher.sh");
+  const hostCopy = path.join(installDir, "host.mjs");
   const manifestPath = path.join(manifestDir, `${HOST_NAME}.json`);
 
   if (opts.uninstall) {
-    for (const p of [manifestPath, launcherPath]) {
+    for (const p of [manifestPath, launcherPath, hostCopy]) {
       if (opts.print) out(`Would remove ${p}`);
       else {
         fs.rmSync(p, { force: true });
         out(`Removed ${p}`);
       }
     }
+    if (!opts.print) {
+      try {
+        fs.rmdirSync(installDir); // only if empty
+      } catch {
+        // not empty or missing
+      }
+    }
     return;
   }
 
   const claudePath = resolveClaude(opts.claude);
-  const launcher = buildLauncher({ claudePath, nodePath: process.execPath, hostScript: HOST_SCRIPT });
+  const launcher = buildLauncher({ claudePath, nodePath: process.execPath, hostScript: hostCopy });
   const manifest = buildManifest({ launcherPath, extensionId: readExtensionId() });
   const manifestText = `${JSON.stringify(manifest, null, 2)}\n`;
 
@@ -148,11 +160,13 @@ export function main(argv) {
     out(`claude: ${claudePath}`);
     return;
   }
-  fs.mkdirSync(path.dirname(launcherPath), { recursive: true });
+  fs.mkdirSync(installDir, { recursive: true });
+  fs.copyFileSync(HOST_SCRIPT, hostCopy);
   fs.writeFileSync(launcherPath, launcher);
   fs.chmodSync(launcherPath, 0o755);
   fs.mkdirSync(manifestDir, { recursive: true });
   fs.writeFileSync(manifestPath, manifestText);
+  out(`Copied host: ${hostCopy}`);
   out(`Wrote launcher: ${launcherPath}`);
   out(`Wrote manifest: ${manifestPath}`);
   out(`Claude path: ${claudePath}`);

@@ -24,7 +24,7 @@ declare namespace messenger {
       onDisconnect: MessengerEvent<(port: Port) => void>;
     }
     const lastError: { message?: string } | null | undefined;
-    // Docs list Promise<Port>; Firefox-based builds return the Port synchronously.
+    // Callers use `await`, which handles both a Port and a Promise<Port>.
     function connectNative(application: string): Port | Promise<Port>;
     const onInstalled: MessengerEvent<(details: InstalledDetails) => void>;
   }

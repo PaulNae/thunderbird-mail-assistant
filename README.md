@@ -40,12 +40,15 @@ npm run host:install
 
 Das Skript registriert den Host `mail_assistant` für Thunderbird (nur macOS, aktueller Nutzer):
 
-- `host/launcher.sh` (nicht im Git): Startskript mit absoluten Pfaden zu `node` und `claude`,
-  weil Thunderbird den Host ohne Shell-`PATH` startet.
+- `~/Library/Application Support/mail-assistant/host.mjs`: **Kopie** von `host/host.mjs`
+  (Thunderbird soll keine Dateien aus `~/Documents` ausführen, sonst fragt macOS nach Zugriff).
+  Nach jeder Änderung an `host/host.mjs` das Installationsskript erneut ausführen!
+- `~/Library/Application Support/mail-assistant/launcher.sh`: Startskript mit absoluten Pfaden
+  zu `node` und `claude`, weil Thunderbird den Host ohne Shell-`PATH` startet.
 - `~/Library/Mozilla/NativeMessagingHosts/mail_assistant.json`: Manifest mit Verweis auf den
   Launcher und der Add-on-ID aus `extension/manifest.json`.
 
 `claude` wird über die Login-Shell, `~/.local/bin`, `/opt/homebrew/bin` und `/usr/local/bin`
-gesucht; mit `--claude <pfad>` lässt sich der Pfad vorgeben. Erneut ausführen, wenn das
-Repository verschoben oder `node` bzw. `claude` gewechselt wird. `--print` zeigt nur an, was
-geschrieben würde; `npm run host:install -- --uninstall` entfernt Manifest und Launcher.
+gesucht; mit `--claude <pfad>` lässt sich der Pfad vorgeben. Mit `--install-dir <ordner>` lässt sich das Installationsverzeichnis ändern. Erneut ausführen, wenn
+`host.mjs` geändert oder `node` bzw. `claude` gewechselt wird. `--print` zeigt nur an, was
+geschrieben würde; `npm run host:install -- --uninstall` entfernt Manifest, Launcher und Host-Kopie.

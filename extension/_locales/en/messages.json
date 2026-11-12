@@ -33,13 +33,13 @@
     "message": "Say hello"
   },
   "errorHostNotFound": {
-    "message": "The helper service is not installed. Please run `npm run host:install`."
+    "message": "The helper service is not installed. Please run \"npm run host:install\"."
   },
   "errorCliNotFound": {
-    "message": "Claude Code was not found. Please install it and run `npm run host:install` again."
+    "message": "Claude Code was not found. Please install it and run \"npm run host:install\" again."
   },
   "errorNotLoggedIn": {
-    "message": "Claude Code is not logged in. Please start `claude` in a terminal and log in."
+    "message": "Claude Code is not logged in. Please start \"claude\" in a terminal and log in."
   },
   "errorRateLimited": {
     "message": "The usage limit has been reached. Please try again later."

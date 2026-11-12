@@ -6,4 +6,3 @@ web-ext-artifacts/
 .env
 .claude/settings.local.json
 .tb-dev-profile/
-host/launcher.sh

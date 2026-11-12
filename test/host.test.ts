@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawn, type ChildProcess } from "node:child_process";
-import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, symlinkSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
@@ -10,17 +10,12 @@ const hostPath = path.join(root, "host", "host.mjs");
 const fakeClaude = path.join(root, "test", "fixtures", "fake-claude.mjs");
 const LE = os.endianness() === "LE";
 
-// The host gives the CLI a minimal PATH, so `#!/usr/bin/env node` cannot find node there.
-// Like the real generated launcher, tests start the fake through an absolute node path.
+// The host puts node's directory on the child's PATH, so the fake's `#!/usr/bin/env node` works.
 const tmpDir = mkdtempSync(path.join(os.tmpdir(), "host-test-"));
 process.on("exit", () => rmSync(tmpDir, { recursive: true, force: true }));
 function launcher(loggedIn: boolean): string {
   const file = path.join(tmpDir, loggedIn ? "claude-in" : "claude-out");
-  writeFileSync(
-    file,
-    `#!/bin/sh\nFAKE_LOGGED_IN=${loggedIn ? 1 : 0} exec "${process.execPath}" "${fakeClaude}" "$@"\n`,
-  );
-  chmodSync(file, 0o755);
+  symlinkSync(fakeClaude, file);
   return file;
 }
 const defaultClaude = launcher(true);
@@ -39,15 +34,18 @@ class HostProc {
   proc: ChildProcess;
   messages: Msg[] = [];
   frameSizes: number[] = [];
+  stderr = "";
   exited: Promise<number | null>;
   private buf = Buffer.alloc(0);
   private waiters: (() => void)[] = [];
 
   constructor(env: Record<string, string> = {}) {
     this.proc = spawn(process.execPath, [hostPath], {
-      env: { ...process.env, MAIL_ASSISTANT_CLAUDE: defaultClaude, ...env },
-      stdio: ["pipe", "pipe", "ignore"],
+      env: { ...process.env, MAIL_ASSISTANT_CLAUDE: defaultClaude, ANTHROPIC_API_KEY: "dummy", ...env },
+      stdio: ["pipe", "pipe", "pipe"],
     });
+    this.proc.stderr!.setEncoding("utf8");
+    this.proc.stderr!.on("data", (c: string) => (this.stderr += c));
     this.proc.stdout!.on("data", (c: Buffer) => {
       this.buf = Buffer.concat([this.buf, c]);
       while (this.buf.length >= 4) {
@@ -109,6 +107,7 @@ test("streams deltas then done; prompt arrives via stdin", async () => {
   assert.ok(h.forId("a").filter((m) => m.type === "delta").length >= 2);
   assert.equal(h.forId("a").filter((m) => m.type === "done" || m.type === "error").length, 1);
   await h.close();
+  assert.ok(!h.stderr.includes("SECRET-PROMPT-123") && !h.stderr.includes("mode:stream"));
 });
 
 test("two frames in one write and one frame split across writes", async () => {
@@ -178,8 +177,21 @@ test("duplicate active id yields internal error", async () => {
 test("timeout kills the child and reports timeout", async () => {
   const h = new HostProc({ MAIL_ASSISTANT_TIMEOUT_MS: "300" });
   h.send(run("t", "mode:sleep"));
+  const pidMsg = await h.waitFor((m) => m.id === "t" && m.type === "delta");
+  const pid = Number(String(pidMsg["text"]).replace("pid:", ""));
   const end = await h.terminal("t");
   assert.equal(end["code"], "timeout");
+  const deadline = Date.now() + 4000;
+  let alive = true;
+  while (alive && Date.now() < deadline) {
+    try {
+      process.kill(pid, 0);
+      await new Promise((r) => setTimeout(r, 50));
+    } catch {
+      alive = false;
+    }
+  }
+  assert.equal(alive, false, "child still running after timeout");
   await h.close();
 });
 
@@ -252,4 +264,29 @@ test("host exits and kills children when stdin closes", async () => {
   assert.equal(await h.exited, 0);
   await new Promise((r) => setTimeout(r, 200));
   assert.throws(() => process.kill(pid, 0));
+});
+
+test("child gets hardened args, empty cwd, minimal env; nothing sensitive in argv or stderr", async () => {
+  const SYS = "mode:args SYSTEM-TEXT-7731";
+  const PROMPT = "PROMPT-TEXT-4409";
+  const h = new HostProc();
+  h.send(run("args", SYS, PROMPT));
+  assert.equal((await h.terminal("args")).type, "done");
+  const text = h.forId("args").filter((m) => m.type === "delta").map((m) => m["text"]).join("");
+  const info = JSON.parse(text) as { argv: string[]; cwdEntries: string[]; envKeys: string[] };
+  const { argv } = info;
+  const at = (flag: string): number => argv.indexOf(flag);
+  assert.ok(at("--tools") >= 0 && argv[at("--tools") + 1] === "", "--tools with empty value");
+  assert.ok(at("--setting-sources") >= 0 && argv[at("--setting-sources") + 1] === "");
+  for (const flag of ["--strict-mcp-config", "--no-session-persistence", "--safe-mode", "--system-prompt-file"]) {
+    assert.ok(argv.includes(flag), `missing ${flag}`);
+  }
+  assert.ok(!argv.includes("--system-prompt"));
+  assert.ok(!argv.some((a) => a.includes("SYSTEM-TEXT-7731") || a.includes(PROMPT)));
+  assert.deepEqual(info.cwdEntries, []);
+  // __CF_USER_TEXT_ENCODING is added by macOS itself to every spawned process.
+  const allowed = new Set(["HOME", "USER", "LOGNAME", "PATH", "LANG", "__CF_USER_TEXT_ENCODING"]);
+  assert.ok(info.envKeys.every((k) => allowed.has(k)), `env keys: ${info.envKeys.join(",")}`);
+  await h.close();
+  assert.ok(!h.stderr.includes("SYSTEM-TEXT-7731") && !h.stderr.includes(PROMPT));
 });

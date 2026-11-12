@@ -33,13 +33,13 @@
     "message": "Sag Hallo"
   },
   "errorHostNotFound": {
-    "message": "Der Hilfsdienst ist nicht installiert. Bitte `npm run host:install` ausführen."
+    "message": "Der Hilfsdienst ist nicht installiert. Bitte „npm run host:install“ ausführen."
   },
   "errorCliNotFound": {
-    "message": "Claude Code wurde nicht gefunden. Bitte installieren und `npm run host:install` erneut ausführen."
+    "message": "Claude Code wurde nicht gefunden. Bitte installieren und „npm run host:install“ erneut ausführen."
   },
   "errorNotLoggedIn": {
-    "message": "Claude Code ist nicht angemeldet. Bitte im Terminal `claude` starten und einloggen."
+    "message": "Claude Code ist nicht angemeldet. Bitte im Terminal „claude“ starten und einloggen."
   },
   "errorRateLimited": {
     "message": "Das Nutzungslimit ist erreicht. Bitte später erneut versuchen."

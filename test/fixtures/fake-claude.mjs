@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Fake `claude` CLI for host tests. The mode is the first line of the --system-prompt value
-// (the host passes no other configurable env), e.g. "mode:stream".
+// Fake `claude` CLI for host tests. The mode is the start of the system prompt, which the host
+// passes as a file via --system-prompt-file, e.g. "mode:stream".
+import { readFileSync, readdirSync } from "node:fs";
 import { setTimeout as sleep } from "node:timers/promises";
 
 const argv = process.argv.slice(2);
@@ -13,13 +14,14 @@ if (argv[0] === "--version") {
   process.exit(0);
 }
 if (argv[0] === "auth") {
-  const loggedIn = process.env.FAKE_LOGGED_IN !== "0";
+  // Logged out when invoked through a symlink named "claude-out" (the host passes no custom env).
+  const loggedIn = !String(process.argv[1]).endsWith("claude-out");
   console.log(JSON.stringify({ loggedIn }));
   process.exit(loggedIn ? 0 : 1);
 }
 
-const sysIdx = argv.indexOf("--system-prompt");
-const system = sysIdx >= 0 ? argv[sysIdx + 1] : "";
+const sysIdx = argv.indexOf("--system-prompt-file");
+const system = sysIdx >= 0 ? readFileSync(argv[sysIdx + 1], "utf8") : "";
 const mode = /^mode:(\w+)/.exec(system)?.[1] ?? "stream";
 
 let prompt = "";
@@ -38,6 +40,12 @@ if (mode === "stream") {
   textDelta("Hallo ");
   textDelta("stdin:" + prompt);
   emit({ type: "assistant", message: { content: [{ type: "text", text: "x" }] }, error: null });
+  emit({ type: "result", is_error: false, result: "ok", api_error_status: null });
+} else if (mode === "args") {
+  const shown = argv.filter((_, i) => i !== sysIdx + 1);
+  textDelta(
+    JSON.stringify({ argv: shown, cwdEntries: readdirSync(process.cwd()), envKeys: Object.keys(process.env).sort() }),
+  );
   emit({ type: "result", is_error: false, result: "ok", api_error_status: null });
 } else if (mode === "big") {
   textDelta("äö😀x\n".repeat(250000)); // ~1.7 MB in one delta

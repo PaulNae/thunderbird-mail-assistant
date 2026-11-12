@@ -139,3 +139,43 @@ test("check resolves from the check reply", async () => {
   port.emit({ type: "check", ok: false, code: "cli_not_found" });
   assert.deepEqual(await p2, { ok: false, detail: "cli_not_found" });
 });
+
+test("early break from the consumer sends cancel", async () => {
+  const { ports, backend } = setup();
+  const it = backend.run({ system: "s", prompt: "p", signal: new AbortController().signal });
+  const consumer = (async () => {
+    for await (const c of it) {
+      void c;
+      break;
+    }
+  })();
+  await tick();
+  const port = ports[0] as FakePort;
+  const id = port.sent[0]?.["id"];
+  port.emit({ id, type: "delta", text: "x" });
+  await consumer;
+  assert.deepEqual(port.sent[1], { id, type: "cancel" });
+});
+
+test("abort while connecting cancels without sending a run message", async () => {
+  const port = new FakePort();
+  let release: (p: NativePort) => void = () => {};
+  const backend = new CliBackend(() => new Promise<NativePort>((r) => (release = r)));
+  const ac = new AbortController();
+  const p = collect(backend.run({ system: "s", prompt: "p", signal: ac.signal }));
+  await tick();
+  ac.abort();
+  release(port);
+  await assert.rejects(p, (e: unknown) => e instanceof BackendError && e.code === "cancelled");
+  assert.deepEqual(port.sent, []);
+});
+
+test("disconnect without error after messages were received gives internal", async () => {
+  const { ports, backend } = setup();
+  const p = collect(backend.run({ system: "s", prompt: "p", signal: new AbortController().signal }));
+  await tick();
+  const port = ports[0] as FakePort;
+  port.emit({ id: port.sent[0]?.["id"], type: "delta", text: "x" });
+  port.drop();
+  await assert.rejects(p, (e: unknown) => e instanceof BackendError && e.code === "internal");
+});
