@@ -219,6 +219,11 @@ das Abo über Claude Code ist eine bewusst zu wählende Option. Der Nutzer hat d
 - [ ] Hinweis am Umschalter und in der Anleitung: Das Abo (Free, Pro, Max) ist laut Anthropics Consumer Terms nur
       für private, nicht geschäftliche Nutzung; für geschäftliche Mails den API-Key verwenden. Eigenes Konto nötig,
       kein offizielles Anthropic-Produkt.
+- [ ] Stand-Hinweis mit Datum am Umschalter, in der Anleitung und im README: "Anthropics Bedingungen zuletzt geprüft
+      am 12.11.2026. Anthropic kann sie ändern; ist die Nutzung des Abos über Claude Code auf diesem Weg nicht mehr
+      erlaubt, darf diese Option nicht mehr verwendet werden. Maßgeblich sind die aktuellen Bedingungen von
+      Anthropic, nicht dieser Hinweis." Mit Link auf `https://code.claude.com/docs/en/legal-and-compliance`. Das
+      Datum steht als eine Konstante im Code und wird nur nach erneuter Prüfung der Bedingungen geändert.
 - [ ] Haftungshinweis im Einwilligungsdialog und in der Anleitung (de/en): Bereitstellung ohne Gewähr; Antworten
       des Modells können falsch sein und sind vor dem Senden zu prüfen; der Nutzer ist für die Einhaltung der
       Anthropic-Bedingungen und für die Weitergabe von Mailinhalten selbst verantwortlich; Verweis auf die
