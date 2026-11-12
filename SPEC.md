@@ -147,13 +147,14 @@ Nicht-Standard-Adresse nutzt diese Adresse.
 Nachgewiesen am 2026-11-12 in Thunderbird 160: Abnahme vom Nutzer im Testprofil bestätigt (Ergebnis überlebt Schließen des Popups, verschwindet bei Mailwechsel; Entwurf im Verfassen-Fenster). Ob die Identitätswahl mit einem Konto mit mehreren Adressen geprüft wurde, ist nicht belegt.
 
 ### Phase 5 – Postfach-Abfrage
-- [x] Chat-Tab; Schritt 1: Modell erzeugt aus der Frage Suchparameter (strukturierte Ausgabe)
-- [x] Schritt 2: Suche über die Thunderbird-API, Treffer begrenzen und kürzen
-- [x] Schritt 3: Antwort mit Verweisen, die die jeweilige Mail öffnen
-- [x] Anzeige, wie viele Mails an das Modell gingen; harte Obergrenze einstellbar
+- [ ] Chat-Tab; Schritt 1: Modell erzeugt aus der Frage Suchparameter (strukturierte Ausgabe)
+- [ ] Schritt 2: Suche über die Thunderbird-API, Treffer begrenzen und kürzen
+- [ ] Schritt 3: Antwort mit Verweisen, die die jeweilige Mail öffnen
+- [ ] Anzeige, wie viele Mails an das Modell gingen; harte Obergrenze einstellbar
 
 Abnahme: Eine Frage, deren Antwort in einer bekannten Mail steht, wird korrekt beantwortet und
 verlinkt die Mail.
+Umgesetzt am 2026-11-12; Abnahme in Thunderbird steht aus.
 
 ### Phase 6 – Härtung
 - [ ] Einwilligungsdialog beim ersten Start (welche Daten wohin gehen)

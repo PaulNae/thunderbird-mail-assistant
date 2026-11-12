@@ -36,6 +36,8 @@ declare namespace messenger {
     const id: string;
     interface MessageSender {
       id?: string;
+      /** The tab that opened the connection, if any. */
+      tab?: tabs.Tab;
     }
     function sendMessage(message: unknown): Promise<unknown>;
     // Return true to call sendResponse asynchronously.
@@ -113,7 +115,9 @@ declare namespace messenger {
       ccList?: string[];
       bccList?: string[];
       /** Only present with accountsRead; accountId is a string since TB 121. */
-      folder?: { accountId: string };
+      folder?: { accountId: string; specialUse?: string[] };
+      /** Marked as junk; always false for news and external messages. */
+      junk?: boolean;
       /** TB 106+: message opened from a file or attachment. */
       external?: boolean;
     }

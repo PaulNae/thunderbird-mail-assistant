@@ -18,8 +18,8 @@ export const LIMIT_MAX_MESSAGES = 50;
 export const MAX_CHAT_TURNS = 20;
 /** Most queries in one search plan (fallback words or loosened search). */
 const MAX_QUERIES = 4;
-/** Sanity limit for header fields shown in the source list. */
-const MAX_HEADER_CHARS = 1000;
+/** Longest sender or subject in the source list; longer values are cut by the background script. */
+export const MAX_HEADER_CHARS = 300;
 
 /** The setting as a whole number within the bounds; anything unusable gives the default. */
 export function sanitizeMaxMessages(v: unknown): number {

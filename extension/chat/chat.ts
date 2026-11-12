@@ -14,6 +14,8 @@ import { MAX_QUESTION_CHARS } from "../prompts/read.ts";
 import { isSubmitKey } from "../display/popup-state.ts";
 
 localizeDocument();
+document.title = messenger.i18n.getMessage("chatTitle");
+document.documentElement.lang = messenger.i18n.getUILanguage();
 
 const $ = <T extends HTMLElement>(id: string): T => {
   const el = document.getElementById(id);
@@ -141,7 +143,7 @@ function renderTurn(turn: ChatTurn, live: boolean): HTMLLIElement {
 
   const answer = document.createElement("div");
   answer.className = "answer";
-  answer.tabIndex = 0;
+  if (turn.status === "done") answer.tabIndex = 0;
   if (turn.status === "done" || turn.status === "running") {
     renderAnswer(answer, live ? liveText : turn.answer, turn.sources);
     li.append(answer);

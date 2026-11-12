@@ -8,10 +8,11 @@ export const QUERY_MAX_MESSAGE_CHARS = 5000;
 export const QUERY_MAX_TOTAL_CHARS = 50000;
 /** A mail is only included in shortened form if at least this much budget is left. */
 export const QUERY_MIN_PARTIAL_CHARS = 500;
-/** Most headers looked at per question; the newest of them are used. */
-export const QUERY_MAX_SCAN = 200;
-/** Headers looked at per mail that may be sent (the search order is not documented, so more are scanned). */
-export const QUERY_SCAN_FACTOR = 4;
+/**
+ * Most headers looked at per question; the newest of them are used. The order of messages.query is not
+ * documented, so many cheap headers are scanned and only the chosen mails are loaded.
+ */
+export const QUERY_MAX_SCAN = 1000;
 
 const MARK = "\n" + TRUNCATION_MARKER;
 
@@ -30,8 +31,9 @@ export const DEFAULT_SEARCH_LIMITS: SearchLimits = {
   maxTotalChars: QUERY_MAX_TOTAL_CHARS,
 };
 
+/** Headers scanned for a question; independent of the setting, at least as many as can be sent. */
 export function scanLimit(maxMessages: number): number {
-  return Math.min(QUERY_MAX_SCAN, Math.max(1, maxMessages) * QUERY_SCAN_FACTOR);
+  return Math.max(QUERY_MAX_SCAN, maxMessages);
 }
 
 function time(d: Date | undefined): number {

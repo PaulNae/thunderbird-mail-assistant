@@ -39,7 +39,7 @@ const chatTab = new ChatTabTracker({
 });
 
 messenger.runtime.onConnect.addListener((port) => {
-  if (port.name === PORT_CHAT) handleChatConnection(port, chatDeps, messenger.runtime.id);
+  if (port.name === PORT_CHAT) handleChatConnection(port, chatDeps, messenger.runtime.id, (tabId) => void chatTab.adopt(tabId));
   else handleConnection(jobs, port, messenger.runtime.id);
 });
 

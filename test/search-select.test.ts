@@ -18,10 +18,9 @@ test("pickNewest dedupes, sorts newest first and puts undated last", () => {
   assert.deepEqual(pickNewest(h, 0), []);
 });
 
-test("scanLimit scales with the setting and is capped", () => {
-  assert.equal(scanLimit(15), 60);
-  assert.equal(scanLimit(50), QUERY_MAX_SCAN);
-  assert.equal(scanLimit(0), 4);
+test("scanLimit scans many headers, at least as many as may be sent", () => {
+  assert.equal(scanLimit(15), QUERY_MAX_SCAN);
+  assert.equal(scanLimit(QUERY_MAX_SCAN + 5), QUERY_MAX_SCAN + 5);
 });
 
 const m = (id: number, len: number): LoadedMessage => ({ id, from: "a", subject: "s", date: "", body: "x".repeat(len), attachments: [] });

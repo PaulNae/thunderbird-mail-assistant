@@ -14,6 +14,7 @@ import {
   DEFAULT_MAX_MESSAGES,
   LIMIT_MAX_MESSAGES,
   MAX_CHAT_TURNS,
+  MAX_HEADER_CHARS,
   parseChatEvent,
   parseChatRequest,
   sanitizeMaxMessages,
@@ -163,6 +164,18 @@ test("the setting limits the mails sent; truncation and omissions are reported",
   assert.match(s.backend.requests[1]!.prompt, /3 further matching email\(s\) were not included/);
 });
 
+test("overlong sender and subject are cut so the snapshot stays valid", async () => {
+  const s = setup([['{"text":"x"}'], ["a [1]"]], [hits(1)], {
+    load: async (id) => ({ ...mail(id), from: "f".repeat(5000), subject: "s".repeat(5000) }),
+  });
+  s.session.ask("x?");
+  await settle(s.session);
+  const turn = s.last();
+  assert.equal(turn.status, "done");
+  assert.equal(turn.sources[0]!.subject.length, MAX_HEADER_CHARS);
+  for (const e of s.events) assert.ok(parseChatEvent(e));
+});
+
 test("unreadable mails are skipped; if none can be read the search fails", async () => {
   const s = setup([['{"text":"x"}']], [hits(1, 2)], { load: async () => Promise.reject(new Error("gone")) });
   s.session.ask("x?");
@@ -292,8 +305,8 @@ class FakePort implements PortLike {
   private msg: ((m: unknown) => void)[] = [];
   private disc: (() => void)[] = [];
   name: string;
-  sender: { id?: string };
-  constructor(name: string, sender: { id?: string }) {
+  sender: { id?: string; tab?: { id?: number } };
+  constructor(name: string, sender: { id?: string; tab?: { id?: number } }) {
     this.name = name;
     this.sender = sender;
   }
@@ -319,8 +332,10 @@ test("chat connection: foreign senders are refused; own tab gets an empty snapsh
   handleChatConnection(foreign, { backend: deps.backend, search: async () => ({ headers: [], complete: true }), load: async (id) => mail(id), maxMessages: async () => 15 }, "me@x");
   assert.equal(foreign.disconnected, true);
 
-  const port = new FakePort("chat", { id: "me@x" });
-  handleChatConnection(port, { backend: deps.backend, search: async () => ({ headers: hits(1), complete: true }), load: async (id) => mail(id), maxMessages: async () => 15 }, "me@x");
+  const port = new FakePort("chat", { id: "me@x", tab: { id: 7 } });
+  const reported: number[] = [];
+  handleChatConnection(port, { backend: deps.backend, search: async () => ({ headers: hits(1), complete: true }), load: async (id) => mail(id), maxMessages: async () => 15 }, "me@x", (id) => reported.push(id));
+  assert.deepEqual(reported, [7]);
   assert.deepEqual(port.sent[0], { type: "snapshot", snapshot: { turns: [] } });
   port.receive({ type: "ask", question: 42 });
   port.receive({ type: "ask", question: "x?" });
@@ -412,4 +427,11 @@ test("chat tab: reused while open, recreated after close or failure, one tab for
   open.delete(11);
   await again.open();
   assert.deepEqual(created, [10, 11, 12]);
+
+  // A restored chat tab reports itself and is focused instead of opening another one.
+  open.add(42);
+  await again.adopt(42);
+  await again.open();
+  assert.deepEqual(created, [10, 11, 12]);
+  assert.equal(activated[activated.length - 1], 42);
 });

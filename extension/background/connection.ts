@@ -7,7 +7,7 @@ import type { JobStore } from "./jobs.ts";
 
 export interface PortLike {
   name: string;
-  sender?: { id?: string };
+  sender?: { id?: string; tab?: { id?: number } };
   postMessage(message: unknown): void;
   disconnect(): void;
   onMessage: { addListener(cb: (message: unknown) => void): void };

@@ -70,6 +70,11 @@ export class ChatTabTracker {
     return p;
   }
 
+  /** A chat page reported its tab (e.g. restored at startup); the action button then focuses it. */
+  async adopt(tabId: number): Promise<void> {
+    await this.remember(tabId);
+  }
+
   async onTabRemoved(tabId: number): Promise<void> {
     if ((await this.known()) === tabId) await this.remember(null);
   }

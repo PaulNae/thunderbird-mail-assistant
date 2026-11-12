@@ -22,7 +22,7 @@ import { pickNewest, scanLimit, selectResults } from "../mail/search-select.ts";
 import type { FoundHeader, SearchLimits } from "../mail/search-select.ts";
 import { isOwnSender } from "../shared/messages.ts";
 import { MAX_TEXT_CHARS } from "../shared/job-messages.ts";
-import { MAX_CHAT_TURNS, PORT_CHAT, parseChatRequest, sanitizeMaxMessages } from "../shared/chat-messages.ts";
+import { MAX_CHAT_TURNS, MAX_HEADER_CHARS, PORT_CHAT, parseChatRequest, sanitizeMaxMessages } from "../shared/chat-messages.ts";
 import type { ChatEvent, ChatSnapshot, ChatTurn } from "../shared/chat-messages.ts";
 import type { PortLike } from "./connection.ts";
 
@@ -201,7 +201,8 @@ export class ChatSession {
       const loaded = await this.loadAll(chosen, signal);
       if (loaded.length === 0) throw new SearchFailed();
       const selected = selectResults(loaded, this.deps.limits);
-      const sources = selected.messages.map((m, i) => ({ index: i + 1, messageId: m.id, from: m.from, subject: m.subject, date: m.date }));
+      const cap = (s: string): string => (s.length > MAX_HEADER_CHARS ? s.slice(0, MAX_HEADER_CHARS - 1) + "…" : s);
+      const sources = selected.messages.map((m, i) => ({ index: i + 1, messageId: m.id, from: cap(m.from), subject: cap(m.subject), date: m.date.slice(0, 64) }));
       // Found but not sent: beyond the setting, unreadable, or over the text budget.
       const omitted = Math.max(0, result.headers.length - selected.messages.length);
       if (!update({ stage: "answer", sources, sent: sources.length, truncated: selected.truncated })) return;
@@ -231,11 +232,14 @@ export class ChatSession {
 }
 
 /** Connects a chat tab's port to its own session; the session ends with the port. */
-export function handleChatConnection(port: PortLike, deps: ChatDeps, ownId: string): void {
+export function handleChatConnection(port: PortLike, deps: ChatDeps, ownId: string, onTab?: (tabId: number) => void): void {
   if (port.name !== PORT_CHAT || !isOwnSender(port.sender?.id, ownId)) {
     port.disconnect();
     return;
   }
+  // A chat tab restored by Thunderbird is not known to the tab tracker yet.
+  const tabId = port.sender?.tab?.id;
+  if (onTab && typeof tabId === "number") onTab(tabId);
   let closed = false;
   const session = new ChatSession(deps, (event) => {
     if (closed) return;
