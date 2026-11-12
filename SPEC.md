@@ -230,7 +230,20 @@ das Abo über Claude Code ist eine bewusst zu wählende Option. Der Nutzer hat d
       MIT-Lizenz. Wer schon eingewilligt hat, muss den erweiterten Text einmal neu bestätigen (Versionsnummer der
       Einwilligung erhöhen).
 - [ ] README (englisch) und Datenschutz-Abschnitt an beide Backends anpassen; Version 0.7.0
-- [ ] Prüfen, ob Thunderbird `data_collection_permissions` im Manifest verlangt (Doku), und danach handeln
+- [ ] Prüfen, ob Thunderbird `data_collection_permissions` im Manifest verlangt (Doku), und danach handeln.
+      Ergebnis (2026-11-12): Thunderbird verlangt den Schlüssel nicht. Die Thunderbird-Doku (`permissions`-API, ab TB 140)
+      sagt ausdrücklich, dass Thunderbird den eingebauten Zustimmungsablauf von Firefox nicht verwendet und Add-ons die
+      Zustimmung selbst einholen müssen; das tut der Einwilligungsdialog. Die ATN-Richtlinie nennt den Schlüssel nicht,
+      verlangt aber, dass die Steuerung bei der Installation gezeigt wird: Deshalb öffnet sich nach einer neuen
+      Installation die Einrichtungsanleitung. `web-ext lint` warnt weiter (`MISSING_DATA_COLLECTION_PERMISSIONS`, Firefox-
+      Regel); ein Eintrag wäre für TB 128 unbekannt und würde eine neue Manifest-Angabe bedeuten. Bei der Einreichung
+      (Phase 9) erneut prüfen.
+- [ ] Alle Texte in `_locales` passen zum gewählten Backend und zu Store-Nutzern (Ergänzung vom 2026-11-12):
+      Fehlermeldungen nennen die Ursache und verweisen per Knopf auf die Anleitung statt auf `npm`-Befehle; die Texte
+      dazu, wohin Daten gehen (Einwilligung, Einstellungen), richten sich nach dem gewählten Backend; eigene Meldungen
+      für das API-Backend (Schlüssel fehlt, Schlüssel ungültig, Guthaben/Abrechnung, Rate-Limit, Überlastung, keine
+      Netzverbindung), nie mit dem Schlüssel; beim CLI-Backend außerhalb von macOS `cli_unsupported`. Test: jeder
+      Fehlercode hat einen Text in beiden Sprachen (`test/locales.test.ts`).
 
 Abnahme: Mit API-Key funktionieren Umformulieren, Zusammenfassen und Postfach-Frage ohne installierten Helfer; der
 Umschalter wechselt das Backend erkennbar; ein fehlender oder falscher Schlüssel führt zu einer verständlichen
