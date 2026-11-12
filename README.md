@@ -3,7 +3,7 @@
 Thunderbird-Add-on, das Claude beim Schreiben und Lesen von Mails einbindet: Umformulieren im
 Verfassen-Fenster, Zusammenfassen und Fragen zu Mails, Abfragen über das Postfach.
 
-Status: Version 0.5.0, Phasen 1 bis 5 umgesetzt (Schreiben, Lesen, Postfach-Abfrage), nur macOS und
+Status: Version 0.6.0, Phasen 1 bis 6 umgesetzt (Schreiben, Lesen, Postfach-Abfrage, Härtung), nur macOS und
 nur mit lokal installiertem Claude Code. Spezifikation und Phasen stehen in
 [SPEC.md](SPEC.md), die Arbeitsregeln für die Entwicklung mit Claude Code in [CLAUDE.md](CLAUDE.md).
 
@@ -60,15 +60,18 @@ Name "Mail Assistant", Add-on-ID `mail-assistant@paulnae.github.io`.
 
 **Was dabei mit dem echten Postfach passiert:** Sobald du eine Aktion auslöst (Umformulieren,
 Zusammenfassen, Frage zu einer Mail, Postfach-Frage), gehen die betroffenen Mailinhalte über das
-lokale Claude Code an Anthropic; bei einer Postfach-Frage sind das bis zu 15 (einstellbar bis 50)
+lokale Claude Code an Anthropic; bei einer Postfach-Frage sind das bis zu 15 (in den Einstellungen bis 50)
 gefundene Mails. Ohne Klick passiert nichts, und das Add-on sendet, löscht oder verschiebt nie eine
-Mail. Einen Einwilligungsdialog gibt es noch nicht (kommt in Phase 6).
+Mail. Vor der ersten Aktion fragt ein Einwilligungsdialog nach deiner Zustimmung; ohne sie sendet das
+Add-on nichts. Widerrufen lässt sie sich in den Einstellungen (Add-ons und Themes → Mail Assistant →
+Einstellungen, oder im Abfrage-Tab über „Einstellungen“). Dort stehen auch die Modelle je Aufgabe, die
+Obergrenzen (Mails je Postfach-Frage, Textmenge, Zeitlimit) und ein Verbindungstest zum Helfer.
 
 Voraussetzungen: Thunderbird 128 oder neuer, Node 22, Claude Code (`claude`) installiert und
 eingeloggt.
 
 1. Bauen: `npm install`, dann `npm run package`. Das prüft alles (`npm run check`) und schreibt
-   `web-ext-artifacts/mail-assistant-0.5.0.xpi`.
+   `web-ext-artifacts/mail-assistant-0.6.0.xpi`.
 2. Helfer installieren: `npm run host:install` (schreibt nur nach
    `~/Library/Mozilla/NativeMessagingHosts/` und `~/Library/Application Support/mail-assistant/`;
    gilt für alle Thunderbird-Profile, also auch für das Testprofil von `npm run start`).
