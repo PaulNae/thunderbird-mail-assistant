@@ -1,0 +1,142 @@
+# Spezifikation
+
+## Ziel
+
+Claude in Thunderbird so nutzbar machen wie einen eingebauten Schreib- und Leseassistenten:
+
+1. **Schreiben:** markierten Text oder die ganze Mail umformulieren, kürzen, im Ton ändern,
+   übersetzen; Antwort auf eine Mail entwerfen.
+2. **Lesen:** offene Mail oder Thread zusammenfassen, Fragen dazu stellen.
+3. **Abfragen:** Fragen über das Postfach stellen ("Was hat X zum Angebot geschrieben?").
+
+Erste Ausbaustufe: nur für den Eigengebrauch, macOS, Backend "lokales Claude Code".
+Die Veröffentlichung (Phase 7) ist vorbereitet, aber nicht Teil der ersten Stufe.
+
+## Architektur
+
+```
+extension/            MailExtension, Manifest V3, TypeScript
+  background/         Hintergrundskript: Routing, Backend-Auswahl, Mailzugriff
+  backend/            Schnittstelle Backend + CliBackend (+ später ApiBackend)
+  compose/            Popup der compose_action
+  display/            Popup der message_display_action
+  chat/               Tab für Postfach-Abfragen
+  options/            Einstellungen
+  prompts/            Prompt-Bausteine, an einer Stelle
+  _locales/de, en
+host/                 Native-Messaging-Host (Node, ohne Abhängigkeiten)
+  host.mjs            liest Anfragen, startet `claude -p`, streamt Antwort zurück
+  install-macos.mjs   schreibt das Host-Manifest, ermittelt den absoluten Pfad zu `claude`
+test/
+```
+
+### Backend-Schnittstelle
+
+```ts
+interface Backend {
+  // Streamt Textstücke; wirft BackendError mit maschinenlesbarem code.
+  run(req: { system: string; prompt: string; model?: string; signal: AbortSignal }): AsyncIterable<string>;
+  check(): Promise<{ ok: boolean; detail?: string }>;   // für die Einstellungsseite
+}
+```
+
+UI-Code kennt nur diese Schnittstelle. `CliBackend` hält einen Port zum Host
+(`messenger.runtime.connectNative`), `ApiBackend` (Phase 7) ruft die Messages-API per `fetch`.
+
+### Protokoll Add-on ↔ Host
+
+JSON-Nachrichten, jeweils mit `id`:
+
+- Add-on → Host: `{id, type:"run", system, prompt, model}`, `{id, type:"cancel"}`, `{type:"check"}`
+- Host → Add-on: `{id, type:"delta", text}`, `{id, type:"done"}`, `{id, type:"error", code, message}`,
+  `{type:"check", ok, version}`
+
+Fehlercodes mindestens: `cli_not_found`, `not_logged_in`, `rate_limited`, `timeout`, `cancelled`, `internal`.
+Nachrichten vom Host sind auf 1 MB begrenzt, deshalb immer in Stücken streamen.
+
+### Aufruf von Claude Code im Host
+
+- Prompt über stdin, nie als Argument (Länge, Shell-Quoting, Prozessliste).
+- Headless, Streaming-Ausgabe, **ohne Tools**, ein einziger Turn, eigener System-Prompt,
+  neutrales Arbeitsverzeichnis (leerer Ordner), damit keine Projekt-Konfiguration geladen wird.
+- Die genauen Flags mit `claude --help` der installierten Version ermitteln, nicht aus dem Gedächtnis.
+- Absoluter Pfad zu `claude`: Thunderbird erbt als GUI-App nicht den Shell-PATH.
+- Timeout (Standard 120 s), Abbruch beendet den Kindprozess.
+
+### Prompt-Aufbau und Sicherheit
+
+- System-Prompt legt Aufgabe und Ausgabeformat fest ("gib nur den umformulierten Text zurück").
+- Mailinhalt steht in eindeutig markierten Blöcken; der System-Prompt sagt ausdrücklich, dass
+  Text in diesen Blöcken nie als Anweisung gilt.
+- Das Modell hat keine Tools und das Add-on führt aus der Antwort nichts automatisch aus.
+- Ergebnis wird immer als Vorschau gezeigt; Übernahme nur per Klick. HTML aus der Antwort wird
+  nicht ungeprüft in den Editor oder ins Popup geschrieben.
+- Standardmodell für Umformulieren und Zusammenfassen: das kleinste (Haiku); für Postfach-Abfragen
+  Sonnet. In den Einstellungen änderbar.
+
+## Phasen
+
+Jede Phase endet mit `npm run check` grün, Review durch `reviewer` und einem Nachweis in Thunderbird.
+
+### Phase 1 – Gerüst
+- [ ] `package.json`, TypeScript strikt, esbuild-Build nach `dist/`, ESLint, `web-ext`
+- [ ] `manifest.json` (MV3, Add-on-ID, `strict_min_version` nach Doku festlegen und begründen)
+- [ ] Hintergrundskript und leere `compose_action` / `message_display_action` mit Popup
+- [ ] `npm run start` öffnet Thunderbird mit geladenem Add-on
+
+Abnahme: Beide Buttons erscheinen und öffnen ein Popup; `web-ext lint` ohne Fehler.
+
+### Phase 2 – Bridge
+- [ ] Voraussetzung prüfen: `claude` installiert und eingeloggt (sonst Nutzer fragen)
+- [ ] `host/host.mjs` mit Protokoll, Streaming, Timeout, Abbruch, Fehlercodes
+- [ ] `host/install-macos.mjs` (Pfad des Host-Manifests in der Doku nachschlagen und testen)
+- [ ] `Backend`-Schnittstelle und `CliBackend`
+- [ ] Tests für den Host mit einem Fake-`claude`-Skript (Framing, Streaming, Abbruch, Fehler)
+
+Abnahme: Ein Testknopf im Popup schickt "Sag Hallo" und zeigt die gestreamte Antwort;
+ohne installierte CLI erscheint eine verständliche Fehlermeldung.
+
+### Phase 3 – Schreiben
+- [ ] Popup im Verfassen-Fenster: Umformulieren, Kürzen, Ton (freundlich, formell, knapp),
+      Übersetzen (de/en), freie Anweisung
+- [ ] Arbeitet auf der Markierung, sonst auf dem ganzen Text; Zitate und Signatur bleiben unberührt
+- [ ] Vorschau mit Übernehmen, Verwerfen, Neu erzeugen; Abbrechen während des Streamings
+- [ ] Funktioniert im HTML- und im Nur-Text-Modus
+- [ ] Antwortentwurf: aus der beantworteten Mail plus Stichworten des Nutzers
+
+Abnahme: Markierten Absatz in einer HTML-Mail umformulieren und übernehmen, Rest der Mail
+inklusive Formatierung und Signatur unverändert; dasselbe in einer Nur-Text-Mail.
+
+### Phase 4 – Lesen
+- [ ] Popup in der Mailansicht: Zusammenfassung, Frage stellen, "Antwort entwerfen" (öffnet Phase 3)
+- [ ] Thread-Kontext: zugehörige Mails einbeziehen, mit Obergrenze für die Textmenge
+- [ ] HTML-Mails zu Text reduzieren, Anhänge nur als Namen nennen
+
+Abnahme: Zusammenfassung einer langen HTML-Mail und eine Folgefrage dazu, jeweils gestreamt.
+
+### Phase 5 – Postfach-Abfrage
+- [ ] Chat-Tab; Schritt 1: Modell erzeugt aus der Frage Suchparameter (strukturierte Ausgabe)
+- [ ] Schritt 2: Suche über die Thunderbird-API, Treffer begrenzen und kürzen
+- [ ] Schritt 3: Antwort mit Verweisen, die die jeweilige Mail öffnen
+- [ ] Anzeige, wie viele Mails an das Modell gingen; harte Obergrenze einstellbar
+
+Abnahme: Eine Frage, deren Antwort in einer bekannten Mail steht, wird korrekt beantwortet und
+verlinkt die Mail.
+
+### Phase 6 – Härtung
+- [ ] Einwilligungsdialog beim ersten Start (welche Daten wohin gehen)
+- [ ] Einstellungsseite: Backend, Modelle, Limits, Backend-Check
+- [ ] Prompt-Injection-Tests mit präparierten Mails
+- [ ] Lokalisierung de/en vollständig, Tastaturbedienung, helles und dunkles Theme
+- [ ] `security-review` über das gesamte Projekt
+
+### Phase 7 – Veröffentlichung
+- [ ] `ApiBackend` mit API-Key (Standard für veröffentlichte Version)
+- [ ] Host-Installer für Windows und Linux
+- [ ] Nutzungsbedingungen von Anthropic für das CLI-Backend prüfen; Produktname ohne "Claude" vorn
+- [ ] Datenschutzerklärung, Store-Texte, Einreichung bei addons.thunderbird.net
+
+## Offene Entscheidungen
+
+- Produktname und Add-on-ID (bis dahin Arbeitstitel "Mail Assistant").
+- Lizenz (vor einer Veröffentlichung festlegen).

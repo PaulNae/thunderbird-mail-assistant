@@ -1,0 +1,7 @@
+node_modules/
+dist/
+web-ext-artifacts/
+*.xpi
+.DS_Store
+.env
+.claude/settings.local.json
