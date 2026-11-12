@@ -9,6 +9,7 @@ export const ERROR_KEYS: Record<BackendErrorCode, string> = {
   timeout: "errorTimeout",
   cancelled: "errorCancelled",
   internal: "errorInternal",
+  consent_required: "errorConsentRequired",
 };
 
 /** Localized, user-facing text for any thrown value; never includes mail content. */

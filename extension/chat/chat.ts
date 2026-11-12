@@ -2,6 +2,7 @@
 // (memory only, bound to this tab's port); this page renders snapshots. Model text is only ever set via
 // textContent; citations become buttons that open the mail.
 import { localizeDocument } from "../shared/i18n.ts";
+import { setupConsent } from "../shared/consent-ui.ts";
 import { errorMessage } from "../shared/errors.ts";
 import { BackendError } from "../backend/backend.ts";
 import { openPort } from "../shared/job-client.ts";
@@ -22,6 +23,13 @@ const $ = <T extends HTMLElement>(id: string): T => {
   if (!el) throw new Error(`Missing element #${id}`);
   return el as T;
 };
+
+// Nothing can be asked before the user has agreed; the background script enforces this as well.
+const consent = setupConsent($("consent"), $("app"), {
+  onChange: (given) => {
+    if (given) questionEl.focus();
+  },
+});
 
 const logEl = $<HTMLOListElement>("log");
 const statusEl = $("status");
@@ -150,6 +158,7 @@ function renderTurn(turn: ChatTurn, live: boolean): HTMLLIElement {
   } else if (turn.status === "no_results") {
     li.append(p("answer", t("chatNoResults")));
   } else if (turn.status === "error") {
+    if (turn.error === "consent_required") void consent.refresh();
     const msg =
       turn.error === "search_failed" ? t("chatSearchFailed") : turn.error === "empty_result" ? t("composeEmptyResult") : errorMessage(new BackendError(turn.error ?? "internal"));
     li.append(p("answer", msg));
@@ -281,4 +290,4 @@ maxEl.addEventListener("change", () => void saveSetting());
 render();
 void loadSetting();
 void connect();
-questionEl.focus();
+void consent.refresh();

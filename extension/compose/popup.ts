@@ -1,4 +1,5 @@
 import { localizeDocument } from "../shared/i18n.ts";
+import { setupConsent } from "../shared/consent-ui.ts";
 import { errorMessage } from "../shared/errors.ts";
 import { BackendError } from "../backend/backend.ts";
 import { openJobPort } from "../shared/job-client.ts";
@@ -21,6 +22,10 @@ const $ = <T extends HTMLElement>(id: string): T => {
   if (!el) throw new Error(`Missing element #${id}`);
   return el as T;
 };
+
+// Nothing can be started before the user has agreed; the background script enforces this as well.
+const consent = setupConsent($("consent"), $("app"), { onDecline: () => window.close() });
+void consent.refresh();
 
 const scopeEl = $("scope");
 const statusEl = $("status");
@@ -117,6 +122,7 @@ function showSnapshot(snap: JobSnapshot): void {
 
 function reportOutcome(snap: JobSnapshot): void {
   if (snap.phase === "error" && snap.error !== undefined) {
+    if (snap.error === "consent_required") void consent.refresh();
     setStatus(snap.error === "empty_result" ? t("composeEmptyResult") : errorMessage(new BackendError(snap.error)));
   } else if (snap.phase === "cancelled") {
     setStatus(errorMessage(new BackendError("cancelled")));

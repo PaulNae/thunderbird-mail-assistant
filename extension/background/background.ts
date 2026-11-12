@@ -2,6 +2,8 @@
 import { PendingReplyDrafts, isOwnSender, parseRuntimeRequest } from "../shared/messages.ts";
 import { findReplyContext } from "../mail/identity.ts";
 import { CliBackend } from "../backend/cli-backend.ts";
+import { ConsentGatedBackend } from "./gated-backend.ts";
+import { readConsent } from "../shared/consent.ts";
 import { handleConnection } from "./connection.ts";
 import { JobStore } from "./jobs.ts";
 import { handleChatConnection } from "./chat.ts";
@@ -19,7 +21,9 @@ const pending = new PendingReplyDrafts();
 // Owns all running jobs and the last results, so they survive closing a popup. The open native port keeps
 // this script alive while a job runs (assumption, not documented); finished results are mirrored to
 // storage.session and restored lazily if the script was unloaded in between.
-const backend = new CliBackend();
+// Every run passes the consent gate: without the user's consent (storage.local, read on each run)
+// nothing is sent to the model, whatever a page asks for.
+const backend = new ConsentGatedBackend(new CliBackend(), () => readConsent(messenger.storage.local));
 const jobs = new JobStore({ backend, session: messenger.storage.session });
 
 // Mailbox queries of the chat tab. Each tab connection gets its own in-memory session that ends with the port.

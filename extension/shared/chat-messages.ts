@@ -1,5 +1,6 @@
 // Message formats between the chat tab and the background script (runtime.connect port "chat"),
 // and the one chat setting. Pure (no messenger.*) so it can be tested in Node.
+import { BACKEND_ERROR_CODES } from "../backend/backend.ts";
 import type { BackendErrorCode } from "../backend/backend.ts";
 import { MAX_QUESTION_CHARS } from "../prompts/read.ts";
 import { MAX_FIELD_CHARS, SEARCH_FIELDS } from "../prompts/query.ts";
@@ -97,7 +98,7 @@ export function parseChatRequest(message: unknown): ChatRequest | null {
 
 const STATUSES: readonly string[] = ["running", "done", "no_results", "error", "cancelled"];
 const STAGES: readonly string[] = ["params", "search", "load", "answer"];
-const ERRORS: readonly string[] = ["cli_not_found", "not_logged_in", "rate_limited", "timeout", "cancelled", "internal", "host_not_found", "empty_result", "search_failed"];
+const ERRORS: readonly string[] = [...BACKEND_ERROR_CODES, "empty_result", "search_failed"];
 
 function parseParams(v: unknown): SearchParams | null {
   if (typeof v !== "object" || v === null || Array.isArray(v)) return null;

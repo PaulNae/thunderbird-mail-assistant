@@ -338,5 +338,38 @@
         "content": "$1"
       }
     }
+  },
+  "consentHeading": {
+    "message": "Bevor es losgeht"
+  },
+  "consentIntro": {
+    "message": "Mail Assistant schickt Mailinhalte an ein KI-Modell, sobald du eine Aktion auslöst. Bitte lies kurz, was dabei passiert."
+  },
+  "consentWhat": {
+    "message": "Was gesendet wird: der Text, an dem du gerade arbeitest, und die betroffene Mail mit Absender, Betreff, Datum, Text und den Namen der Anhänge. Beim Lesen kommen frühere Mails desselben Verlaufs dazu, bei einer Postfach-Frage die gefundenen Mails (höchstens so viele, wie in den Einstellungen festgelegt)."
+  },
+  "consentWhere": {
+    "message": "Wohin: über das auf diesem Computer installierte Claude Code an Anthropic, unter deinem Claude-Konto. Dort gelten die Bedingungen und Datenschutzregeln deines Anthropic-Kontos."
+  },
+  "consentNoAction": {
+    "message": "Ohne deinen Klick passiert nichts. Das Add-on sendet, löscht oder verschiebt nie selbst eine Mail; Ergebnisse übernimmst du nur, wenn du es willst."
+  },
+  "consentNoDisk": {
+    "message": "Mailinhalte und Ergebnisse bleiben nur im Arbeitsspeicher und kommen nicht auf die Festplatte. Gespeichert werden nur deine Einstellungen und diese Zustimmung."
+  },
+  "consentRevoke": {
+    "message": "Du kannst die Zustimmung jederzeit in den Einstellungen des Add-ons widerrufen."
+  },
+  "consentAccept": {
+    "message": "Zustimmen"
+  },
+  "consentDecline": {
+    "message": "Nicht jetzt"
+  },
+  "consentDeclined": {
+    "message": "Ohne Zustimmung bleibt Mail Assistant gesperrt."
+  },
+  "errorConsentRequired": {
+    "message": "Ohne deine Zustimmung wird nichts an das Modell gesendet."
   }
 }

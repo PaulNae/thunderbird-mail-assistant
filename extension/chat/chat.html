@@ -2,12 +2,14 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Mail Assistant</title>
+    <title data-i18n="chatTitle"></title>
     <link rel="stylesheet" href="../shared/popup.css" />
     <script type="module" src="chat.js"></script>
   </head>
   <body class="chat">
     <main>
+      <section id="consent" class="consent" hidden></section>
+      <div id="app" hidden>
       <h1 data-i18n="chatTitle"></h1>
       <p data-i18n="chatIntro"></p>
 
@@ -24,6 +26,7 @@
         <label for="max-messages" data-i18n="chatMaxLabel"></label>
         <input type="number" id="max-messages" min="1" max="50" step="1" />
         <button type="button" id="clear" data-i18n="chatClear"></button>
+      </div>
       </div>
     </main>
   </body>

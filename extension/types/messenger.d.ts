@@ -34,10 +34,14 @@ declare namespace messenger {
     const onConnect: MessengerEvent<(port: Port) => void>;
     const onInstalled: MessengerEvent<(details: InstalledDetails) => void>;
     const id: string;
+    /** Opens the page of the manifest's options_ui (TB 48+). */
+    function openOptionsPage(): Promise<void>;
     interface MessageSender {
       id?: string;
       /** The tab that opened the connection, if any. */
       tab?: tabs.Tab;
+      /** URL of the page or frame that sent the message. */
+      url?: string;
     }
     function sendMessage(message: unknown): Promise<unknown>;
     // Return true to call sendResponse asynchronously.
@@ -205,7 +209,14 @@ declare namespace messenger {
     const local: {
       get(keys: string | string[] | null): Promise<Record<string, unknown>>;
       set(items: Record<string, unknown>): Promise<void>;
+      remove(keys: string | string[]): Promise<void>;
     };
+    interface StorageChange {
+      oldValue?: unknown;
+      newValue?: unknown;
+    }
+    /** areaName is "local", "session", "sync" or "managed". */
+    const onChanged: MessengerEvent<(changes: Record<string, StorageChange>, areaName: string) => void>;
     /** Kept in memory only, until Thunderbird or the add-on is closed or reloaded (TB 115+, needs "storage"). */
     const session: {
       get(keys: string | string[] | null): Promise<Record<string, unknown>>;

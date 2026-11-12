@@ -1,5 +1,6 @@
 // Message formats between the popups and the background job store (runtime.connect ports).
 // Pure (no messenger.*) so it can be tested in Node. Incoming messages are validated like in messages.ts.
+import { BACKEND_ERROR_CODES } from "../backend/backend.ts";
 import type { BackendErrorCode } from "../backend/backend.ts";
 import type { ComposeAction } from "../prompts/compose.ts";
 import { MAX_HISTORY_ENTRIES, MAX_QUESTION_CHARS } from "../prompts/read.ts";
@@ -150,7 +151,7 @@ export function portName(name: unknown): PortName | null {
 
 const PHASES: readonly string[] = ["idle", "streaming", "done", "error", "cancelled"];
 const KINDS: readonly string[] = ["summary", "question", "compose", "reply", "instruction_draft"];
-const ERRORS: readonly string[] = ["cli_not_found", "not_logged_in", "rate_limited", "timeout", "cancelled", "internal", "host_not_found", "empty_result"];
+const ERRORS: readonly string[] = [...BACKEND_ERROR_CODES, "empty_result"];
 
 /** Rebuilds a snapshot from untrusted data (the session mirror); null if it does not fit. */
 export function sanitizeSnapshot(raw: unknown): JobSnapshot | null {

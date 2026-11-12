@@ -5,9 +5,11 @@ export type BackendErrorCode =
   | "timeout"
   | "cancelled"
   | "internal"
-  | "host_not_found";
+  | "host_not_found"
+  | "consent_required";
 
-const KNOWN_CODES: readonly string[] = [
+/** All codes; lists of accepted error values elsewhere are derived from this. */
+export const BACKEND_ERROR_CODES: readonly BackendErrorCode[] = [
   "cli_not_found",
   "not_logged_in",
   "rate_limited",
@@ -15,7 +17,9 @@ const KNOWN_CODES: readonly string[] = [
   "cancelled",
   "internal",
   "host_not_found",
+  "consent_required",
 ];
+const KNOWN_CODES: readonly string[] = BACKEND_ERROR_CODES;
 
 export function toBackendErrorCode(code: unknown): BackendErrorCode {
   return typeof code === "string" && KNOWN_CODES.includes(code) ? (code as BackendErrorCode) : "internal";
@@ -34,6 +38,8 @@ export interface RunRequest {
   system: string;
   prompt: string;
   model?: string;
+  /** Time limit for the run; the host uses its default if absent or out of range. */
+  timeoutMs?: number;
   signal: AbortSignal;
 }
 

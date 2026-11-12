@@ -15,7 +15,15 @@ const MAX_INCOMING_BYTES = 64 * 1024 * 1024;
 const KILL_GRACE_MS = 2000;
 const DEFAULT_TIMEOUT_MS = 120000;
 const CHECK_TIMEOUT_MS = 15000;
-const MODEL_RE = /^[A-Za-z0-9._-]+$/;
+const MODEL_RE = /^[A-Za-z0-9._-]{1,64}$/;
+/** Bounds for a per-run timeout sent by the add-on; anything else uses the default. */
+export const MIN_RUN_TIMEOUT_MS = 10000;
+export const MAX_RUN_TIMEOUT_MS = 600000;
+
+/** The run's time limit: a valid whole number of milliseconds within the bounds, else the default. */
+export function runTimeout(value, fallback) {
+  return Number.isSafeInteger(value) && value >= MIN_RUN_TIMEOUT_MS && value <= MAX_RUN_TIMEOUT_MS ? value : fallback;
+}
 
 // ---------------------------------------------------------------- framing
 
@@ -260,7 +268,7 @@ export function startHost({ input = process.stdin, output = process.stdout, exit
 
     const timer = setTimeout(() => {
       if (finish("timeout")) killChild(child);
-    }, timeoutMs);
+    }, runTimeout(msg.timeoutMs, timeoutMs));
 
     /** Sends the single terminal message. Returns false if one was already sent. */
     function finish(code, message) {

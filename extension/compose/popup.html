@@ -2,11 +2,13 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Mail Assistant</title>
+    <title data-i18n="extensionName"></title>
     <link rel="stylesheet" href="../shared/popup.css" />
     <script type="module" src="popup.js"></script>
   </head>
   <body class="compose">
+    <section id="consent" class="consent" hidden></section>
+    <div id="app" hidden>
     <h1 data-i18n="popupComposeTitle"></h1>
     <p id="scope" class="scope"></p>
     <p id="status" class="status" role="status" aria-live="polite"></p>
@@ -51,5 +53,6 @@
         <button type="button" id="regenerate" data-i18n="composeRegenerate" hidden></button>
       </div>
     </section>
+    </div>
   </body>
 </html>

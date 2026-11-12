@@ -338,5 +338,38 @@
         "content": "$1"
       }
     }
+  },
+  "consentHeading": {
+    "message": "Before you start"
+  },
+  "consentIntro": {
+    "message": "Mail Assistant sends email content to an AI model whenever you start an action. Please take a moment to read what happens."
+  },
+  "consentWhat": {
+    "message": "What is sent: the text you are working on and the email concerned, with sender, subject, date, text and the names of attachments. When reading, earlier emails of the same conversation are added; for a mailbox question, the emails found (at most as many as set in the settings)."
+  },
+  "consentWhere": {
+    "message": "Where it goes: through Claude Code installed on this computer to Anthropic, under your Claude account. The terms and privacy rules of your Anthropic account apply there."
+  },
+  "consentNoAction": {
+    "message": "Nothing happens without your click. The add-on never sends, deletes or moves an email by itself; results are only applied when you choose to."
+  },
+  "consentNoDisk": {
+    "message": "Email content and results are kept in memory only and never written to disk. Only your settings and this consent are stored."
+  },
+  "consentRevoke": {
+    "message": "You can withdraw your consent at any time in the add-on settings."
+  },
+  "consentAccept": {
+    "message": "I agree"
+  },
+  "consentDecline": {
+    "message": "Not now"
+  },
+  "consentDeclined": {
+    "message": "Without your consent Mail Assistant stays locked."
+  },
+  "errorConsentRequired": {
+    "message": "Without your consent nothing is sent to the model."
   }
 }

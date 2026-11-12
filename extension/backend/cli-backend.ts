@@ -133,7 +133,7 @@ export class CliBackend implements Backend {
     req.signal.addEventListener("abort", onAbort, { once: true });
     try {
       try {
-        port.postMessage({ id, type: "run", system: req.system, prompt: req.prompt, model: req.model });
+        port.postMessage({ id, type: "run", system: req.system, prompt: req.prompt, model: req.model, ...(req.timeoutMs === undefined ? {} : { timeoutMs: req.timeoutMs }) });
       } catch {
         throw new BackendError("host_not_found");
       }
