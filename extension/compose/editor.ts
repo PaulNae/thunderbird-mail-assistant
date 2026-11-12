@@ -118,6 +118,17 @@ function emptyBodyRange(root: Element): Range {
   return range;
 }
 
+/** A collapsed caret in unprotected content of the root, used as insertion point for empty own text. */
+function cursorRange(root: Element, sig: SignaturePoint | null): Range | null {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0 || !sel.isCollapsed) return null;
+  const range = sel.getRangeAt(0);
+  if (!root.contains(range.startContainer)) return null;
+  if (isProtectedNode(range.startContainer)) return null;
+  if (sig && range.comparePoint(sig.node, sig.offset) < 0) return null;
+  return range.cloneRange();
+}
+
 function textOfRange(range: Range): string {
   const sel = window.getSelection();
   if (!sel) return "";
@@ -148,7 +159,7 @@ function capture(isPlainText: boolean): CaptureResult {
   }
 
   const own = findOwnTextRange(root, sig);
-  const range = own ?? emptyBodyRange(root);
+  const range = own ?? cursorRange(root, sig) ?? emptyBodyRange(root);
   const text = own ? textOfRange(range) : "";
   current = { range, text };
   return { scope: "body", text };

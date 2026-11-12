@@ -2,7 +2,8 @@ import { localizeDocument } from "../shared/i18n.ts";
 import { errorMessage } from "../shared/errors.ts";
 import { BackendError } from "../backend/backend.ts";
 import { CliBackend } from "../backend/cli-backend.ts";
-import { COMPOSE_MODEL, buildComposePrompt, buildReplyDraftPrompt, cleanModelOutput } from "../prompts/compose.ts";
+import { COMPOSE_MODEL, MAX_COMPOSE_CHARS, buildComposePrompt, buildReplyDraftPrompt, cleanModelOutput } from "../prompts/compose.ts";
+import { isBlank } from "./editor-text.ts";
 import { applyText, captureSelection } from "./editor-bridge.ts";
 import { controls, describeScope, initialState, reduce, resolveAction, scopeEvent, startEvent } from "./popup-state.ts";
 import type { PopupEvent, PopupJob } from "./popup-state.ts";
@@ -81,7 +82,9 @@ async function refreshScope(): Promise<{ text: string; usable: boolean; replyUsa
 }
 
 async function start(job: PopupJob): Promise<void> {
-  if (state.phase === "streaming") return;
+  // Synchronously leave idle/error so a second click cannot start a parallel run.
+  dispatch("prepare");
+  if (state.phase !== "preparing") return;
   lastJob = job;
   setStatus("");
   let scope: Awaited<ReturnType<typeof refreshScope>>;
@@ -89,20 +92,33 @@ async function start(job: PopupJob): Promise<void> {
   try {
     scope = await refreshScope();
     if (scope && job.type === "reply" && scope.replyUsable) {
-      if (relatedMessageId === null) return;
+      if (relatedMessageId === null) {
+        dispatch("prepare_fail");
+        return;
+      }
       try {
         original = await loadOriginal(relatedMessageId);
       } catch {
         setStatus(t("composeOriginalFailed"));
+        dispatch("prepare_fail");
         return;
       }
     }
   } catch (e) {
     setStatus(errorMessage(e));
+    dispatch("prepare_fail");
     return;
   }
-  if (!scope || !(job.type === "reply" ? scope.replyUsable : scope.usable)) return;
+  if (!scope || !(job.type === "reply" ? scope.replyUsable : scope.usable)) {
+    dispatch("prepare_fail");
+    return;
+  }
   const text = scope.text;
+  if (job.type === "compose" && text.length > MAX_COMPOSE_CHARS) {
+    setStatus(t("composeTooLong", [String(MAX_COMPOSE_CHARS)]));
+    dispatch("prepare_fail");
+    return;
+  }
   const ctl = new AbortController();
   controller = ctl;
   result = "";
@@ -123,6 +139,13 @@ async function start(job: PopupJob): Promise<void> {
     }
     if (ctl.signal.aborted) throw new BackendError("cancelled");
     result = cleanModelOutput(result);
+    if (isBlank(result)) {
+      previewEl.textContent = "";
+      result = "";
+      setStatus(t("composeEmptyResult"));
+      dispatch("fail");
+      return;
+    }
     previewEl.textContent = result;
     dispatch("done");
     applyBtn.focus();

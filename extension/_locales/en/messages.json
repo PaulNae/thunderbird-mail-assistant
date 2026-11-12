@@ -59,7 +59,7 @@
     }
   },
   "composeScopeBody": {
-    "message": "Your whole text (without quote and signature)"
+    "message": "Your own text outside quote and signature (first block)"
   },
   "composeProtected": {
     "message": "The selection contains a quote or signature and cannot be edited. Please select only your own text."
@@ -129,5 +129,16 @@
   },
   "composeOriginalFailed": {
     "message": "The original message could not be read."
+  },
+  "composeEmptyResult": {
+    "message": "The model returned no text."
+  },
+  "composeTooLong": {
+    "message": "The text is too long (more than $MAX$ characters). Please select a shorter passage.",
+    "placeholders": {
+      "max": {
+        "content": "$1"
+      }
+    }
   }
 }

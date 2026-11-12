@@ -6,10 +6,17 @@ export type { ApplyResult, CaptureResult };
 type Op = "capture" | "apply";
 
 async function callEditor<T>(tabId: number, op: Op, arg: boolean | string): Promise<T> {
-  await messenger.scripting.executeScript({
+  // Inject only once per document: the script keeps the captured range in its module state.
+  const probe = await messenger.scripting.executeScript({
     target: { tabId },
-    files: ["/compose/editor.js"],
+    func: (): boolean => typeof globalThis.mailAssistantEditor !== "undefined",
   });
+  if (probe[0]?.result !== true) {
+    await messenger.scripting.executeScript({
+      target: { tabId },
+      files: ["/compose/editor.js"],
+    });
+  }
   const results = await messenger.scripting.executeScript({
     target: { tabId },
     func: (operation: string, argument: boolean | string): unknown => {

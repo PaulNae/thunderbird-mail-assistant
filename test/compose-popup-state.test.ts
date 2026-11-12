@@ -80,3 +80,20 @@ test("scopeEvent and startEvent", () => {
   assert.equal(startEvent({ type: "reply", notes: "" }), "start_reply");
   assert.equal(startEvent({ type: "compose", action: { kind: "rephrase" } }), "start");
 });
+
+test("preparing blocks a second start until the first one resolves", () => {
+  const prep = run(["scope_ok", "prepare"]);
+  assert.equal(prep.phase, "preparing");
+  assert.equal(reduce(prep, "prepare").phase, "preparing");
+  const c = controls(prep);
+  assert.equal(c.actionsEnabled, false);
+  assert.equal(c.replyEnabled, false);
+  assert.equal(c.cancelVisible, false);
+  assert.equal(reduce(prep, "start").phase, "streaming");
+  assert.equal(reduce(prep, "start_reply").phase, "streaming");
+  assert.equal(reduce(prep, "prepare_fail").phase, "idle");
+  assert.equal(run(["scope_ok", "start", "prepare"]).phase, "streaming");
+  assert.equal(run(["scope_ok", "start", "prepare_fail"]).phase, "streaming");
+  assert.equal(run(["scope_ok", "prepare", "scope_unusable", "start"]).phase, "preparing");
+  assert.equal(run(["scope_ok", "start", "fail", "prepare"]).phase, "preparing");
+});

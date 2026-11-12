@@ -12,7 +12,6 @@ const dist = path.join(root, "dist");
 const entryPoints = {
   "background/background": "extension/background/background.ts",
   "compose/popup": "extension/compose/popup.ts",
-  "compose/editor": "extension/compose/editor.ts",
   "display/popup": "extension/display/popup.ts",
 };
 
@@ -35,6 +34,21 @@ await build({
   outdir: "dist",
   bundle: true,
   format: "esm",
+  target: "es2022",
+  platform: "browser",
+  minify: false,
+  sourcemap: "linked",
+  logLevel: "info",
+});
+
+// The compose editor content script is injected into the same frame more than once. It must be
+// an IIFE so its module state is not leaked as top-level globals (a re-injection would reset them).
+await build({
+  absWorkingDir: root,
+  entryPoints: { "compose/editor": "extension/compose/editor.ts" },
+  outdir: "dist",
+  bundle: true,
+  format: "iife",
   target: "es2022",
   platform: "browser",
   minify: false,

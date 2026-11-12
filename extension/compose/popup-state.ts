@@ -6,7 +6,7 @@ import type { CaptureResult } from "./editor-text.ts";
 /** What a run does: a rewrite action on the captured text, or a reply draft from the notes. */
 export type PopupJob = { type: "compose"; action: ComposeAction } | { type: "reply"; notes: string };
 
-export type Phase = "idle" | "streaming" | "preview" | "error";
+export type Phase = "idle" | "preparing" | "streaming" | "preview" | "error";
 
 export interface PopupState {
   phase: Phase;
@@ -16,10 +16,14 @@ export interface PopupState {
   canReply: boolean;
 }
 
-export type PopupEvent = "start" | "start_reply" | "scope_reply_only" | "done" | "fail" | "cancel" | "discard" | "scope_ok" | "scope_unusable";
+export type PopupEvent = "prepare" | "prepare_fail" | "start" | "start_reply" | "scope_reply_only" | "done" | "fail" | "cancel" | "discard" | "scope_ok" | "scope_unusable";
 
 export function initialState(): PopupState {
   return { phase: "idle", canAct: false, canReply: false };
+}
+
+function canStart(state: PopupState): boolean {
+  return state.phase === "idle" || state.phase === "error" || state.phase === "preparing";
 }
 
 export function reduce(state: PopupState, event: PopupEvent): PopupState {
@@ -30,10 +34,14 @@ export function reduce(state: PopupState, event: PopupEvent): PopupState {
       return { ...state, canAct: false, canReply: true };
     case "scope_unusable":
       return { ...state, canAct: false, canReply: false };
+    case "prepare":
+      return state.phase === "idle" || state.phase === "error" ? { ...state, phase: "preparing" } : state;
+    case "prepare_fail":
+      return state.phase === "preparing" ? { ...state, phase: "idle" } : state;
     case "start":
-      return state.canAct && state.phase !== "streaming" ? { ...state, phase: "streaming" } : state;
+      return state.canAct && canStart(state) ? { ...state, phase: "streaming" } : state;
     case "start_reply":
-      return state.canReply && state.phase !== "streaming" ? { ...state, phase: "streaming" } : state;
+      return state.canReply && canStart(state) ? { ...state, phase: "streaming" } : state;
     case "done":
       return state.phase === "streaming" ? { ...state, phase: "preview" } : state;
     case "fail":

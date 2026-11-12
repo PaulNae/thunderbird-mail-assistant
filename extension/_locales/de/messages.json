@@ -59,7 +59,7 @@
     }
   },
   "composeScopeBody": {
-    "message": "Ganzer eigener Text (ohne Zitat und Signatur)"
+    "message": "Eigener Text oberhalb/außerhalb von Zitat und Signatur (erster Block)"
   },
   "composeProtected": {
     "message": "Die Markierung enthält Zitat oder Signatur und kann nicht bearbeitet werden. Bitte nur eigenen Text markieren."
@@ -129,5 +129,16 @@
   },
   "composeOriginalFailed": {
     "message": "Die beantwortete Mail konnte nicht gelesen werden."
+  },
+  "composeEmptyResult": {
+    "message": "Das Modell hat keinen Text geliefert."
+  },
+  "composeTooLong": {
+    "message": "Der Text ist zu lang (mehr als $MAX$ Zeichen). Bitte wähle einen kürzeren Abschnitt aus.",
+    "placeholders": {
+      "max": {
+        "content": "$1"
+      }
+    }
   }
 }
