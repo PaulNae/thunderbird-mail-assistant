@@ -156,6 +156,12 @@ still try the add-on:
 The helper installed by `npm run host:install` serves all Thunderbird profiles, including the test
 profile.
 
+## Bugs and feature requests
+
+Please report bugs and suggest features as
+[GitHub issues](https://github.com/PaulNae/thunderbird-mail-assistant/issues). Do not paste mail
+content or your API key into an issue.
+
 ## License
 
 [MIT](LICENSE)

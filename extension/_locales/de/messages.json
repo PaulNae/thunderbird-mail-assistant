@@ -677,5 +677,14 @@
   },
   "errorOutputTruncated": {
     "message": "Die Antwort war zu lang und wurde abgebrochen. Bitte einen kürzeren Text wählen oder die Aufgabe aufteilen."
+  },
+  "guideFeedbackHeading": {
+    "message": "Fehler melden und Wünsche"
+  },
+  "guideFeedback": {
+    "message": "Fehler und Wünsche für neue Funktionen bitte als Issue auf GitHub melden. Bitte keine Mailinhalte und keinen API-Schlüssel in ein Issue schreiben."
+  },
+  "guideFeedbackLink": {
+    "message": "Issues auf GitHub"
   }
 }

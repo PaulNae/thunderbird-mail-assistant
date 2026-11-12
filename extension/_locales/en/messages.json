@@ -677,5 +677,14 @@
   },
   "errorOutputTruncated": {
     "message": "The answer was too long and was cut off. Please choose a shorter text or split the task."
+  },
+  "guideFeedbackHeading": {
+    "message": "Bugs and feature requests"
+  },
+  "guideFeedback": {
+    "message": "Please report bugs and feature requests as an issue on GitHub. Please do not put mail content or your API key into an issue."
+  },
+  "guideFeedbackLink": {
+    "message": "Issues on GitHub"
   }
 }

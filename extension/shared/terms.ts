@@ -6,6 +6,8 @@ export const TERMS_URL = "https://code.claude.com/docs/en/legal-and-compliance";
 /** Where API keys are created. */
 export const CONSOLE_KEYS_URL = "https://platform.claude.com/settings/keys";
 export const REPOSITORY_URL = "https://github.com/PaulNae/thunderbird-mail-assistant";
+/** Where bugs and feature requests are reported. */
+export const ISSUES_URL = `${REPOSITORY_URL}/issues`;
 
 /** The check date in the user's language, e.g. "12.11.2026" (de) or "Nov 12, 2026" (en). */
 export function formatTermsDate(locale: string): string {

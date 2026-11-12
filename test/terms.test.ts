@@ -16,3 +16,11 @@ test("the README states the same check date and links the terms", () => {
   assert.ok(readme.includes(TERMS_CHECKED_ON), "README misses the check date");
   assert.ok(readme.includes(TERMS_URL), "README misses the terms link");
 });
+
+test("the guide and the README point to GitHub issues for bugs and feature requests", async () => {
+  const { ISSUES_URL } = await import("../extension/shared/terms.ts");
+  assert.equal(ISSUES_URL, "https://github.com/PaulNae/thunderbird-mail-assistant/issues");
+  const root = path.resolve(import.meta.dirname, "..");
+  assert.ok(readFileSync(path.join(root, "README.md"), "utf8").includes(ISSUES_URL));
+  assert.match(readFileSync(path.join(root, "extension", "guide", "guide.html"), "utf8"), /<section id="feedback"/);
+});
