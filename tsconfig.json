@@ -10,7 +10,7 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "allowImportingTsExtensions": true,
-    "types": ["node"]
+    "types": []
   },
-  "include": ["extension/**/*.ts", "test/**/*.ts"]
+  "include": ["extension/**/*.ts"]
 }

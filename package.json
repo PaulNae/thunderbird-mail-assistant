@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json",
     "lint": "eslint .",
     "lint:ext": "web-ext lint --source-dir dist",
     "test": "node --test \"test/**/*.test.ts\"",
