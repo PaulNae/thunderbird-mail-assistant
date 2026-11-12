@@ -116,7 +116,7 @@
     "message": "Noch kein eigener Text. Ein Entwurf wird vor dem Zitat eingefügt."
   },
   "composeOriginalFailed": {
-    "message": "Die beantwortete Mail konnte nicht gelesen werden."
+    "message": "Die Originalmail konnte nicht gelesen werden; Entwurf ohne sie."
   },
   "composeEmptyResult": {
     "message": "Das Modell hat keinen Text geliefert."
@@ -185,5 +185,20 @@
   },
   "displayAsk": {
     "message": "Fragen"
+  },
+  "displayReplyHeading": {
+    "message": "Antwort"
+  },
+  "displayReplyNotesPlaceholder": {
+    "message": "Stichworte für die Antwort (optional)"
+  },
+  "displayReplyDraft": {
+    "message": "Antwort entwerfen"
+  },
+  "displayReplyOpened": {
+    "message": "Antwortfenster geöffnet – dort auf Mail Assistant klicken."
+  },
+  "displayReplyFailed": {
+    "message": "Das Antwortfenster konnte nicht geöffnet werden."
   }
 }

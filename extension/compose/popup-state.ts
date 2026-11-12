@@ -148,3 +148,32 @@ export function scopeEvent(info: ScopeInfo): PopupEvent {
 export function startEvent(job: PopupJob): PopupEvent {
   return job.type === "compose" ? "start" : "start_reply";
 }
+
+export interface JobScope {
+  text: string;
+  usable: boolean;
+  replyUsable: boolean;
+}
+
+export interface JobPlan {
+  /** A reply draft: the original is the point of the job (a read failure is reported, the draft continues). */
+  needsOriginal: boolean;
+  /** An instruction draft in a reply window: the original is added as context if readable. */
+  wantsOriginal: boolean;
+  /** Set if the job must not run: the text changed meanwhile ("stale") or the scope does not fit ("unusable"). */
+  blocked?: "stale" | "unusable";
+}
+
+/** Decides from the freshly captured scope whether and how a job runs. Pure; scope null = capture failed. */
+export function planJob(job: PopupJob, scope: JobScope | null, hasRelatedMessage: boolean): JobPlan {
+  const none = { needsOriginal: false, wantsOriginal: false };
+  if (!scope) return { ...none, blocked: "unusable" };
+  if (job.type === "compose") return scope.usable ? none : { ...none, blocked: "stale" };
+  if (!scope.replyUsable) return { ...none, blocked: "unusable" };
+  if (job.type === "instruction_draft") {
+    // The own text is no longer empty: the draft would overwrite it.
+    if (!isBlank(scope.text)) return { ...none, blocked: "stale" };
+    return { needsOriginal: false, wantsOriginal: hasRelatedMessage };
+  }
+  return hasRelatedMessage ? { needsOriginal: true, wantsOriginal: false } : { ...none, blocked: "unusable" };
+}

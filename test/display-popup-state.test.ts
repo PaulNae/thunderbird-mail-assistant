@@ -29,10 +29,10 @@ test("cancel, failure, prepare_fail, restart", () => {
 });
 
 test("controls", () => {
-  assert.deepEqual(controls(run([])), { summarizeEnabled: false, askEnabled: false, cancelVisible: false });
-  assert.deepEqual(controls(run(["unavailable"])), { summarizeEnabled: false, askEnabled: false, cancelVisible: false });
-  assert.deepEqual(controls(run(["loaded"])), { summarizeEnabled: true, askEnabled: true, cancelVisible: false });
-  assert.deepEqual(controls(run(["loaded", "prepare", "start"])), { summarizeEnabled: false, askEnabled: false, cancelVisible: true });
+  assert.deepEqual(controls(run([])), { summarizeEnabled: false, askEnabled: false, replyEnabled: false, cancelVisible: false });
+  assert.deepEqual(controls(run(["unavailable"])), { summarizeEnabled: false, askEnabled: false, replyEnabled: false, cancelVisible: false });
+  assert.deepEqual(controls(run(["loaded"])), { summarizeEnabled: true, askEnabled: true, replyEnabled: true, cancelVisible: false });
+  assert.deepEqual(controls(run(["loaded", "prepare", "start"])), { summarizeEnabled: false, askEnabled: false, replyEnabled: false, cancelVisible: true });
   assert.equal(controls(run(["loaded", "prepare", "start", "done"])).askEnabled, true);
 });
 

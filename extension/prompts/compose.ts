@@ -111,17 +111,25 @@ function originalBlock(original: OriginalInput): string[] {
   ];
 }
 
-export function buildReplyDraftPrompt(original: OriginalInput, notes: string): PromptParts {
+const REPLY_NO_ORIGINAL_SYSTEM = [
+  ...COMMON_RULES,
+  "Write a reply to an email whose text is not available. Base the reply only on <user_notes>, which contain the user's own keywords and wishes and are trusted.",
+  "Do not invent facts, names, dates or numbers. Mark missing details as clearly recognizable placeholders in square brackets, for example [Name] or [Date].",
+  "Write in the language of <user_notes>.",
+  "Output only the reply body: no subject line, no quotation, no signature.",
+].join("\n");
+
+/** Reply draft; without `original` (it could not be read) the draft rests on the notes alone. */
+export function buildReplyDraftPrompt(original: OriginalInput | undefined, notes: string): PromptParts {
   const prompt = [
-    "Task: Write a reply to the email below.",
+    original ? "Task: Write a reply to the email below." : "Task: Write a reply to an email that is not available, following the notes.",
     "",
-    ...originalBlock(original),
-    "",
+    ...(original ? [...originalBlock(original), ""] : []),
     "<user_notes>",
     neutralizeBlockTags(notes.trim()),
     "</user_notes>",
   ].join("\n");
-  return { system: REPLY_SYSTEM, prompt };
+  return { system: original ? REPLY_SYSTEM : REPLY_NO_ORIGINAL_SYSTEM, prompt };
 }
 
 const INSTRUCTION_DRAFT_RULES = [

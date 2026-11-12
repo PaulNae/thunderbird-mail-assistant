@@ -4,8 +4,9 @@ import { BackendError } from "../backend/backend.ts";
 import { CliBackend } from "../backend/cli-backend.ts";
 import { DRAFT_MODEL, MAX_COMPOSE_CHARS, REWRITE_MODEL, buildComposePrompt, buildInstructionDraftPrompt, buildReplyDraftPrompt, cleanModelOutput } from "../prompts/compose.ts";
 import { isBlank } from "./editor-text.ts";
+import type { TakePendingResponse } from "../shared/messages.ts";
 import { applyText, captureSelection } from "./editor-bridge.ts";
-import { controls, describeScope, initialState, reduce, resolveAction, resolveInstructionJob, scopeEvent, startEvent } from "./popup-state.ts";
+import { controls, describeScope, initialState, reduce, resolveAction, planJob, resolveInstructionJob, scopeEvent, startEvent } from "./popup-state.ts";
 import type { PopupEvent, PopupJob } from "./popup-state.ts";
 import { loadOriginal } from "../mail/message-text.ts";
 import type { OriginalMessage } from "../mail/message-text.ts";
@@ -91,37 +92,32 @@ async function start(job: PopupJob): Promise<void> {
   lastJob = job;
   setStatus("");
   let scope: Awaited<ReturnType<typeof refreshScope>>;
-  let original: OriginalMessage | null = null;
   try {
     scope = await refreshScope();
-    if (job.type === "instruction_draft" && scope && !isBlank(scope.text)) {
-      // The own text is no longer empty: the draft would overwrite it, so do not run.
-      setStatus(t("composeStale"));
-      dispatch("prepare_fail");
-      return;
-    }
-    if (scope && job.type !== "compose" && scope.replyUsable && (job.type === "reply" || relatedMessageId !== null)) {
-      if (relatedMessageId === null) {
-        dispatch("prepare_fail");
-        return;
-      }
-      try {
-        original = await loadOriginal(relatedMessageId);
-      } catch {
-        setStatus(t("composeOriginalFailed"));
-        dispatch("prepare_fail");
-        return;
-      }
-    }
   } catch (e) {
     setStatus(errorMessage(e));
     dispatch("prepare_fail");
     return;
   }
-  if (!scope || !(job.type === "compose" ? scope.usable : scope.replyUsable)) {
-    if (scope && job.type === "compose") setStatus(t("composeStale"));
+  const plan = planJob(job, scope, relatedMessageId !== null);
+  if (plan.blocked || !scope) {
+    if (plan.blocked === "stale") setStatus(t("composeStale"));
     dispatch("prepare_fail");
     return;
+  }
+  let original: OriginalMessage | undefined;
+  if ((plan.needsOriginal || plan.wantsOriginal) && relatedMessageId !== null) {
+    try {
+      original = await loadOriginal(relatedMessageId);
+    } catch {
+      // Continue without the original, but say so.
+      setStatus(t("composeOriginalFailed"));
+      if (job.type === "reply" && job.notes.trim() === "") {
+        // Nothing to base a reply on.
+        dispatch("prepare_fail");
+        return;
+      }
+    }
   }
   const text = scope.text;
   if (job.type === "compose" && text.length > MAX_COMPOSE_CHARS) {
@@ -136,15 +132,11 @@ async function start(job: PopupJob): Promise<void> {
   dispatch(startEvent(job));
   try {
     const { system, prompt } =
-      job.type === "reply" && original
+      job.type === "reply"
         ? buildReplyDraftPrompt(original, job.notes)
         : job.type === "compose"
           ? buildComposePrompt(job.action, text)
-          : job.type === "instruction_draft"
-            ? buildInstructionDraftPrompt(job.instruction, original ?? undefined)
-            : (() => {
-                throw new Error("Original message missing");
-              })();
+          : buildInstructionDraftPrompt(job.instruction, original);
     const model = job.type === "compose" ? REWRITE_MODEL : DRAFT_MODEL;
     for await (const chunk of backend.run({ system, prompt, model, signal: ctl.signal })) {
       result += chunk;
@@ -257,4 +249,18 @@ void (async () => {
   } catch (e) {
     setStatus(errorMessage(e));
   }
+  await takePendingReplyDraft();
 })();
+
+// A reply draft started from the message display popup: prefill the notes and run the usual path.
+async function takePendingReplyDraft(): Promise<void> {
+  if (tabId === null) return;
+  try {
+    const res = (await messenger.runtime.sendMessage({ type: "takePendingReplyDraft", tabId })) as TakePendingResponse | undefined;
+    if (!res || typeof res.notes !== "string") return;
+    replyNotesEl.value = res.notes;
+    if (state.canReply && relatedMessageId !== null) void start({ type: "reply", notes: res.notes });
+  } catch {
+    // No pending draft is the normal case; ignore errors.
+  }
+}

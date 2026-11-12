@@ -42,12 +42,14 @@ export interface Controls {
   summarizeEnabled: boolean;
   /** Question field and ask button (the button also needs a non-empty question). */
   askEnabled: boolean;
+  /** Reply draft button and its notes field. */
+  replyEnabled: boolean;
   cancelVisible: boolean;
 }
 
 export function controls(state: DisplayState): Controls {
   const ready = READY.includes(state.phase);
-  return { summarizeEnabled: ready, askEnabled: ready, cancelVisible: state.phase === "streaming" };
+  return { summarizeEnabled: ready, askEnabled: ready, replyEnabled: ready, cancelVisible: state.phase === "streaming" };
 }
 
 /** Whether the ask button may start: a ready state and a non-blank question. */

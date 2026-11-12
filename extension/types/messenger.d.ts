@@ -28,6 +28,13 @@ declare namespace messenger {
     // Callers use `await`, which handles both a Port and a Promise<Port>.
     function connectNative(application: string): Port | Promise<Port>;
     const onInstalled: MessengerEvent<(details: InstalledDetails) => void>;
+    const id: string;
+    interface MessageSender {
+      id?: string;
+    }
+    function sendMessage(message: unknown): Promise<unknown>;
+    // Return true to call sendResponse asynchronously.
+    const onMessage: MessengerEvent<(message: unknown, sender: MessageSender, sendResponse: (response?: unknown) => void) => boolean | void>;
   }
 }
 
@@ -53,6 +60,7 @@ declare namespace messenger {
     // Only `id` is used; url/title would need the "tabs" permission.
     interface Tab {
       id?: number;
+      windowId?: number;
     }
     function query(queryInfo: { active?: boolean; currentWindow?: boolean }): Promise<Tab[]>;
   }
@@ -68,6 +76,11 @@ declare namespace messenger {
       relatedMessageId?: number;
     }
     function getComposeDetails(tabId: number): Promise<ComposeDetails>;
+    function beginReply(messageId: number, replyType?: "replyToAll" | "replyToList" | "replyToSender", details?: ComposeDetails): Promise<tabs.Tab>;
+  }
+  namespace composeAction {
+    /** Resolves to false if the popup cannot be opened (TB 113+ for options and return value). */
+    function openPopup(options?: { windowId?: number }): Promise<boolean>;
   }
 }
 

@@ -31,10 +31,14 @@ const answerSection = $("answer-section");
 const answerEl = $("answer");
 const questionEl = $<HTMLInputElement>("question");
 const askBtn = $<HTMLButtonElement>("ask");
+const replyNotesEl = $<HTMLInputElement>("reply-notes");
+const replyBtn = $<HTMLButtonElement>("reply-draft");
 
 const backend = new CliBackend();
 let state = initialState();
 let thread: LoadedThread | null = null;
+let displayedId: number | null = null;
+let replyStarting = false;
 // Lives only in this popup's memory; never stored or logged.
 let history: HistoryEntry[] = [];
 let controller: AbortController | null = null;
@@ -52,6 +56,30 @@ function render(): void {
   questionEl.disabled = !c.askEnabled;
   askBtn.disabled = !canAsk(state, questionEl.value);
   cancelBtn.hidden = !c.cancelVisible;
+  replyNotesEl.disabled = !c.replyEnabled;
+  replyBtn.disabled = !c.replyEnabled || replyStarting || displayedId === null;
+}
+
+function startReplyDraft(): void {
+  if (replyBtn.disabled || displayedId === null) return;
+  replyStarting = true;
+  statusEl.textContent = "";
+  render();
+  void (async () => {
+    try {
+      const res = (await messenger.runtime.sendMessage({ type: "startReplyDraft", messageId: displayedId, notes: replyNotesEl.value })) as
+        | { ok?: boolean; popupOpened?: boolean }
+        | undefined;
+      if (res?.ok !== true) statusEl.textContent = t("displayReplyFailed");
+      else if (res.popupOpened === true) window.close();
+      else statusEl.textContent = t("displayReplyOpened");
+    } catch {
+      statusEl.textContent = t("displayReplyFailed");
+    } finally {
+      replyStarting = false;
+      render();
+    }
+  })();
 }
 
 function renderHistory(): void {
@@ -141,6 +169,13 @@ function ask(): void {
 
 summarizeBtn.addEventListener("click", summarize);
 askBtn.addEventListener("click", ask);
+replyBtn.addEventListener("click", startReplyDraft);
+replyNotesEl.addEventListener("keydown", (ev) => {
+  if (isSubmitKey(ev)) {
+    ev.preventDefault();
+    startReplyDraft();
+  }
+});
 cancelBtn.addEventListener("click", () => controller?.abort());
 questionEl.addEventListener("input", render);
 questionEl.addEventListener("keydown", (ev) => {
@@ -165,6 +200,7 @@ void (async () => {
       return;
     }
     thread = await loadThread(only.id);
+    displayedId = only.id;
     infoEl.textContent = t("displayThreadCount", [String(thread.messages.length)]);
     const notice = threadNotice(thread);
     if (notice) {

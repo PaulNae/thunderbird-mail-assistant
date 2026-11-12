@@ -116,7 +116,7 @@
     "message": "No text of your own yet. A draft will be inserted above the quote."
   },
   "composeOriginalFailed": {
-    "message": "The original message could not be read."
+    "message": "The original message could not be read; draft without it."
   },
   "composeEmptyResult": {
     "message": "The model returned no text."
@@ -185,5 +185,20 @@
   },
   "displayAsk": {
     "message": "Ask"
+  },
+  "displayReplyHeading": {
+    "message": "Reply"
+  },
+  "displayReplyNotesPlaceholder": {
+    "message": "Keywords for the reply (optional)"
+  },
+  "displayReplyDraft": {
+    "message": "Draft reply"
+  },
+  "displayReplyOpened": {
+    "message": "Reply window opened - click Mail Assistant there."
+  },
+  "displayReplyFailed": {
+    "message": "The reply window could not be opened."
   }
 }

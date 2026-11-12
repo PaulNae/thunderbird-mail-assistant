@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { controls, describeScope, initialState, reduce, resolveAction, resolveInstructionJob, scopeEvent, startEvent } from "../extension/compose/popup-state.ts";
+import { controls, describeScope, initialState, reduce, resolveAction, planJob, resolveInstructionJob, scopeEvent, startEvent } from "../extension/compose/popup-state.ts";
 import type { PopupEvent } from "../extension/compose/popup-state.ts";
 
 const run = (events: PopupEvent[]) => events.reduce(reduce, initialState());
@@ -124,4 +124,32 @@ test("instruction draft uses the draft path and can be regenerated", () => {
   const s = run(["scope_reply_only", "start_reply", "done"]);
   assert.equal(s.phase, "preview");
   assert.equal(reduce(reduce(s, "discard"), startEvent(job)).phase, "streaming");
+});
+
+const scope = (text: string, usable = true, replyUsable = true) => ({ text, usable, replyUsable });
+const reply = { type: "reply", notes: "n" } as const;
+const draft = { type: "instruction_draft", instruction: "x" } as const;
+const rewrite = { type: "compose", action: { kind: "rephrase" } } as const;
+
+test("planJob: reply needs the original and a related message", () => {
+  assert.deepEqual(planJob(reply, scope(""), true), { needsOriginal: true, wantsOriginal: false });
+  assert.equal(planJob(reply, scope(""), false).blocked, "unusable");
+  assert.equal(planJob(reply, null, true).blocked, "unusable");
+  assert.equal(planJob(reply, scope("", false, false), true).blocked, "unusable");
+});
+
+test("planJob: instruction draft wants the original only with a related message", () => {
+  assert.deepEqual(planJob(draft, scope(" \n"), true), { needsOriginal: false, wantsOriginal: true });
+  assert.deepEqual(planJob(draft, scope(""), false), { needsOriginal: false, wantsOriginal: false });
+});
+
+test("planJob: newly typed own text blocks an instruction draft as stale", () => {
+  assert.equal(planJob(draft, scope("Hello", true, true), true).blocked, "stale");
+  assert.equal(planJob(draft, scope("Hello", true, true), false).blocked, "stale");
+});
+
+test("planJob: rewrite needs a usable scope, else stale", () => {
+  assert.deepEqual(planJob(rewrite, scope("abc"), true), { needsOriginal: false, wantsOriginal: false });
+  assert.equal(planJob(rewrite, scope("", false, true), true).blocked, "stale");
+  assert.equal(planJob(rewrite, null, true).blocked, "unusable");
 });
