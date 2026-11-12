@@ -119,6 +119,7 @@ async function start(job: PopupJob): Promise<void> {
     return;
   }
   if (!scope || !(job.type === "compose" ? scope.usable : scope.replyUsable)) {
+    if (scope && job.type === "compose") setStatus(t("composeStale"));
     dispatch("prepare_fail");
     return;
   }

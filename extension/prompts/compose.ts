@@ -117,6 +117,7 @@ const INSTRUCTION_DRAFT_RULES = [
   "Output only the email body: no subject line, no introduction, no explanation.",
   "Do not invent facts, names, dates or numbers. Mark missing details as clearly recognizable placeholders in square brackets, for example [Name] or [Date].",
   "Write in the language of the instruction.",
+  "Do not add a signature; the email client adds it.",
 ];
 
 /** Draft from a free instruction; with `original` the text is a reply to that email. */
@@ -127,7 +128,7 @@ export function buildInstructionDraftPrompt(instruction: string, original?: Orig
     ...COMMON_RULES,
     ...INSTRUCTION_DRAFT_RULES,
     ...(original
-      ? ["The text is a reply to the email in <original_email>. Do not quote the original email and do not add a signature."]
+      ? ["The text is a reply to the email in <original_email>. Do not quote the original email."]
       : []),
   ].join("\n");
   const prompt = [
