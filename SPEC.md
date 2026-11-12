@@ -202,35 +202,35 @@ Entschieden am 2026-11-12: Die Store-Version bekommt beide Backends mit Umschalt
 das Abo über Claude Code ist eine bewusst zu wählende Option. Der Nutzer hat der neuen Host-Berechtigung für
 `https://api.anthropic.com/*` zugestimmt; weitere neue Berechtigungen nur nach Rückfrage.
 
-- [ ] `ApiBackend`: Messages-API per `fetch` mit Streaming, gleiche `Backend`-Schnittstelle und gleiche Fehlercodes
+- [x] `ApiBackend`: Messages-API per `fetch` mit Streaming, gleiche `Backend`-Schnittstelle und gleiche Fehlercodes
       wie `CliBackend` (dazu ein Code für fehlenden oder ungültigen Schlüssel), Abbruch und Zeitlimit. Keine Tools.
       Modellnamen der Einstellungen (`haiku`, `sonnet`, …) auf API-Modellkennungen abbilden; die Kennungen und das
       Anfrageformat in der offiziellen API-Doku nachschlagen, nicht aus dem Gedächtnis.
-- [ ] API-Key: Eingabe in den Einstellungen (Passwortfeld), gespeichert in `storage.local`, nie in Logs,
+- [x] API-Key: Eingabe in den Einstellungen (Passwortfeld), gespeichert in `storage.local`, nie in Logs,
       Fehlermeldungen oder `storage.sync`; geht nur an `api.anthropic.com`. Verbindungstest auch für dieses Backend.
-- [ ] Backend-Umschalter in den Einstellungen. Neue Installation: API-Key. Bestehende Installation (0.6.0 und älter,
+- [x] Backend-Umschalter in den Einstellungen. Neue Installation: API-Key. Bestehende Installation (0.6.0 und älter,
       erkennbar an vorhandenen Einstellungen) bleibt beim CLI-Backend, damit beim Nutzer nichts bricht.
-- [ ] Einrichtungsanleitung im Add-on (de/en), als eigene Seite, erreichbar aus den Einstellungen, aus dem
+- [x] Einrichtungsanleitung im Add-on (de/en), als eigene Seite, erreichbar aus den Einstellungen, aus dem
       Einwilligungsdialog und aus Fehlermeldungen (`host_not_found`, `cli_not_found`, `not_logged_in`, fehlender
       Schlüssel). Für den API-Key: wo man ihn erstellt, wo man ihn einträgt, dass Kosten nach Verbrauch entstehen.
       Für Claude Code: Voraussetzungen (macOS, Node 22, Claude Code installiert und angemeldet), Helfer aus dem
       GitHub-Repository installieren (`npm run host:install`), Verbindungstest. Das CLI-Backend bleibt vorerst nur
       macOS; auf anderen Systemen sagt das die Anleitung und der Umschalter.
-- [ ] Hinweis am Umschalter und in der Anleitung: Das Abo (Free, Pro, Max) ist laut Anthropics Consumer Terms nur
+- [x] Hinweis am Umschalter und in der Anleitung: Das Abo (Free, Pro, Max) ist laut Anthropics Consumer Terms nur
       für private, nicht geschäftliche Nutzung; für geschäftliche Mails den API-Key verwenden. Eigenes Konto nötig,
       kein offizielles Anthropic-Produkt.
-- [ ] Stand-Hinweis mit Datum am Umschalter, in der Anleitung und im README: "Anthropics Bedingungen zuletzt geprüft
+- [x] Stand-Hinweis mit Datum am Umschalter, in der Anleitung und im README: "Anthropics Bedingungen zuletzt geprüft
       am 12.11.2026. Anthropic kann sie ändern; ist die Nutzung des Abos über Claude Code auf diesem Weg nicht mehr
       erlaubt, darf diese Option nicht mehr verwendet werden. Maßgeblich sind die aktuellen Bedingungen von
       Anthropic, nicht dieser Hinweis." Mit Link auf `https://code.claude.com/docs/en/legal-and-compliance`. Das
       Datum steht als eine Konstante im Code und wird nur nach erneuter Prüfung der Bedingungen geändert.
-- [ ] Haftungshinweis im Einwilligungsdialog und in der Anleitung (de/en): Bereitstellung ohne Gewähr; Antworten
+- [x] Haftungshinweis im Einwilligungsdialog und in der Anleitung (de/en): Bereitstellung ohne Gewähr; Antworten
       des Modells können falsch sein und sind vor dem Senden zu prüfen; der Nutzer ist für die Einhaltung der
       Anthropic-Bedingungen und für die Weitergabe von Mailinhalten selbst verantwortlich; Verweis auf die
       MIT-Lizenz. Wer schon eingewilligt hat, muss den erweiterten Text einmal neu bestätigen (Versionsnummer der
       Einwilligung erhöhen).
-- [ ] README (englisch) und Datenschutz-Abschnitt an beide Backends anpassen; Version 0.7.0
-- [ ] Prüfen, ob Thunderbird `data_collection_permissions` im Manifest verlangt (Doku), und danach handeln.
+- [x] README (englisch) und Datenschutz-Abschnitt an beide Backends anpassen; Version 0.7.0
+- [x] Prüfen, ob Thunderbird `data_collection_permissions` im Manifest verlangt (Doku), und danach handeln.
       Ergebnis (2026-11-12): Thunderbird verlangt den Schlüssel nicht. Die Thunderbird-Doku (`permissions`-API, ab TB 140)
       sagt ausdrücklich, dass Thunderbird den eingebauten Zustimmungsablauf von Firefox nicht verwendet und Add-ons die
       Zustimmung selbst einholen müssen; das tut der Einwilligungsdialog. Die ATN-Richtlinie nennt den Schlüssel nicht,
@@ -238,7 +238,7 @@ das Abo über Claude Code ist eine bewusst zu wählende Option. Der Nutzer hat d
       Installation die Einrichtungsanleitung. `web-ext lint` warnt weiter (`MISSING_DATA_COLLECTION_PERMISSIONS`, Firefox-
       Regel); ein Eintrag wäre für TB 128 unbekannt und würde eine neue Manifest-Angabe bedeuten. Bei der Einreichung
       (Phase 9) erneut prüfen.
-- [ ] Alle Texte in `_locales` passen zum gewählten Backend und zu Store-Nutzern (Ergänzung vom 2026-11-12):
+- [x] Alle Texte in `_locales` passen zum gewählten Backend und zu Store-Nutzern (Ergänzung vom 2026-11-12):
       Fehlermeldungen nennen die Ursache und verweisen per Knopf auf die Anleitung statt auf `npm`-Befehle; die Texte
       dazu, wohin Daten gehen (Einwilligung, Einstellungen), richten sich nach dem gewählten Backend; eigene Meldungen
       für das API-Backend (Schlüssel fehlt, Schlüssel ungültig, Guthaben/Abrechnung, Rate-Limit, Überlastung, keine
@@ -249,6 +249,12 @@ Abnahme: Mit API-Key funktionieren Umformulieren, Zusammenfassen und Postfach-Fr
 Umschalter wechselt das Backend erkennbar; ein fehlender oder falscher Schlüssel führt zu einer verständlichen
 Meldung mit Verweis auf die Anleitung; Anleitung, Privat-Hinweis und Haftungshinweis sind in Deutsch und Englisch
 sichtbar; eine bestehende 0.6.0-Installation arbeitet nach dem Update unverändert mit Claude Code weiter.
+Nachgewiesen am 2026-11-12 in Thunderbird 160: Abnahme vom Nutzer im Testprofil nach der Testanleitung bestätigt
+(Update von 0.6.0 bleibt bei Claude Code, Umschalter, Meldungen bei fehlendem und falschem Schlüssel, Lauf mit echtem
+Schlüssel, Anleitung und Hinweise). Zusätzlich verweisen Anleitung und README für Fehler und Wünsche auf GitHub Issues.
+Nicht eigens geprüft: ob ein langer API-Lauf weiterläuft, wenn das Popup währenddessen geschlossen wird. Der Link
+„Mehr erfahren“ im Berechtigungsdialog von Thunderbird (support.mozilla.org) ging beim Nutzer nicht; er gehört zu
+Thunderbird, nicht zum Add-on.
 
 ### Phase 9 – Einreichung im Store
 - [ ] Datenschutzerklärung als Volltext, Store-Texte (en/de), Quelltext-Paket mit Bauanleitung
