@@ -118,11 +118,12 @@ in einer leeren Antwort landet er vor Zitat und Signatur, beide bleiben unverän
 Nachgewiesen am 2026-11-12 in Thunderbird 160: Abnahme vom Nutzer im Testprofil bestätigt (Umformulieren und Übernehmen in HTML- und Nur-Text-Mail, Entwurf aus Anweisung).
 
 ### Phase 4 – Lesen
-- [ ] Popup in der Mailansicht: Zusammenfassung, Frage stellen, "Antwort entwerfen" (öffnet Phase 3)
-- [ ] Thread-Kontext: zugehörige Mails einbeziehen, mit Obergrenze für die Textmenge
-- [ ] HTML-Mails zu Text reduzieren, Anhänge nur als Namen nennen
+- [x] Popup in der Mailansicht: Zusammenfassung, Frage stellen, "Antwort entwerfen" (öffnet Phase 3)
+- [x] Thread-Kontext: zugehörige Mails einbeziehen, mit Obergrenze für die Textmenge
+- [x] HTML-Mails zu Text reduzieren, Anhänge nur als Namen nennen
 
 Abnahme: Zusammenfassung einer langen HTML-Mail und eine Folgefrage dazu, jeweils gestreamt.
+Umgesetzt und reviewt; Nachweis in Thunderbird steht aus.
 
 ### Phase 5 – Postfach-Abfrage
 - [ ] Chat-Tab; Schritt 1: Modell erzeugt aus der Frage Suchparameter (strukturierte Ausgabe)
