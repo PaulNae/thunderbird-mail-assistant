@@ -6,11 +6,36 @@
     <link rel="stylesheet" href="../shared/popup.css" />
     <script type="module" src="popup.js"></script>
   </head>
-  <body>
+  <body class="display">
     <h1 data-i18n="popupDisplayTitle"></h1>
-    <p data-i18n="popupDisplayPlaceholder"></p>
-    <p><button id="bridge-test" data-i18n="bridgeTestButton"></button>
-      <button id="bridge-cancel" data-i18n="bridgeCancelButton" hidden></button></p>
-    <pre id="bridge-output" aria-live="polite"></pre>
+    <p id="info" class="scope"></p>
+    <p id="notice" class="status" role="status" hidden></p>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+
+    <div class="row">
+      <button type="button" id="summarize" data-i18n="displaySummarize" disabled></button>
+      <button type="button" id="cancel" data-i18n="composeCancel" hidden></button>
+    </div>
+
+    <section id="summary-section" hidden>
+      <h2 data-i18n="displaySummaryHeading"></h2>
+      <pre id="summary" class="output" tabindex="0"></pre>
+    </section>
+
+    <section id="history-section" hidden>
+      <h2 data-i18n="displayHistoryHeading"></h2>
+      <ol id="history" class="history"></ol>
+    </section>
+
+    <section id="answer-section" hidden>
+      <h2 data-i18n="displayAnswerHeading"></h2>
+      <pre id="answer" class="output" tabindex="0" aria-live="polite"></pre>
+    </section>
+
+    <h2 data-i18n="displayAskHeading"></h2>
+    <div class="row">
+      <input type="text" id="question" data-i18n-placeholder="displayAskPlaceholder" disabled />
+      <button type="button" id="ask" data-i18n="displayAsk" disabled></button>
+    </div>
   </body>
 </html>

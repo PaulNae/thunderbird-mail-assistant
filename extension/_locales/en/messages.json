@@ -17,18 +17,6 @@
   "popupDisplayTitle": {
     "message": "Read"
   },
-  "popupDisplayPlaceholder": {
-    "message": "The reading features will appear here."
-  },
-  "bridgeTestButton": {
-    "message": "Test connection"
-  },
-  "bridgeCancelButton": {
-    "message": "Cancel"
-  },
-  "bridgeTestPrompt": {
-    "message": "Say hello"
-  },
   "errorHostNotFound": {
     "message": "The helper service is not installed. Please run \"npm run host:install\"."
   },
@@ -146,5 +134,56 @@
   },
   "composeDraftLabel": {
     "message": "The text is empty: the instruction writes a new draft."
+  },
+  "displaySelectOne": {
+    "message": "Please display exactly one message to read it."
+  },
+  "displayThreadCount": {
+    "message": "Messages included: $COUNT$",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "displayOmitted": {
+    "message": "Thread shortened: $COUNT$ older messages left out.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "displayShortened": {
+    "message": "Text shortened: parts of the messages were cut to fit the size limit."
+  },
+  "displayOmittedShortened": {
+    "message": "Thread shortened: $COUNT$ older messages left out, text also shortened.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "displaySummarize": {
+    "message": "Summarize"
+  },
+  "displaySummaryHeading": {
+    "message": "Summary"
+  },
+  "displayHistoryHeading": {
+    "message": "Questions and answers"
+  },
+  "displayAnswerHeading": {
+    "message": "Answer"
+  },
+  "displayAskHeading": {
+    "message": "Question about the mail"
+  },
+  "displayAskPlaceholder": {
+    "message": "Ask a question …"
+  },
+  "displayAsk": {
+    "message": "Ask"
   }
 }

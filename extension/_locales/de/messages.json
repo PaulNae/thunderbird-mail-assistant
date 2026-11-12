@@ -17,18 +17,6 @@
   "popupDisplayTitle": {
     "message": "Lesen"
   },
-  "popupDisplayPlaceholder": {
-    "message": "Hier entstehen die Lesefunktionen."
-  },
-  "bridgeTestButton": {
-    "message": "Verbindung testen"
-  },
-  "bridgeCancelButton": {
-    "message": "Abbrechen"
-  },
-  "bridgeTestPrompt": {
-    "message": "Sag Hallo"
-  },
   "errorHostNotFound": {
     "message": "Der Hilfsdienst ist nicht installiert. Bitte „npm run host:install“ ausführen."
   },
@@ -146,5 +134,56 @@
   },
   "composeDraftLabel": {
     "message": "Der Text ist leer: Die Anweisung schreibt einen neuen Entwurf."
+  },
+  "displaySelectOne": {
+    "message": "Bitte genau eine Mail anzeigen, um sie zu lesen."
+  },
+  "displayThreadCount": {
+    "message": "Einbezogene Mails: $COUNT$",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "displayOmitted": {
+    "message": "Thread gekürzt: $COUNT$ ältere Mails ausgelassen.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "displayShortened": {
+    "message": "Text gekürzt: Teile der Mails wurden wegen der Größe abgeschnitten."
+  },
+  "displayOmittedShortened": {
+    "message": "Thread gekürzt: $COUNT$ ältere Mails ausgelassen, Text zusätzlich gekürzt.",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "displaySummarize": {
+    "message": "Zusammenfassen"
+  },
+  "displaySummaryHeading": {
+    "message": "Zusammenfassung"
+  },
+  "displayHistoryHeading": {
+    "message": "Fragen und Antworten"
+  },
+  "displayAnswerHeading": {
+    "message": "Antwort"
+  },
+  "displayAskHeading": {
+    "message": "Frage zur Mail"
+  },
+  "displayAskPlaceholder": {
+    "message": "Frage stellen …"
+  },
+  "displayAsk": {
+    "message": "Fragen"
   }
 }

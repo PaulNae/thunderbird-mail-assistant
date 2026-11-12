@@ -9,6 +9,7 @@ interface MessengerEvent<T extends (...args: never[]) => void> {
 declare namespace messenger {
   namespace i18n {
     function getMessage(messageName: string, substitutions?: string | string[]): string;
+    function getUILanguage(): string;
   }
   namespace runtime {
     interface InstalledDetails {
@@ -54,6 +55,10 @@ declare namespace messenger {
       id?: number;
     }
     function query(queryInfo: { active?: boolean; currentWindow?: boolean }): Promise<Tab[]>;
+  }
+  namespace messageDisplay {
+    // MV3 returns a MessageList ({ id, messages }), not an array.
+    function getDisplayedMessages(tabId?: number): Promise<messages.MessageList>;
   }
   namespace compose {
     interface ComposeDetails {
