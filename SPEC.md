@@ -250,8 +250,9 @@ Umschalter wechselt das Backend erkennbar; ein fehlender oder falscher Schlüsse
 Meldung mit Verweis auf die Anleitung; Anleitung, Privat-Hinweis und Haftungshinweis sind in Deutsch und Englisch
 sichtbar; eine bestehende 0.6.0-Installation arbeitet nach dem Update unverändert mit Claude Code weiter.
 Nachgewiesen am 2026-11-12 in Thunderbird 160: Abnahme vom Nutzer im Testprofil nach der Testanleitung bestätigt
-(Update von 0.6.0 bleibt bei Claude Code, Umschalter, Meldungen bei fehlendem und falschem Schlüssel, Lauf mit echtem
-Schlüssel, Anleitung und Hinweise). Zusätzlich verweisen Anleitung und README für Fehler und Wünsche auf GitHub Issues.
+(Update von 0.6.0 bleibt bei Claude Code, Umschalter, Meldungen bei fehlendem und falschem Schlüssel, Anleitung und
+Hinweise). **Nicht geprüft: ein Lauf mit echtem API-Schlüssel.** Der Nutzer hat keinen; das API-Backend ist nur gegen
+einen nachgebauten Server getestet und gilt bis zu einem echten Lauf als ungeprüft (vor der Store-Einreichung nachholen). Zusätzlich verweisen Anleitung und README für Fehler und Wünsche auf GitHub Issues.
 Nicht eigens geprüft: ob ein langer API-Lauf weiterläuft, wenn das Popup währenddessen geschlossen wird. Der Link
 „Mehr erfahren“ im Berechtigungsdialog von Thunderbird (support.mozilla.org) ging beim Nutzer nicht; er gehört zu
 Thunderbird, nicht zum Add-on.
