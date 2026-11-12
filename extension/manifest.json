@@ -30,6 +30,8 @@
     "default_icon": "icons/icon.svg"
   },
   "permissions": [
-    "nativeMessaging"
+    "nativeMessaging",
+    "scripting",
+    "compose"
   ]
 }

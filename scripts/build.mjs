@@ -12,6 +12,7 @@ const dist = path.join(root, "dist");
 const entryPoints = {
   "background/background": "extension/background/background.ts",
   "compose/popup": "extension/compose/popup.ts",
+  "compose/editor": "extension/compose/editor.ts",
   "display/popup": "extension/display/popup.ts",
 };
 

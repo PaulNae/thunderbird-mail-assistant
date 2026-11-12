@@ -29,3 +29,24 @@ declare namespace messenger {
     const onInstalled: MessengerEvent<(details: InstalledDetails) => void>;
   }
 }
+
+declare namespace messenger {
+  namespace scripting {
+    interface InjectionResult {
+      frameId: number;
+      result?: unknown;
+      error?: { message?: string };
+    }
+    interface ScriptTarget {
+      tabId: number;
+    }
+    type ExecuteScriptDetails =
+      | { target: ScriptTarget; files: string[] }
+      | { target: ScriptTarget; func: (...args: never[]) => unknown; args?: unknown[] };
+    function executeScript(details: ExecuteScriptDetails): Promise<InjectionResult[]>;
+  }
+}
+
+// Set by the compose editor content script (extension/compose/editor.ts).
+// eslint-disable-next-line no-var
+declare var mailAssistantEditor: import("../compose/editor-text.ts").EditorApi | undefined;

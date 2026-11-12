@@ -66,3 +66,9 @@ test("data-i18n keys exist in both locales and locales have identical keys", () 
 test("nativeMessaging permission is requested", () => {
   assert.ok((manifest["permissions"] as string[]).includes("nativeMessaging"));
 });
+
+test("scripting and compose permissions are requested", () => {
+  const permissions = manifest["permissions"] as string[];
+  assert.ok(permissions.includes("scripting"));
+  assert.ok(permissions.includes("compose"));
+});
