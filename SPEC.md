@@ -171,5 +171,5 @@ Nachgewiesen am 2026-11-12 in Thunderbird 160: Abnahme vom Nutzer im Testprofil 
 
 ## Offene Entscheidungen
 
-- Produktname und Add-on-ID (bis dahin Arbeitstitel "Mail Assistant").
+- ~~Produktname und Add-on-ID~~: entschieden am 2026-11-12, Name "Mail Assistant", ID `mail-assistant@paulnae.github.io`.
 - Lizenz (vor einer Veröffentlichung festlegen).

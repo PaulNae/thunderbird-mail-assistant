@@ -12,7 +12,7 @@ const manifest = readJson("manifest.json");
 test("manifest is MV3 with a pinned minimum Thunderbird version", () => {
   assert.equal(manifest["manifest_version"], 3);
   const gecko = (manifest["browser_specific_settings"] as { gecko: Record<string, string> }).gecko;
-  assert.ok(gecko["id"]);
+  assert.equal(gecko["id"], "mail-assistant@paulnae.github.io");
   assert.ok(gecko["strict_min_version"]);
 });
 
