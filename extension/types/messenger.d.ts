@@ -15,7 +15,14 @@ declare namespace messenger {
     interface InstalledDetails {
       reason: "install" | "update" | "browser_update" | "shared_module_update";
       previousVersion?: string;
+      temporary?: boolean;
     }
+    interface PlatformInfo {
+      /** "mac", "win", "linux", "android", "cros" or "openbsd". */
+      os: string;
+      arch: string;
+    }
+    function getPlatformInfo(): Promise<PlatformInfo>;
     interface Port {
       name: string;
       /** Set on ports passed to onConnect. */
@@ -198,6 +205,8 @@ declare namespace messenger {
   }
   namespace windows {
     function update(windowId: number, updateInfo: { focused?: boolean }): Promise<unknown>;
+    /** Opens the URL in the system's default browser (TB 85+). */
+    function openDefaultBrowser(url: string): Promise<void>;
   }
 }
 

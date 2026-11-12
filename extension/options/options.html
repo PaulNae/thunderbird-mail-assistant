@@ -10,6 +10,40 @@
     <main>
       <h1 data-i18n="optionsTitle"></h1>
       <p id="saved" class="status" role="status" aria-live="polite"></p>
+      <p id="guide-row"></p>
+
+      <section aria-labelledby="backend-heading">
+        <h2 id="backend-heading" data-i18n="optionsBackendHeading"></h2>
+        <fieldset class="choices">
+          <legend data-i18n="optionsBackendLegend"></legend>
+          <div class="choice">
+            <input type="radio" name="backend" id="backend-api" aria-describedby="backend-api-hint" />
+            <label for="backend-api" data-i18n="optionsBackendApi"></label>
+            <p id="backend-api-hint" class="hint" data-i18n="optionsBackendApiHint"></p>
+          </div>
+          <div class="choice">
+            <input type="radio" name="backend" id="backend-cli" aria-describedby="backend-cli-hint backend-cli-private backend-cli-unsupported" />
+            <label for="backend-cli" data-i18n="optionsBackendCli"></label>
+            <p id="backend-cli-hint" class="hint" data-i18n="optionsBackendCliHint"></p>
+            <p id="backend-cli-private" class="notice" data-i18n="noticePrivateUse"></p>
+            <p id="backend-cli-unsupported" class="notice" data-i18n="optionsBackendCliUnsupported" hidden></p>
+            <div id="terms-row"></div>
+          </div>
+        </fieldset>
+
+        <div id="api-key-box">
+          <h3 id="api-key-heading" data-i18n="optionsApiKeyHeading"></h3>
+          <p id="api-key-state" class="scope"></p>
+          <div class="row">
+            <label for="api-key" data-i18n="optionsApiKeyLabel"></label>
+            <input type="password" id="api-key" autocomplete="off" spellcheck="false" aria-describedby="api-key-hint" />
+            <button type="button" id="api-key-save" data-i18n="optionsApiKeySave"></button>
+            <button type="button" id="api-key-remove" data-i18n="optionsApiKeyRemove"></button>
+          </div>
+          <p id="api-key-hint" class="hint" data-i18n="optionsApiKeyHint"></p>
+          <p id="api-key-status" class="status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
 
       <section aria-labelledby="consent-heading-main">
         <h2 id="consent-heading-main" data-i18n="optionsConsentHeading"></h2>
@@ -55,6 +89,7 @@
 
       <section aria-labelledby="check-heading">
         <h2 id="check-heading" data-i18n="optionsCheckHeading"></h2>
+        <p data-i18n="optionsCheckHint"></p>
         <div class="row">
           <button type="button" id="check" data-i18n="optionsCheckRun"></button>
         </div>

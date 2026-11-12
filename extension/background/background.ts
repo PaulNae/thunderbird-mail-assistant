@@ -2,6 +2,10 @@
 import { PendingReplyDrafts, isOwnSender, parseRuntimeRequest } from "../shared/messages.ts";
 import { findReplyContext } from "../mail/identity.ts";
 import { CliBackend } from "../backend/cli-backend.ts";
+import { ApiBackend } from "../backend/api-backend.ts";
+import { SwitchingBackend } from "./switching-backend.ts";
+import { readApiKey } from "../shared/api-key.ts";
+import { GUIDE_PAGE } from "../shared/guide.ts";
 import { ConsentGatedBackend } from "./gated-backend.ts";
 import { CONSENT_KEY, isConsentGiven, readConsent } from "../shared/consent.ts";
 import type { ChatSession } from "./chat.ts";
@@ -13,7 +17,7 @@ import { ChatTabTracker } from "./chat-tab.ts";
 import { loadMessage } from "../mail/message-text.ts";
 import { searchHeaders } from "../mail/search.ts";
 import { PORT_CHAT } from "../shared/chat-messages.ts";
-import { migrateLegacySettings, readSettings } from "../shared/settings.ts";
+import { readSettings, settleBackendChoice } from "../shared/settings.ts";
 import { toCheckResponse } from "../shared/messages.ts";
 import type { CheckResponse, StartReplyDraftResponse, TakePendingResponse } from "../shared/messages.ts";
 import { BackendError } from "../backend/backend.ts";
@@ -27,8 +31,20 @@ const pending = new PendingReplyDrafts();
 // storage.session and restored lazily if the script was unloaded in between.
 // Every run passes the consent gate: without the user's consent (storage.local, read on each run)
 // nothing is sent to the model, whatever a page asks for.
-const backend = new ConsentGatedBackend(new CliBackend(), () => readConsent(messenger.storage.local));
-const settings = () => readSettings(messenger.storage.local);
+// The backend is fixed once per installation before the settings are first read: 0.6 installations stay
+// with Claude Code, new ones start with the API key. A failure leaves the default (API key).
+const settled = settleBackendChoice(messenger.storage.local).catch(() => undefined);
+const settings = () => settled.then(() => readSettings(messenger.storage.local));
+// Picks the backend of the settings for every run; the API key is read on each run and goes only to the API.
+const switching = new SwitchingBackend({
+  backends: {
+    cli: new CliBackend(),
+    api: new ApiBackend({ getKey: () => readApiKey(messenger.storage.local) }),
+  },
+  choice: async () => (await settings()).backend,
+  os: async () => (await messenger.runtime.getPlatformInfo()).os,
+});
+const backend = new ConsentGatedBackend(switching, () => readConsent(messenger.storage.local));
 const jobs = new JobStore({ backend, session: messenger.storage.session, settings });
 
 // Mailbox queries of the chat tab. Each tab connection gets its own in-memory session that ends with the port.
@@ -70,8 +86,8 @@ messenger.tabs.onRemoved.addListener((tabId) => {
 
 messenger.runtime.onInstalled.addListener((details) => {
   console.log(`Mail Assistant installed (${details.reason})`);
-  // 0.5 kept "most mails per question" under its own key; move it into the settings object.
-  if (details.reason === "update") void migrateLegacySettings(messenger.storage.local).catch(() => undefined);
+  // A new installation shows the setup guide (API key, notices) before anything else.
+  if (details.reason === "install") void messenger.tabs.create({ url: GUIDE_PAGE }).catch(() => undefined);
 });
 
 // Withdrawing the consent stops every running run at once (new runs are blocked by the gate anyway).
@@ -105,14 +121,15 @@ const CHECK_TIMEOUT_MS = 40000;
 
 /** Connection test for the settings page; sends no mail content, so it needs no consent. */
 async function checkBackend(): Promise<CheckResponse> {
+  const { kind } = await switching.current().catch(() => ({ kind: "api" as const }));
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new BackendError("timeout")), CHECK_TIMEOUT_MS);
   });
   try {
-    return toCheckResponse(await Promise.race([backend.check(), timeout]));
+    return toCheckResponse(kind, await Promise.race([backend.check(), timeout]));
   } catch (e) {
-    return toCheckResponse({ errorCode: e instanceof BackendError ? e.code : "internal" });
+    return toCheckResponse(kind, { errorCode: e instanceof BackendError ? e.code : "internal" });
   } finally {
     clearTimeout(timer);
   }
