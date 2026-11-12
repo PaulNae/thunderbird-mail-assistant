@@ -1,32 +1,73 @@
-:root { color-scheme: light dark; --bg: #fff; --fg: #1c1b22; --muted: #5b5b66; }
-@media (prefers-color-scheme: dark) {
-  :root { --bg: #2b2a33; --fg: #fbfbfe; --muted: #b1b1b9; }
+/* Shared styles of all pages (popups, chat tab, settings). Colors only through the variables below,
+   which follow the light or dark theme via prefers-color-scheme. */
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1c1b22;
+  --muted: #5b5b66;
+  --border: #8f8f9d;
+  --surface: #f0f0f4;
+  --accent: #0061e0;
+  --accent-fg: #ffffff;
+  --link: #0061e0;
+  --focus: #0061e0;
 }
-body { margin: 0; padding: 16px; min-width: 280px; background: var(--bg); color: var(--fg);
-  font: message-box; }
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #2b2a33;
+    --fg: #fbfbfe;
+    --muted: #bfbfc9;
+    --border: #8f8f9d;
+    --surface: #42414d;
+    --accent: #80ebff;
+    --accent-fg: #15141a;
+    --link: #80ebff;
+    --focus: #80ebff;
+  }
+}
+
+body { margin: 0; padding: 16px; min-width: 280px; background: var(--bg); color: var(--fg); font: message-box; }
 h1 { margin: 0 0 8px; font-size: 1.2em; }
+h2 { margin: 12px 0 4px; font-size: 1em; }
 p { margin: 0; color: var(--muted); }
 pre { white-space: pre-wrap; margin: 8px 0 0; font: inherit; }
 
-body.compose { width: 380px; box-sizing: border-box; }
 .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0; }
 .label { color: var(--muted); min-width: 4.5em; }
 .scope { color: var(--fg); font-weight: 600; }
 .status { min-height: 1.2em; margin: 4px 0; }
-input[type="text"] { flex: 1 1 160px; min-width: 0; padding: 4px 6px; font: inherit; color: var(--fg);
-  background: transparent; border: 1px solid var(--muted); border-radius: 4px; }
-button { font: inherit; color: var(--fg); background: transparent; border: 1px solid var(--muted);
-  border-radius: 4px; padding: 3px 10px; cursor: pointer; }
-button:disabled, input:disabled { opacity: 0.5; cursor: default; }
-button:focus-visible, input:focus-visible, pre:focus-visible { outline: 2px solid #0a84ff; outline-offset: 1px; }
-#preview { max-height: 240px; overflow-y: auto; padding: 8px; border: 1px solid var(--muted);
-  border-radius: 4px; margin: 8px 0 0; }
+.hint { color: var(--muted); font-size: 0.9em; }
 
-h2 { margin: 12px 0 4px; font-size: 1em; }
+input[type="text"], input[type="number"], select {
+  font: inherit; color: var(--fg); background: var(--bg);
+  border: 1px solid var(--border); border-radius: 4px; padding: 4px 6px;
+}
+input[type="text"] { flex: 1 1 160px; min-width: 0; }
+input[type="number"] { width: 6em; }
+input::placeholder { color: var(--muted); opacity: 1; }
 
+button {
+  font: inherit; color: var(--fg); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 4px; padding: 3px 10px; cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--fg); }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+button:disabled, input:disabled, select:disabled { opacity: 0.5; cursor: default; }
+
+/* Visible focus for everything that can be reached with the keyboard. */
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+button:focus-visible, input:focus-visible, select:focus-visible, pre:focus-visible,
+[tabindex]:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.output, #preview {
+  max-height: 240px; overflow-y: auto; padding: 8px;
+  border: 1px solid var(--border); border-radius: 4px; margin: 8px 0 0;
+}
+.output { margin: 4px 0 0; }
+
+body.compose { width: 380px; box-sizing: border-box; }
 body.display { width: 420px; box-sizing: border-box; }
-.output { max-height: 240px; overflow-y: auto; padding: 8px; border: 1px solid var(--muted);
-  border-radius: 4px; margin: 4px 0 0; }
+
 .history { margin: 4px 0 0; padding: 0; list-style: none; max-height: 240px; overflow-y: auto; }
 .history li { margin: 0 0 8px; }
 .history .question { color: var(--fg); font-weight: 600; }
@@ -34,19 +75,17 @@ body.display { width: 420px; box-sizing: border-box; }
 
 body.chat { max-width: 760px; margin: 0 auto; box-sizing: border-box; }
 .chat-log { margin: 12px 0 0; padding: 0; list-style: none; }
-.chat-log > li { margin: 0 0 16px; padding: 0 0 12px; border-bottom: 1px solid var(--muted); }
+.chat-log > li { margin: 0 0 16px; padding: 0 0 12px; border-bottom: 1px solid var(--border); }
 .chat-log .question { color: var(--fg); font-weight: 600; }
-.chat-log .answer { white-space: pre-wrap; margin: 6px 0 0; }
+.chat-log .answer { white-space: pre-wrap; margin: 6px 0 0; color: var(--fg); }
 .chat-log .meta { margin: 6px 0 0; font-size: 0.9em; }
 .chat-log .sources { margin: 4px 0 0; padding-left: 1.6em; }
 .chat-log .sources li { margin: 2px 0; }
-button.ref, button.source { border: none; padding: 0; color: #0a84ff; text-decoration: underline;
-  background: transparent; text-align: left; }
+button.ref, button.source {
+  border: none; padding: 0; color: var(--link); text-decoration: underline;
+  background: transparent; text-align: left;
+}
 button.ref { margin: 0 1px; }
-.settings label { color: var(--muted); }
-input[type="number"] { width: 4.5em; padding: 4px 6px; font: inherit; color: var(--fg); background: transparent;
-  border: 1px solid var(--muted); border-radius: 4px; }
-input[type="number"]:focus-visible { outline: 2px solid #0a84ff; outline-offset: 1px; }
 
 .consent p { margin: 0 0 8px; color: var(--fg); }
 .consent h1, .consent h2 { margin: 0 0 8px; font-size: 1.1em; }
@@ -54,5 +93,7 @@ input[type="number"]:focus-visible { outline: 2px solid #0a84ff; outline-offset:
 body.options { max-width: 720px; margin: 0 auto; box-sizing: border-box; }
 body.options section { margin: 16px 0 0; }
 .form-grid { display: grid; grid-template-columns: minmax(12em, max-content) 1fr; gap: 8px 12px; align-items: center; margin: 8px 0; }
-.hint { color: var(--muted); font-size: 0.9em; }
-select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--muted); border-radius: 4px; padding: 3px 6px; }
+
+@media (forced-colors: active) {
+  button.primary { border: 1px solid ButtonText; }
+}
