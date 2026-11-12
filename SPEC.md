@@ -47,7 +47,7 @@ UI-Code kennt nur diese Schnittstelle. `CliBackend` hält einen Port zum Host
 
 JSON-Nachrichten, jeweils mit `id`:
 
-- Add-on → Host: `{id, type:"run", system, prompt, model}`, `{id, type:"cancel"}`, `{type:"check"}`
+- Add-on → Host: `{id, type:"run", system, prompt, model, timeoutMs?}` (`timeoutMs` 10 000 bis 600 000, sonst Standard), `{id, type:"cancel"}`, `{type:"check"}`
 - Host → Add-on: `{id, type:"delta", text}`, `{id, type:"done"}`, `{id, type:"error", code, message}`,
   `{type:"check", ok, version}`
 

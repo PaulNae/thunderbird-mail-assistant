@@ -9,6 +9,7 @@ import { CONSENT_KEY, CONSENT_VERSION, grantConsent, isConsentGiven, readConsent
 import type { LocalArea } from "../extension/shared/consent.ts";
 import type { JobSnapshot, PortEvent } from "../extension/shared/job-messages.ts";
 import type { ChatEvent } from "../extension/shared/chat-messages.ts";
+import { defaultSettings } from "../extension/shared/settings.ts";
 
 class FakeLocal implements LocalArea {
   data = new Map<string, unknown>();
@@ -124,7 +125,7 @@ test("a mailbox question without consent ends with consent_required before any m
         loaded++;
         return { id, from: "a", subject: "b", date: "", body: "c", attachments: [] };
       },
-      maxMessages: async () => undefined,
+      settings: async () => defaultSettings(),
     },
     (e) => events.push(e),
   );

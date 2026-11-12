@@ -7,7 +7,7 @@ import { errorMessage } from "../shared/errors.ts";
 import { BackendError } from "../backend/backend.ts";
 import { openPort } from "../shared/job-client.ts";
 import type { JobPort } from "../shared/job-client.ts";
-import { PORT_CHAT, SETTING_MAX_MESSAGES, parseChatEvent, sanitizeMaxMessages } from "../shared/chat-messages.ts";
+import { PORT_CHAT, parseChatEvent } from "../shared/chat-messages.ts";
 import type { ChatEvent, ChatSearchInfo, ChatSnapshot, ChatSource, ChatTurn } from "../shared/chat-messages.ts";
 import { splitAnswer } from "../prompts/query.ts";
 import type { SearchField } from "../prompts/query.ts";
@@ -37,7 +37,7 @@ const questionEl = $<HTMLInputElement>("question");
 const askBtn = $<HTMLButtonElement>("ask");
 const cancelBtn = $<HTMLButtonElement>("cancel");
 const clearBtn = $<HTMLButtonElement>("clear");
-const maxEl = $<HTMLInputElement>("max-messages");
+const settingsBtn = $<HTMLButtonElement>("open-settings");
 
 const t = (key: string, subs?: string[]): string => messenger.i18n.getMessage(key, subs);
 
@@ -254,24 +254,6 @@ async function ask(): Promise<void> {
   renderControls();
 }
 
-async function loadSetting(): Promise<void> {
-  try {
-    maxEl.value = String(sanitizeMaxMessages((await messenger.storage.local.get(SETTING_MAX_MESSAGES))[SETTING_MAX_MESSAGES]));
-  } catch {
-    maxEl.value = String(sanitizeMaxMessages(undefined));
-  }
-}
-
-async function saveSetting(): Promise<void> {
-  const value = sanitizeMaxMessages(maxEl.value);
-  maxEl.value = String(value);
-  try {
-    await messenger.storage.local.set({ [SETTING_MAX_MESSAGES]: value });
-  } catch {
-    statusEl.textContent = t("errorInternal");
-  }
-}
-
 askBtn.addEventListener("click", () => void ask());
 questionEl.addEventListener("input", renderControls);
 questionEl.addEventListener("keydown", (ev) => {
@@ -285,9 +267,8 @@ clearBtn.addEventListener("click", () => {
   statusEl.textContent = "";
   port?.post({ type: "clear" });
 });
-maxEl.addEventListener("change", () => void saveSetting());
+settingsBtn.addEventListener("click", () => void messenger.runtime.openOptionsPage().catch(() => undefined));
 
 render();
-void loadSetting();
 void connect();
 void consent.refresh();

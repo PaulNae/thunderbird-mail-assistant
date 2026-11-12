@@ -6,7 +6,8 @@ import { openJobPort } from "../shared/job-client.ts";
 import type { JobPort } from "../shared/job-client.ts";
 import { PORT_DISPLAY } from "../shared/job-messages.ts";
 import type { JobSnapshot, PortEvent } from "../shared/job-messages.ts";
-import { MAX_QUESTION_CHARS, QUESTION_MODEL, SUMMARY_MODEL, buildQuestionPrompt, buildSummaryPrompt } from "../prompts/read.ts";
+import { MAX_QUESTION_CHARS, buildQuestionPrompt, buildSummaryPrompt } from "../prompts/read.ts";
+import { readSettings, threadLimits } from "../shared/settings.ts";
 import type { HistoryEntry, PromptParts } from "../prompts/read.ts";
 import { loadThread } from "../mail/thread.ts";
 import type { LoadedThread } from "../mail/thread.ts";
@@ -151,13 +152,14 @@ function syncState(): void {
   }
 }
 
-function startJob(kind: "summary" | "question", parts: PromptParts, model: string, question?: string): void {
+function startJob(kind: "summary" | "question", parts: PromptParts, question?: string): void {
   if (displayedId === null || !jobPort) {
     dispatch("prepare_fail");
     return;
   }
   statusEl.textContent = "";
-  const ok = jobPort.post({ type: "start", kind, system: parts.system, prompt: parts.prompt, model, messageId: displayedId, ...(question === undefined ? {} : { question }) });
+  // The background script picks the model for the job from the settings.
+  const ok = jobPort.post({ type: "start", kind, system: parts.system, prompt: parts.prompt, messageId: displayedId, ...(question === undefined ? {} : { question }) });
   if (!ok) {
     statusEl.textContent = t("errorInternal");
     dispatch("prepare_fail");
@@ -176,7 +178,7 @@ function summarize(): void {
     dispatch("prepare_fail");
     return;
   }
-  startJob("summary", buildSummaryPrompt(thread, uiLang(messenger.i18n.getUILanguage())), SUMMARY_MODEL);
+  startJob("summary", buildSummaryPrompt(thread, uiLang(messenger.i18n.getUILanguage())));
 }
 
 function ask(): void {
@@ -192,7 +194,7 @@ function ask(): void {
     dispatch("prepare_fail");
     return;
   }
-  startJob("question", buildQuestionPrompt(thread, snapshot?.history ?? [], question), QUESTION_MODEL, question);
+  startJob("question", buildQuestionPrompt(thread, snapshot?.history ?? [], question), question);
 }
 
 function onEvent(event: PortEvent): void {
@@ -248,7 +250,7 @@ void (async () => {
       jobPort = null;
     }
     try {
-      thread = await loadThread(only.id);
+      thread = await loadThread(only.id, threadLimits(await readSettings(messenger.storage.local)));
     } catch (e) {
       statusEl.textContent = errorMessage(e);
       dispatch("loaded_no_thread");

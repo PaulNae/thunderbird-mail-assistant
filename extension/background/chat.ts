@@ -8,7 +8,6 @@ import { cleanModelOutput } from "../prompts/compose.ts";
 import { isBlank } from "../compose/editor-text.ts";
 import {
   MAX_PARAMS_OUTPUT_CHARS,
-  QUERY_ANSWER_MODEL,
   QUERY_PARAMS_MODEL,
   buildAnswerPrompt,
   buildParamsPrompt,
@@ -22,7 +21,9 @@ import { pickNewest, scanLimit, selectResults } from "../mail/search-select.ts";
 import type { FoundHeader, SearchLimits } from "../mail/search-select.ts";
 import { isOwnSender } from "../shared/messages.ts";
 import { MAX_TEXT_CHARS } from "../shared/job-messages.ts";
-import { MAX_CHAT_TURNS, MAX_HEADER_CHARS, PORT_CHAT, parseChatRequest, sanitizeMaxMessages } from "../shared/chat-messages.ts";
+import { MAX_CHAT_TURNS, MAX_HEADER_CHARS, PORT_CHAT, parseChatRequest } from "../shared/chat-messages.ts";
+import { defaultSettings, searchLimits, timeoutMs } from "../shared/settings.ts";
+import type { Settings } from "../shared/settings.ts";
 import type { ChatEvent, ChatSnapshot, ChatTurn } from "../shared/chat-messages.ts";
 import type { PortLike } from "./connection.ts";
 
@@ -35,9 +36,10 @@ export interface ChatDeps {
   search(queries: readonly SearchParams[], limit: number, signal: AbortSignal): Promise<{ headers: FoundHeader[]; complete: boolean }>;
   /** Header and text of one mail. Errors never contain mail content. */
   load(messageId: number): Promise<LoadedMessage>;
-  /** The setting "most mails per question" (sanitized here). */
-  maxMessages(): Promise<unknown>;
+  /** The current settings (models, most mails per question, text and time limits). */
+  settings(): Promise<Settings>;
   now?: () => Date;
+  /** Overrides the text limits of the settings (tests). */
   limits?: SearchLimits;
 }
 
@@ -110,9 +112,9 @@ export class ChatSession {
     return !this.disposed && this.ctl === ctl && this.turns.includes(turn);
   }
 
-  private async collect(system: string, prompt: string, model: string, signal: AbortSignal, max: number): Promise<string> {
+  private async collect(system: string, prompt: string, model: string, timeout: number, signal: AbortSignal, max: number): Promise<string> {
     let text = "";
-    for await (const chunk of this.deps.backend.run({ system, prompt, model, signal })) {
+    for await (const chunk of this.deps.backend.run({ system, prompt, model, timeoutMs: timeout, signal })) {
       if (text.length <= max) text += chunk;
     }
     if (signal.aborted) throw new BackendError("cancelled");
@@ -120,11 +122,12 @@ export class ChatSession {
   }
 
   /** Step 1: the model output is validated strictly; one retry, then the words of the question. */
-  private async plan(question: string, earlier: readonly ChatTurn[], signal: AbortSignal): Promise<SearchPlan> {
+  private async plan(question: string, earlier: readonly ChatTurn[], timeout: number, signal: AbortSignal): Promise<SearchPlan> {
     const now = (this.deps.now ?? (() => new Date()))();
     const parts = buildParamsPrompt(question, now, earlier.map((t) => t.question));
     for (let attempt = 0; attempt < 2; attempt++) {
-      const raw = await this.collect(parts.system, parts.prompt, QUERY_PARAMS_MODEL, signal, MAX_PARAMS_OUTPUT_CHARS);
+      // Step 1 is a small structured task and stays on its fixed model; the setting applies to the answer.
+      const raw = await this.collect(parts.system, parts.prompt, QUERY_PARAMS_MODEL, timeout, signal, MAX_PARAMS_OUTPUT_CHARS);
       const params = parseSearchParams(raw, now);
       if (params) return { queries: [params], source: "model" };
     }
@@ -178,10 +181,12 @@ export class ChatSession {
       this.publish();
     };
     try {
-      const plan = await this.plan(turn.question, earlier, signal);
+      const settings = await this.deps.settings().catch(() => defaultSettings());
+      const timeout = timeoutMs(settings);
+      const plan = await this.plan(turn.question, earlier, timeout, signal);
       if (!update({ stage: "search", search: { queries: plan.queries, source: plan.source, relaxed: false } })) return;
 
-      const max = sanitizeMaxMessages(await this.deps.maxMessages().catch(() => undefined));
+      const max = settings.maxMessages;
       const limit = scanLimit(max);
       let result = await this.search(plan, limit, signal);
       if (result.headers.length === 0) {
@@ -200,7 +205,7 @@ export class ChatSession {
       if (!update({ stage: "load", found: result.headers.length, foundComplete: result.complete })) return;
       const loaded = await this.loadAll(chosen, signal);
       if (loaded.length === 0) throw new SearchFailed();
-      const selected = selectResults(loaded, this.deps.limits);
+      const selected = selectResults(loaded, this.deps.limits ?? searchLimits(settings));
       const cap = (s: string): string => (s.length > MAX_HEADER_CHARS ? s.slice(0, MAX_HEADER_CHARS - 1) + "…" : s);
       const sources = selected.messages.map((m, i) => ({ index: i + 1, messageId: m.id, from: cap(m.from), subject: cap(m.subject), date: m.date.slice(0, 64) }));
       // Found but not sent: beyond the setting, unreadable, or over the text budget.
@@ -210,7 +215,7 @@ export class ChatSession {
       const history = earlier.map((t) => ({ question: t.question, answer: t.answer }));
       const parts = buildAnswerPrompt(turn.question, { messages: selected.messages, omittedCount: omitted, truncated: selected.truncated }, history);
       let text = "";
-      for await (const chunk of this.deps.backend.run({ system: parts.system, prompt: parts.prompt, model: QUERY_ANSWER_MODEL, signal })) {
+      for await (const chunk of this.deps.backend.run({ system: parts.system, prompt: parts.prompt, model: settings.models.query, timeoutMs: timeout, signal })) {
         if (!this.current(turn, ctl)) return;
         const room = MAX_TEXT_CHARS - text.length;
         if (room <= 0) continue;

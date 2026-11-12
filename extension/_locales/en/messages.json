@@ -224,9 +224,6 @@
   "chatAskPlaceholder": {
     "message": "Question about your mailbox, e.g. What did Anna write about the offer?"
   },
-  "chatMaxLabel": {
-    "message": "At most this many emails per question to the model:"
-  },
   "chatClear": {
     "message": "New chat"
   },
@@ -371,5 +368,117 @@
   },
   "errorConsentRequired": {
     "message": "Without your consent nothing is sent to the model."
+  },
+  "openSettings": {
+    "message": "Settings"
+  },
+  "optionsTitle": {
+    "message": "Mail Assistant – Settings"
+  },
+  "optionsSaved": {
+    "message": "Saved."
+  },
+  "optionsConsentHeading": {
+    "message": "Consent"
+  },
+  "optionsConsentGiven": {
+    "message": "You agreed that email content goes through Claude Code to Anthropic when you start an action."
+  },
+  "optionsConsentMissing": {
+    "message": "No consent: Mail Assistant is locked and sends nothing."
+  },
+  "optionsConsentRevoke": {
+    "message": "Withdraw consent"
+  },
+  "optionsModelsHeading": {
+    "message": "Models"
+  },
+  "optionsModelsHint": {
+    "message": "Which Claude model is used for which task. For mailbox questions the choice applies to the answer; the search terms are always worked out by Haiku."
+  },
+  "optionsModelRewrite": {
+    "message": "Rephrase, shorten, tone, translate"
+  },
+  "optionsModelDraft": {
+    "message": "Drafts (reply, email from instruction)"
+  },
+  "optionsModelSummary": {
+    "message": "Summary"
+  },
+  "optionsModelQuestion": {
+    "message": "Questions about an email"
+  },
+  "optionsModelQuery": {
+    "message": "Mailbox question"
+  },
+  "optionsModelHaiku": {
+    "message": "Haiku (fast, low cost)"
+  },
+  "optionsModelSonnet": {
+    "message": "Sonnet (balanced)"
+  },
+  "optionsModelOpus": {
+    "message": "Opus (thorough, slower)"
+  },
+  "optionsLimitsHeading": {
+    "message": "Limits"
+  },
+  "optionsMaxMessages": {
+    "message": "Emails per mailbox question"
+  },
+  "optionsMaxText": {
+    "message": "Amount of text per request (characters)"
+  },
+  "optionsTimeout": {
+    "message": "Time limit per request (seconds)"
+  },
+  "optionsRange": {
+    "message": "($MIN$ to $MAX$, default $DEF$)",
+    "placeholders": {
+      "min": {
+        "content": "$1"
+      },
+      "max": {
+        "content": "$2"
+      },
+      "def": {
+        "content": "$3"
+      }
+    }
+  },
+  "optionsReset": {
+    "message": "Restore defaults"
+  },
+  "optionsCheckHeading": {
+    "message": "Connection to the helper"
+  },
+  "optionsCheckRun": {
+    "message": "Test connection"
+  },
+  "optionsCheckRunning": {
+    "message": "Testing the connection …"
+  },
+  "optionsCheckOk": {
+    "message": "All good: Claude Code $VERSION$ is reachable and logged in.",
+    "placeholders": {
+      "version": {
+        "content": "$1"
+      }
+    }
+  },
+  "optionsCheckHostNotFound": {
+    "message": "The helper is not installed. Please run “npm run host:install”."
+  },
+  "optionsCheckCliNotFound": {
+    "message": "The helper runs but cannot find Claude Code. Please install Claude Code and run “npm run host:install” again."
+  },
+  "optionsCheckNotLoggedIn": {
+    "message": "Claude Code is not logged in. Please start “claude” in a terminal and log in."
+  },
+  "optionsCheckTimeout": {
+    "message": "The helper did not answer in time."
+  },
+  "optionsCheckInternal": {
+    "message": "The state could not be determined (unexpected answer from Claude Code)."
   }
 }

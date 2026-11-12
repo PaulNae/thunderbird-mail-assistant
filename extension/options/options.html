@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title data-i18n="optionsTitle"></title>
+    <link rel="stylesheet" href="../shared/popup.css" />
+    <script type="module" src="options.js"></script>
+  </head>
+  <body class="options">
+    <main>
+      <h1 data-i18n="optionsTitle"></h1>
+      <p id="saved" class="status" role="status" aria-live="polite"></p>
+
+      <section aria-labelledby="consent-heading-main">
+        <h2 id="consent-heading-main" data-i18n="optionsConsentHeading"></h2>
+        <p id="consent-state" class="scope"></p>
+        <div id="consent-text" class="consent" hidden></div>
+        <div class="row">
+          <button type="button" id="consent-grant" class="primary" data-i18n="consentAccept" hidden></button>
+          <button type="button" id="consent-revoke" data-i18n="optionsConsentRevoke" hidden></button>
+        </div>
+      </section>
+
+      <section aria-labelledby="models-heading">
+        <h2 id="models-heading" data-i18n="optionsModelsHeading"></h2>
+        <p data-i18n="optionsModelsHint"></p>
+        <div class="form-grid">
+          <label for="model-rewrite" data-i18n="optionsModelRewrite"></label>
+          <select id="model-rewrite" data-task="rewrite"></select>
+          <label for="model-draft" data-i18n="optionsModelDraft"></label>
+          <select id="model-draft" data-task="draft"></select>
+          <label for="model-summary" data-i18n="optionsModelSummary"></label>
+          <select id="model-summary" data-task="summary"></select>
+          <label for="model-question" data-i18n="optionsModelQuestion"></label>
+          <select id="model-question" data-task="question"></select>
+          <label for="model-query" data-i18n="optionsModelQuery"></label>
+          <select id="model-query" data-task="query"></select>
+        </div>
+      </section>
+
+      <section aria-labelledby="limits-heading">
+        <h2 id="limits-heading" data-i18n="optionsLimitsHeading"></h2>
+        <div class="form-grid">
+          <label for="max-messages" data-i18n="optionsMaxMessages"></label>
+          <span><input type="number" id="max-messages" step="1" aria-describedby="max-messages-range" /> <span id="max-messages-range" class="hint"></span></span>
+          <label for="max-text" data-i18n="optionsMaxText"></label>
+          <span><input type="number" id="max-text" step="1000" aria-describedby="max-text-range" /> <span id="max-text-range" class="hint"></span></span>
+          <label for="timeout" data-i18n="optionsTimeout"></label>
+          <span><input type="number" id="timeout" step="10" aria-describedby="timeout-range" /> <span id="timeout-range" class="hint"></span></span>
+        </div>
+        <div class="row">
+          <button type="button" id="reset" data-i18n="optionsReset"></button>
+        </div>
+      </section>
+
+      <section aria-labelledby="check-heading">
+        <h2 id="check-heading" data-i18n="optionsCheckHeading"></h2>
+        <div class="row">
+          <button type="button" id="check" data-i18n="optionsCheckRun"></button>
+        </div>
+        <p id="check-result" class="status" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+  </body>
+</html>

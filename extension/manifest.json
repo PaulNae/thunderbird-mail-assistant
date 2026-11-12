@@ -33,6 +33,10 @@
     "default_title": "__MSG_actionDisplayTitle__",
     "default_icon": "icons/icon.svg"
   },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
   "permissions": [
     "nativeMessaging",
     "scripting",

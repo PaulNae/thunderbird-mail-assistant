@@ -7,7 +7,8 @@ export const PENDING_TTL_MS = 2 * 60 * 1000;
 
 export type RuntimeRequest =
   | { type: "startReplyDraft"; messageId: number; notes: string }
-  | { type: "takePendingReplyDraft"; tabId: number };
+  | { type: "takePendingReplyDraft"; tabId: number }
+  | { type: "checkBackend" };
 
 export type StartReplyDraftResponse = { ok: true; popupOpened: boolean } | { ok: false };
 export type TakePendingResponse = { notes: string } | null;
@@ -26,7 +27,39 @@ export function parseRuntimeRequest(message: unknown): RuntimeRequest | null {
   if (m["type"] === "takePendingReplyDraft") {
     return isId(m["tabId"]) ? { type: "takePendingReplyDraft", tabId: m["tabId"] } : null;
   }
+  if (m["type"] === "checkBackend") return { type: "checkBackend" };
   return null;
+}
+
+/** States the connection test can report on the settings page. */
+export const CHECK_STATES = ["ok", "host_not_found", "cli_not_found", "not_logged_in", "timeout", "internal"] as const;
+export type CheckState = (typeof CHECK_STATES)[number];
+export type CheckResponse = { state: CheckState; version?: string };
+
+/** Longest CLI version string passed on. */
+const MAX_VERSION_CHARS = 40;
+
+/** Maps the outcome of Backend.check() (a result or a thrown error code) to a state for the page. */
+export function toCheckResponse(outcome: { ok: boolean; detail?: string } | { errorCode: string }): CheckResponse {
+  if ("errorCode" in outcome) {
+    return { state: (CHECK_STATES as readonly string[]).includes(outcome.errorCode) && outcome.errorCode !== "ok" ? (outcome.errorCode as CheckState) : "internal" };
+  }
+  if (outcome.ok) {
+    const v = typeof outcome.detail === "string" && /^[0-9A-Za-z.+-]{1,40}$/.test(outcome.detail) ? outcome.detail.slice(0, MAX_VERSION_CHARS) : undefined;
+    return v === undefined ? { state: "ok" } : { state: "ok", version: v };
+  }
+  const code = outcome.detail ?? "internal";
+  return { state: (CHECK_STATES as readonly string[]).includes(code) && code !== "ok" ? (code as CheckState) : "internal" };
+}
+
+/** Validates the response on the settings page. */
+export function parseCheckResponse(raw: unknown): CheckResponse | null {
+  if (typeof raw !== "object" || raw === null) return null;
+  const r = raw as Record<string, unknown>;
+  if (typeof r["state"] !== "string" || !(CHECK_STATES as readonly string[]).includes(r["state"])) return null;
+  const v = r["version"];
+  if (v !== undefined && (typeof v !== "string" || v.length > MAX_VERSION_CHARS)) return null;
+  return v === undefined ? { state: r["state"] as CheckState } : { state: r["state"] as CheckState, version: v };
 }
 
 /** Whether a message comes from this extension itself. */

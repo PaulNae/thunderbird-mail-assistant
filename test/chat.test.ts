@@ -8,16 +8,15 @@ import { ChatTabTracker } from "../extension/background/chat-tab.ts";
 import type { PortLike } from "../extension/background/connection.ts";
 import type { SearchParams } from "../extension/prompts/query.ts";
 import { QUERY_ANSWER_MODEL, QUERY_PARAMS_MODEL } from "../extension/prompts/query.ts";
+import { defaultSettings } from "../extension/shared/settings.ts";
+import type { Settings } from "../extension/shared/settings.ts";
 import type { LoadedMessage } from "../extension/mail/types.ts";
 import type { FoundHeader } from "../extension/mail/search-select.ts";
 import {
-  DEFAULT_MAX_MESSAGES,
-  LIMIT_MAX_MESSAGES,
   MAX_CHAT_TURNS,
   MAX_HEADER_CHARS,
   parseChatEvent,
   parseChatRequest,
-  sanitizeMaxMessages,
 } from "../extension/shared/chat-messages.ts";
 import type { ChatEvent, ChatSnapshot, ChatTurn } from "../extension/shared/chat-messages.ts";
 
@@ -72,7 +71,7 @@ function setup(replies: Reply[], results: FoundHeader[][], opts: Partial<ChatDep
       return { headers: results.shift() ?? [], complete: true };
     },
     load: async (id) => mail(id),
-    maxMessages: async () => undefined,
+    settings: async () => defaultSettings(),
     now: () => NOW,
     ...opts,
   };
@@ -108,6 +107,20 @@ test("happy path: params, search, answer with sources newest first", async () =>
   assert.ok(s.events.some((e) => e.type === "delta"));
   // Every snapshot passes the page-side validation.
   for (const e of s.events) assert.ok(parseChatEvent(e), JSON.stringify(e));
+});
+
+test("the settings choose the answer model, the time limit and the text budget", async () => {
+  const settings: Settings = { ...defaultSettings(), models: { ...defaultSettings().models, query: "opus" }, timeoutSec: 300, maxTextChars: 5000 };
+  const long = "z".repeat(4000);
+  const s = setup([['{"text":"Angebot"}'], ["ok [1]"]], [hits(1, 2, 3)], { settings: async () => settings, load: async (id) => mail(id, long) });
+  s.session.ask("Angebot?");
+  await settle(s.session);
+  assert.equal(s.backend.requests[0]!.model, QUERY_PARAMS_MODEL, "step 1 keeps its fixed model");
+  assert.equal(s.backend.requests[1]!.model, "opus");
+  assert.ok(s.backend.requests.every((r) => r.timeoutMs === 300000));
+  const turn = s.last();
+  assert.equal(turn.truncated, true, "5000 characters do not hold three mails of 4000");
+  assert.ok(turn.sent < 3);
 });
 
 test("invalid params: one retry, then fallback to the words of the question", async () => {
@@ -150,7 +163,7 @@ test("the looser search can find mails", async () => {
 
 test("the setting limits the mails sent; truncation and omissions are reported", async () => {
   const s = setup([['{"text":"x"}'], ["a [1]"]], [hits(1, 2, 3, 4, 5)], {
-    maxMessages: async () => 2,
+    settings: async (): Promise<Settings> => ({ ...defaultSettings(), maxMessages: 2 }),
     load: async (id) => mail(id, "y".repeat(400)),
     limits: { maxMessageChars: 300, maxTotalChars: 10000 },
   });
@@ -329,12 +342,12 @@ class FakePort implements PortLike {
 test("chat connection: foreign senders are refused; own tab gets an empty snapshot and can ask", async () => {
   const deps = setup([['{"text":"x"}'], ["ok [1]"]], [hits(1)]);
   const foreign = new FakePort("chat", { id: "evil@x" });
-  handleChatConnection(foreign, { backend: deps.backend, search: async () => ({ headers: [], complete: true }), load: async (id) => mail(id), maxMessages: async () => 15 }, "me@x");
+  handleChatConnection(foreign, { backend: deps.backend, search: async () => ({ headers: [], complete: true }), load: async (id) => mail(id), settings: async () => defaultSettings() }, "me@x");
   assert.equal(foreign.disconnected, true);
 
   const port = new FakePort("chat", { id: "me@x", tab: { id: 7 } });
   const reported: number[] = [];
-  handleChatConnection(port, { backend: deps.backend, search: async () => ({ headers: hits(1), complete: true }), load: async (id) => mail(id), maxMessages: async () => 15 }, "me@x", (id) => reported.push(id));
+  handleChatConnection(port, { backend: deps.backend, search: async () => ({ headers: hits(1), complete: true }), load: async (id) => mail(id), settings: async () => defaultSettings() }, "me@x", (id) => reported.push(id));
   assert.deepEqual(reported, [7]);
   assert.deepEqual(port.sent[0], { type: "snapshot", snapshot: { turns: [] } });
   port.receive({ type: "ask", question: 42 });
@@ -362,15 +375,6 @@ test("chat requests and events are validated", () => {
   assert.equal(parseChatEvent({ type: "snapshot", snapshot: { turns: [turn] } }), null, "unknown search field");
 });
 
-test("max messages setting is sanitized", () => {
-  assert.equal(sanitizeMaxMessages(undefined), DEFAULT_MAX_MESSAGES);
-  assert.equal(sanitizeMaxMessages("abc"), DEFAULT_MAX_MESSAGES);
-  assert.equal(sanitizeMaxMessages(""), DEFAULT_MAX_MESSAGES);
-  assert.equal(sanitizeMaxMessages("7"), 7);
-  assert.equal(sanitizeMaxMessages(0), 1);
-  assert.equal(sanitizeMaxMessages(999), LIMIT_MAX_MESSAGES);
-  assert.equal(sanitizeMaxMessages(3.6), 4);
-});
 
 class FakeSessionArea {
   data = new Map<string, unknown>();

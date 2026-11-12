@@ -11,8 +11,11 @@ import type { ChatDeps } from "./chat.ts";
 import { ChatTabTracker } from "./chat-tab.ts";
 import { loadMessage } from "../mail/message-text.ts";
 import { searchHeaders } from "../mail/search.ts";
-import { PORT_CHAT, SETTING_MAX_MESSAGES } from "../shared/chat-messages.ts";
-import type { StartReplyDraftResponse, TakePendingResponse } from "../shared/messages.ts";
+import { PORT_CHAT } from "../shared/chat-messages.ts";
+import { readSettings } from "../shared/settings.ts";
+import { toCheckResponse } from "../shared/messages.ts";
+import type { CheckResponse, StartReplyDraftResponse, TakePendingResponse } from "../shared/messages.ts";
+import { BackendError } from "../backend/backend.ts";
 
 // Only user notes, in memory only. If the background script is unloaded the entry is lost,
 // which just means the compose popup starts without prefilled notes.
@@ -24,14 +27,15 @@ const pending = new PendingReplyDrafts();
 // Every run passes the consent gate: without the user's consent (storage.local, read on each run)
 // nothing is sent to the model, whatever a page asks for.
 const backend = new ConsentGatedBackend(new CliBackend(), () => readConsent(messenger.storage.local));
-const jobs = new JobStore({ backend, session: messenger.storage.session });
+const settings = () => readSettings(messenger.storage.local);
+const jobs = new JobStore({ backend, session: messenger.storage.session, settings });
 
 // Mailbox queries of the chat tab. Each tab connection gets its own in-memory session that ends with the port.
 const chatDeps: ChatDeps = {
   backend,
   search: searchHeaders,
   load: loadMessage,
-  maxMessages: async () => (await messenger.storage.local.get(SETTING_MAX_MESSAGES))[SETTING_MAX_MESSAGES],
+  settings,
 };
 const chatTab = new ChatTabTracker({
   session: messenger.storage.session,
@@ -83,10 +87,32 @@ async function startReplyDraft(messageId: number, notes: string): Promise<StartR
   }
 }
 
+/** Longest wait for the connection test (the host gives each of its two CLI calls 15 s). */
+const CHECK_TIMEOUT_MS = 40000;
+
+/** Connection test for the settings page; sends no mail content, so it needs no consent. */
+async function checkBackend(): Promise<CheckResponse> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new BackendError("timeout")), CHECK_TIMEOUT_MS);
+  });
+  try {
+    return toCheckResponse(await Promise.race([backend.check(), timeout]));
+  } catch (e) {
+    return toCheckResponse({ errorCode: e instanceof BackendError ? e.code : "internal" });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 messenger.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!isOwnSender(sender.id, messenger.runtime.id)) return false;
   const request = parseRuntimeRequest(message);
   if (!request) return false;
+  if (request.type === "checkBackend") {
+    void checkBackend().then(sendResponse);
+    return true;
+  }
   if (request.type === "takePendingReplyDraft") {
     const res: TakePendingResponse = pending.take(request.tabId);
     sendResponse(res);

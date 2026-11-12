@@ -6,28 +6,16 @@ import { MAX_QUESTION_CHARS } from "../prompts/read.ts";
 import { MAX_FIELD_CHARS, SEARCH_FIELDS } from "../prompts/query.ts";
 import type { SearchField, SearchParams } from "../prompts/query.ts";
 import { MAX_TEXT_CHARS } from "./job-messages.ts";
+import { MAX_MESSAGES_BOUNDS } from "./settings.ts";
 
 export const PORT_CHAT = "chat";
 
-/** storage.local key of the most mails sent to the model per question (a setting, not mail content). */
-export const SETTING_MAX_MESSAGES = "queryMaxMessages";
-export const DEFAULT_MAX_MESSAGES = 15;
-export const MIN_MAX_MESSAGES = 1;
-/** Hard upper bound for the setting. */
-export const LIMIT_MAX_MESSAGES = 50;
 /** Most turns shown in the chat; the oldest are dropped first. */
 export const MAX_CHAT_TURNS = 20;
 /** Most queries in one search plan (fallback words or loosened search). */
 const MAX_QUERIES = 4;
 /** Longest sender or subject in the source list; longer values are cut by the background script. */
 export const MAX_HEADER_CHARS = 300;
-
-/** The setting as a whole number within the bounds; anything unusable gives the default. */
-export function sanitizeMaxMessages(v: unknown): number {
-  const x = typeof v === "string" && v.trim() !== "" ? Number(v) : v;
-  if (typeof x !== "number" || !Number.isFinite(x)) return DEFAULT_MAX_MESSAGES;
-  return Math.min(LIMIT_MAX_MESSAGES, Math.max(MIN_MAX_MESSAGES, Math.round(x)));
-}
 
 export type ChatError = BackendErrorCode | "empty_result" | "search_failed";
 export type TurnStatus = "running" | "done" | "no_results" | "error" | "cancelled";
@@ -138,7 +126,7 @@ function parseTurn(v: unknown): ChatTurn | null {
   if (!isStr(t["question"], MAX_QUESTION_CHARS) || !isStr(t["answer"], MAX_TEXT_CHARS)) return null;
   if (typeof t["status"] !== "string" || !STATUSES.includes(t["status"])) return null;
   if (!isCount(t["found"]) || !isCount(t["sent"]) || typeof t["foundComplete"] !== "boolean" || typeof t["truncated"] !== "boolean") return null;
-  if (!Array.isArray(t["sources"]) || t["sources"].length > LIMIT_MAX_MESSAGES) return null;
+  if (!Array.isArray(t["sources"]) || t["sources"].length > MAX_MESSAGES_BOUNDS.max) return null;
   const sources: ChatSource[] = [];
   for (const s of t["sources"] as unknown[]) {
     const src = parseSource(s);

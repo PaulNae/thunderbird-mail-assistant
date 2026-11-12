@@ -9,6 +9,8 @@ import { limitHistory } from "../prompts/read.ts";
 import { isBlank } from "../compose/editor-text.ts";
 import { MAX_ENTRIES, MAX_TEXT_CHARS, emptySnapshot, sanitizeSnapshot } from "../shared/job-messages.ts";
 import type { JobSnapshot, PortEvent, StartRequest } from "../shared/job-messages.ts";
+import { defaultSettings, modelForKind, timeoutMs } from "../shared/settings.ts";
+import type { Settings } from "../shared/settings.ts";
 
 export type Subscriber = (event: PortEvent) => void;
 
@@ -24,6 +26,8 @@ export interface JobStoreDeps {
   session?: SessionArea | null;
   maxEntries?: number;
   now?: () => number;
+  /** The current settings (model per job kind, time limit); defaults if absent or failing. */
+  settings?: () => Promise<Settings>;
 }
 
 interface Entry {
@@ -46,6 +50,7 @@ export class JobStore {
   private readonly session: SessionArea | null;
   private readonly maxEntries: number;
   private readonly now: () => number;
+  private readonly settings: () => Promise<Settings>;
   // Serializes operations that load, create or delete entries, so a lazy load cannot revive a cleared entry.
   private chain: Promise<unknown> = Promise.resolve();
 
@@ -54,6 +59,7 @@ export class JobStore {
     this.session = deps.session ?? null;
     this.maxEntries = deps.maxEntries ?? MAX_ENTRIES;
     this.now = deps.now ?? Date.now;
+    this.settings = deps.settings ?? (async () => defaultSettings());
   }
 
   private serial<T>(fn: () => Promise<T>): Promise<T> {
@@ -183,7 +189,10 @@ export class JobStore {
     let text = "";
     let failure: BackendError | null = null;
     try {
-      for await (const chunk of this.backend.run({ system: req.system, prompt: req.prompt, ...(req.model === undefined ? {} : { model: req.model }), signal: ctl.signal })) {
+      // The model follows the job kind and the settings; a page cannot choose it.
+      const settings = await this.settings().catch(() => defaultSettings());
+      const run = { system: req.system, prompt: req.prompt, model: modelForKind(settings, req.kind), timeoutMs: timeoutMs(settings), signal: ctl.signal };
+      for await (const chunk of this.backend.run(run)) {
         if (this.entries.get(key) !== entry) return;
         const room = MAX_TEXT_CHARS - text.length;
         if (room <= 0) continue;

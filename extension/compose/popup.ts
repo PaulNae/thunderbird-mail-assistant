@@ -6,7 +6,8 @@ import { openJobPort } from "../shared/job-client.ts";
 import type { JobPort } from "../shared/job-client.ts";
 import { PORT_COMPOSE } from "../shared/job-messages.ts";
 import type { JobSnapshot, PortEvent } from "../shared/job-messages.ts";
-import { DRAFT_MODEL, MAX_COMPOSE_CHARS, REWRITE_MODEL, buildComposePrompt, buildInstructionDraftPrompt, buildReplyDraftPrompt } from "../prompts/compose.ts";
+import { buildComposePrompt, buildInstructionDraftPrompt, buildReplyDraftPrompt } from "../prompts/compose.ts";
+import { readSettings } from "../shared/settings.ts";
 import type { CaptureResult } from "./editor-text.ts";
 import type { TakePendingResponse } from "../shared/messages.ts";
 import { applyText, captureSelection, peekSelection } from "./editor-bridge.ts";
@@ -193,21 +194,23 @@ async function start(job: PopupJob): Promise<void> {
     }
   }
   const text = scope.text;
-  if (job.type === "compose" && text.length > MAX_COMPOSE_CHARS) {
-    setStatus(t("composeTooLong", [String(MAX_COMPOSE_CHARS)]));
+  // The text limit of the settings applies to the own text and to the original mail.
+  const maxChars = (await readSettings(messenger.storage.local)).maxTextChars;
+  if (job.type === "compose" && text.length > maxChars) {
+    setStatus(t("composeTooLong", [String(maxChars)]));
     dispatch("prepare_fail");
     return;
   }
   const { system, prompt } =
     job.type === "reply"
-      ? buildReplyDraftPrompt(original, job.notes)
+      ? buildReplyDraftPrompt(original, job.notes, maxChars)
       : job.type === "compose"
         ? buildComposePrompt(job.action, text)
-        : buildInstructionDraftPrompt(job.instruction, original);
-  const model = job.type === "compose" ? REWRITE_MODEL : DRAFT_MODEL;
+        : buildInstructionDraftPrompt(job.instruction, original, maxChars);
   result = "";
   previewEl.textContent = "";
-  if (!jobPort?.post({ type: "start", system, prompt, model, job })) {
+  // The background script picks the model for the job from the settings.
+  if (!jobPort?.post({ type: "start", system, prompt, job })) {
     setStatus(t("errorInternal"));
     dispatch("prepare_fail");
     return;

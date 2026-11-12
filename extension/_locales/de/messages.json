@@ -224,9 +224,6 @@
   "chatAskPlaceholder": {
     "message": "Frage zu deinem Postfach, z. B. Was hat Anna zum Angebot geschrieben?"
   },
-  "chatMaxLabel": {
-    "message": "Höchstens so viele Mails je Frage an das Modell:"
-  },
   "chatClear": {
     "message": "Neuer Chat"
   },
@@ -371,5 +368,117 @@
   },
   "errorConsentRequired": {
     "message": "Ohne deine Zustimmung wird nichts an das Modell gesendet."
+  },
+  "openSettings": {
+    "message": "Einstellungen"
+  },
+  "optionsTitle": {
+    "message": "Mail Assistant – Einstellungen"
+  },
+  "optionsSaved": {
+    "message": "Gespeichert."
+  },
+  "optionsConsentHeading": {
+    "message": "Einwilligung"
+  },
+  "optionsConsentGiven": {
+    "message": "Du hast zugestimmt, dass Mailinhalte bei einer Aktion über Claude Code an Anthropic gehen."
+  },
+  "optionsConsentMissing": {
+    "message": "Keine Zustimmung: Mail Assistant ist gesperrt und sendet nichts."
+  },
+  "optionsConsentRevoke": {
+    "message": "Zustimmung widerrufen"
+  },
+  "optionsModelsHeading": {
+    "message": "Modelle"
+  },
+  "optionsModelsHint": {
+    "message": "Welches Claude-Modell für welche Aufgabe verwendet wird. Bei der Postfach-Abfrage gilt die Wahl für die Antwort; die Suchbegriffe ermittelt immer Haiku."
+  },
+  "optionsModelRewrite": {
+    "message": "Umformulieren, Kürzen, Ton, Übersetzen"
+  },
+  "optionsModelDraft": {
+    "message": "Entwürfe (Antwort, Mail aus Anweisung)"
+  },
+  "optionsModelSummary": {
+    "message": "Zusammenfassung"
+  },
+  "optionsModelQuestion": {
+    "message": "Fragen zu einer Mail"
+  },
+  "optionsModelQuery": {
+    "message": "Postfach-Abfrage"
+  },
+  "optionsModelHaiku": {
+    "message": "Haiku (schnell, günstig)"
+  },
+  "optionsModelSonnet": {
+    "message": "Sonnet (ausgewogen)"
+  },
+  "optionsModelOpus": {
+    "message": "Opus (gründlich, langsamer)"
+  },
+  "optionsLimitsHeading": {
+    "message": "Obergrenzen"
+  },
+  "optionsMaxMessages": {
+    "message": "Mails je Postfach-Abfrage"
+  },
+  "optionsMaxText": {
+    "message": "Textmenge je Auftrag (Zeichen)"
+  },
+  "optionsTimeout": {
+    "message": "Zeitlimit je Auftrag (Sekunden)"
+  },
+  "optionsRange": {
+    "message": "($MIN$ bis $MAX$, Standard $DEF$)",
+    "placeholders": {
+      "min": {
+        "content": "$1"
+      },
+      "max": {
+        "content": "$2"
+      },
+      "def": {
+        "content": "$3"
+      }
+    }
+  },
+  "optionsReset": {
+    "message": "Standardwerte wiederherstellen"
+  },
+  "optionsCheckHeading": {
+    "message": "Verbindung zum Helfer"
+  },
+  "optionsCheckRun": {
+    "message": "Verbindung testen"
+  },
+  "optionsCheckRunning": {
+    "message": "Teste die Verbindung …"
+  },
+  "optionsCheckOk": {
+    "message": "In Ordnung: Claude Code $VERSION$ ist erreichbar und angemeldet.",
+    "placeholders": {
+      "version": {
+        "content": "$1"
+      }
+    }
+  },
+  "optionsCheckHostNotFound": {
+    "message": "Der Helfer ist nicht installiert. Bitte „npm run host:install“ ausführen."
+  },
+  "optionsCheckCliNotFound": {
+    "message": "Der Helfer läuft, findet aber Claude Code nicht. Bitte Claude Code installieren und „npm run host:install“ erneut ausführen."
+  },
+  "optionsCheckNotLoggedIn": {
+    "message": "Claude Code ist nicht angemeldet. Bitte im Terminal „claude“ starten und einloggen."
+  },
+  "optionsCheckTimeout": {
+    "message": "Der Helfer hat nicht rechtzeitig geantwortet."
+  },
+  "optionsCheckInternal": {
+    "message": "Der Zustand ließ sich nicht feststellen (unerwartete Antwort von Claude Code)."
   }
 }

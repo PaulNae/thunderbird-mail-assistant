@@ -50,3 +50,9 @@ input[type="number"]:focus-visible { outline: 2px solid #0a84ff; outline-offset:
 
 .consent p { margin: 0 0 8px; color: var(--fg); }
 .consent h1, .consent h2 { margin: 0 0 8px; font-size: 1.1em; }
+
+body.options { max-width: 720px; margin: 0 auto; box-sizing: border-box; }
+body.options section { margin: 16px 0 0; }
+.form-grid { display: grid; grid-template-columns: minmax(12em, max-content) 1fr; gap: 8px 12px; align-items: center; margin: 8px 0; }
+.hint { color: var(--muted); font-size: 0.9em; }
+select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--muted); border-radius: 4px; padding: 3px 6px; }

@@ -13,8 +13,6 @@ export const REWRITE_MODEL = "haiku";
 /** Model for newly written text (reply draft, draft from instruction). */
 export const DRAFT_MODEL = "sonnet";
 export const MAX_ORIGINAL_CHARS = 30000;
-/** Longest own text that is sent for rewriting. */
-export const MAX_COMPOSE_CHARS = 30000;
 export const TRUNCATION_MARKER = "[... truncated ...]";
 
 export interface PromptParts {
@@ -103,9 +101,9 @@ interface OriginalInput {
   body: string;
 }
 
-function originalBlock(original: OriginalInput): string[] {
+function originalBlock(original: OriginalInput, maxChars: number): string[] {
   let body = original.body;
-  if (body.length > MAX_ORIGINAL_CHARS) body = body.slice(0, MAX_ORIGINAL_CHARS) + "\n" + TRUNCATION_MARKER;
+  if (body.length > maxChars) body = body.slice(0, maxChars) + "\n" + TRUNCATION_MARKER;
   return [
     "<original_email>",
     `From: ${neutralizeBlockTags(original.from)}`,
@@ -125,11 +123,11 @@ const REPLY_NO_ORIGINAL_SYSTEM = [
 ].join("\n");
 
 /** Reply draft; without `original` (it could not be read) the draft rests on the notes alone. */
-export function buildReplyDraftPrompt(original: OriginalInput | undefined, notes: string): PromptParts {
+export function buildReplyDraftPrompt(original: OriginalInput | undefined, notes: string, maxOriginalChars = MAX_ORIGINAL_CHARS): PromptParts {
   const prompt = [
     original ? "Task: Write a reply to the email below." : "Task: Write a reply to an email that is not available, following the notes.",
     "",
-    ...(original ? [...originalBlock(original), ""] : []),
+    ...(original ? [...originalBlock(original, maxOriginalChars), ""] : []),
     "<user_notes>",
     neutralizeBlockTags(notes.trim()),
     "</user_notes>",
@@ -146,7 +144,7 @@ const INSTRUCTION_DRAFT_RULES = [
 ];
 
 /** Draft from a free instruction; with `original` the text is a reply to that email. */
-export function buildInstructionDraftPrompt(instruction: string, original?: OriginalInput): PromptParts {
+export function buildInstructionDraftPrompt(instruction: string, original?: OriginalInput, maxOriginalChars = MAX_ORIGINAL_CHARS): PromptParts {
   const text = instruction.trim();
   if (!text) throw new Error("Instruction must not be empty");
   const system = [
@@ -159,7 +157,7 @@ export function buildInstructionDraftPrompt(instruction: string, original?: Orig
   const prompt = [
     original ? "Task: Write a reply to the email below, following the instruction." : "Task: Write a new email following the instruction.",
     "",
-    ...(original ? [...originalBlock(original), ""] : []),
+    ...(original ? [...originalBlock(original, maxOriginalChars), ""] : []),
     "<user_instruction>",
     neutralizeBlockTags(text),
     "</user_instruction>",

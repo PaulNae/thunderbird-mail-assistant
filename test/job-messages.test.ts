@@ -18,7 +18,8 @@ test("parsePortRequest validates open/start/cancel", () => {
   assert.equal(parsePortRequest(PORT_DISPLAY, { type: "start", kind: "reply", system: "s", prompt: "p", messageId: 1 }), null);
   assert.deepEqual(parsePortRequest(PORT_COMPOSE, { type: "start", system: "s", prompt: "p", model: "sonnet", job: { type: "instruction_draft", instruction: "hi" } }), {
     type: "start",
-    start: { kind: "instruction_draft", system: "s", prompt: "p", model: "sonnet", job: { type: "instruction_draft", instruction: "hi" } },
+    // A model sent by a page is dropped: the background script picks it from the settings.
+    start: { kind: "instruction_draft", system: "s", prompt: "p", job: { type: "instruction_draft", instruction: "hi" } },
   });
   assert.equal(parsePortRequest(PORT_COMPOSE, { type: "start", system: "s", prompt: "p", job: { type: "compose", action: { kind: "tone", tone: "rude" } } }), null);
   assert.equal(parsePortRequest(PORT_COMPOSE, { type: "start", system: "s", prompt: "p" }), null);

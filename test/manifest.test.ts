@@ -50,6 +50,9 @@ test("every file referenced by the manifest exists in dist", () => {
   assert.equal(action.default_popup, undefined);
   icons(action.default_icon);
   refs.push("chat/chat.html", "chat/chat.js");
+  const options = manifest["options_ui"] as { page: string } | undefined;
+  assert.ok(options, "options_ui missing");
+  refs.push(options.page, "options/options.js");
   for (const r of refs) assert.ok(existsSync(path.join(dist, r)), `${r} missing`);
 });
 
@@ -57,7 +60,7 @@ test("data-i18n keys exist in both locales and locales have identical keys", () 
   const de = readJson("_locales/de/messages.json");
   const en = readJson("_locales/en/messages.json");
   assert.deepEqual(Object.keys(de).sort(), Object.keys(en).sort());
-  for (const page of ["compose/popup.html", "display/popup.html", "chat/chat.html"]) {
+  for (const page of ["compose/popup.html", "display/popup.html", "chat/chat.html", "options/options.html"]) {
     const html = readFileSync(path.join(dist, page), "utf8");
     const keys = [...html.matchAll(/data-i18n(?:-placeholder)?="([^"]+)"/g)].map((m) => m[1] as string);
     assert.ok(keys.length > 0, `${page} has no data-i18n`);

@@ -19,7 +19,6 @@ export const MAX_ENTRIES = 20;
 /** Sanity limits for what a popup may send; the real prompt limits are enforced when the prompt is built. */
 export const MAX_SYSTEM_CHARS = 100000;
 export const MAX_PROMPT_CHARS = 1000000;
-const MAX_MODEL_CHARS = 64;
 const MAX_INSTRUCTION_CHARS = 4000;
 
 export type JobKind = "summary" | "question" | "compose" | "reply" | "instruction_draft";
@@ -53,7 +52,6 @@ export interface StartRequest {
   kind: JobKind;
   system: string;
   prompt: string;
-  model?: string;
   messageId?: number;
   question?: string;
   job?: PopupJob;
@@ -104,10 +102,10 @@ export function parseJob(v: unknown): PopupJob | null {
 }
 
 function parseStart(port: PortName, m: Record<string, unknown>): StartRequest | null {
-  const { system, prompt, model } = m;
+  const { system, prompt } = m;
   if (!isStr(system, MAX_SYSTEM_CHARS) || !isStr(prompt, MAX_PROMPT_CHARS) || prompt === "") return null;
-  if (model !== undefined && !isStr(model, MAX_MODEL_CHARS)) return null;
-  const base = { system, prompt, ...(model === undefined ? {} : { model }) };
+  // A "model" field is ignored: the background script picks the model from the settings.
+  const base = { system, prompt };
   if (port === PORT_DISPLAY) {
     if (!isId(m["messageId"])) return null;
     if (m["kind"] === "summary") return { kind: "summary", ...base, messageId: m["messageId"] };

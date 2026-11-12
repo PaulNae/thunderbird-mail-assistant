@@ -9,6 +9,7 @@ import type { PortLike } from "../extension/background/connection.ts";
 import { MAX_TEXT_CHARS } from "../extension/shared/job-messages.ts";
 import type { JobSnapshot, PortEvent, StartRequest } from "../extension/shared/job-messages.ts";
 import { MAX_HISTORY_ENTRIES } from "../extension/prompts/read.ts";
+import { defaultSettings } from "../extension/shared/settings.ts";
 
 class FakeSession implements SessionArea {
   data = new Map<string, unknown>();
@@ -86,7 +87,7 @@ function setup(opts: { maxEntries?: number; session?: FakeSession | null } = {})
   return { backend, session, store };
 }
 
-const summary = (messageId = 1): StartRequest => ({ kind: "summary", system: "SYS", prompt: "SECRET MAIL BODY", model: "haiku", messageId });
+const summary = (messageId = 1): StartRequest => ({ kind: "summary", system: "SYS", prompt: "SECRET MAIL BODY", messageId });
 const question = (q: string, messageId = 1): StartRequest => ({ kind: "question", system: "SYS", prompt: "SECRET MAIL BODY", messageId, question: q });
 const rewrite: StartRequest = { kind: "compose", system: "SYS", prompt: "SECRET MAIL BODY", job: { type: "compose", action: { kind: "shorten" } } };
 
@@ -516,4 +517,30 @@ test("a cancel queued behind a pending start still aborts the run", async () => 
   await cancelled;
   await flush();
   assert.equal(backend.runs[0]!.req.signal.aborted, true);
+});
+
+test("the model and time limit come from the settings by job kind, never from the page", async () => {
+  const backend = new FakeBackend();
+  const settings = { ...defaultSettings(), models: { rewrite: "opus", draft: "haiku", summary: "sonnet", question: "opus", query: "haiku" } as const, timeoutSec: 45 };
+  const store = new JobStore({ backend, settings: async () => settings });
+  const cases: [string, StartRequest, string][] = [
+    ["display:1", summary(), "sonnet"],
+    ["compose:2", rewrite, "opus"],
+    ["compose:3", { kind: "reply", system: "S", prompt: "P", job: { type: "reply", notes: "" } }, "haiku"],
+    ["compose:4", { kind: "instruction_draft", system: "S", prompt: "P", job: { type: "instruction_draft", instruction: "x" } }, "haiku"],
+  ];
+  for (const [key, req] of cases) await store.start(key, req);
+  await flush();
+  assert.deepEqual(backend.runs.map((r) => r.req.model), cases.map((c) => c[2]));
+  assert.ok(backend.runs.every((r) => r.req.timeoutMs === 45000));
+  for (const r of backend.runs) r.end();
+});
+
+test("without a settings source the defaults are used", async () => {
+  const { backend, store } = setup();
+  await store.start("display:1", summary());
+  await flush();
+  assert.equal(backend.runs[0]!.req.model, defaultSettings().models.summary);
+  assert.equal(backend.runs[0]!.req.timeoutMs, defaultSettings().timeoutSec * 1000);
+  backend.runs[0]!.end();
 });
