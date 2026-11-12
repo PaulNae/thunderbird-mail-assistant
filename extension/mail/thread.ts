@@ -2,6 +2,7 @@
 // In-Reply-To headers. Only messages that can be found this way are included.
 import { findAccountId } from "./identity.ts";
 import { loadMessage } from "./message-text.ts";
+import { isSearchable } from "./search.ts";
 import type { LoadedMessage } from "./message-text.ts";
 import { DEFAULT_THREAD_LIMITS, parseMessageIds, selectThread } from "./thread-select.ts";
 import type { LoadedThread, ThreadLimits } from "./thread-select.ts";
@@ -44,7 +45,8 @@ export async function loadThread(
     try {
       const list = await messenger.messages.query(accountId ? { headerMessageId, accountId } : { headerMessageId });
       listId = list.id;
-      const hit = list.messages.find((m) => m.id !== messageId);
+      // A planted References header must not pull in mails from trash or junk (same rule as the mailbox search).
+      const hit = list.messages.find((m) => m.id !== messageId && isSearchable(m));
       return hit ? await loadMessage(hit.id) : null;
     } catch {
       return null;

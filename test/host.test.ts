@@ -212,6 +212,9 @@ test("invalid model name is rejected", async () => {
   const h = new HostProc();
   h.send({ ...run("m", "mode:stream"), model: "x; rm -rf" });
   assert.equal((await h.terminal("m"))["code"], "internal");
+  // A model name that looks like a CLI option is refused as well.
+  h.send({ ...run("o", "mode:stream"), model: "--dangerously-skip-permissions" });
+  assert.equal((await h.terminal("o"))["code"], "internal");
   await h.close();
 });
 

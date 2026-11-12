@@ -9,7 +9,8 @@ async function callEditor<T>(tabId: number, op: Op, arg: boolean | string): Prom
   // Inject only once per document: the script keeps the captured range in its module state.
   const probe = await messenger.scripting.executeScript({
     target: { tabId },
-    func: (): boolean => typeof globalThis.mailAssistantEditor !== "undefined",
+    // Checks the API itself, so an element with the same id in the mail cannot fake the presence.
+    func: (): boolean => typeof (globalThis.mailAssistantEditor as { capture?: unknown } | undefined)?.capture === "function",
   });
   if (probe[0]?.result !== true) {
     await messenger.scripting.executeScript({

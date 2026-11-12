@@ -15,7 +15,8 @@ const MAX_INCOMING_BYTES = 64 * 1024 * 1024;
 const KILL_GRACE_MS = 2000;
 const DEFAULT_TIMEOUT_MS = 120000;
 const CHECK_TIMEOUT_MS = 15000;
-const MODEL_RE = /^[A-Za-z0-9._-]{1,64}$/;
+// Starts with a letter or digit, so a model name can never look like a CLI option.
+const MODEL_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 /** Bounds for a per-run timeout sent by the add-on; anything else uses the default. */
 export const MIN_RUN_TIMEOUT_MS = 10000;
 export const MAX_RUN_TIMEOUT_MS = 600000;
