@@ -3,7 +3,7 @@ import type { ApplyResult, CaptureResult } from "./editor-text.ts";
 
 export type { ApplyResult, CaptureResult };
 
-type Op = "capture" | "apply";
+type Op = "capture" | "apply" | "peek";
 
 async function callEditor<T>(tabId: number, op: Op, arg: boolean | string): Promise<T> {
   // Inject only once per document: the script keeps the captured range in its module state.
@@ -34,6 +34,11 @@ async function callEditor<T>(tabId: number, op: Op, arg: boolean | string): Prom
 /** Captures the selection, or the user's own text if nothing is selected. */
 export function captureSelection(tabId: number, isPlainText: boolean): Promise<CaptureResult> {
   return callEditor<CaptureResult>(tabId, "capture", isPlainText);
+}
+
+/** The range capture would find, without replacing the stored capture. */
+export function peekSelection(tabId: number, isPlainText: boolean): Promise<CaptureResult> {
+  return callEditor<CaptureResult>(tabId, "peek", isPlainText);
 }
 
 /** Replaces the previously captured range with the given text (text only, no markup). */

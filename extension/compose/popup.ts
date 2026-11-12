@@ -1,11 +1,14 @@
 import { localizeDocument } from "../shared/i18n.ts";
 import { errorMessage } from "../shared/errors.ts";
 import { BackendError } from "../backend/backend.ts";
-import { CliBackend } from "../backend/cli-backend.ts";
-import { DRAFT_MODEL, MAX_COMPOSE_CHARS, REWRITE_MODEL, buildComposePrompt, buildInstructionDraftPrompt, buildReplyDraftPrompt, cleanModelOutput } from "../prompts/compose.ts";
-import { isBlank } from "./editor-text.ts";
+import { openJobPort } from "../shared/job-client.ts";
+import type { JobPort } from "../shared/job-client.ts";
+import { PORT_COMPOSE } from "../shared/job-messages.ts";
+import type { JobSnapshot, PortEvent } from "../shared/job-messages.ts";
+import { DRAFT_MODEL, MAX_COMPOSE_CHARS, REWRITE_MODEL, buildComposePrompt, buildInstructionDraftPrompt, buildReplyDraftPrompt } from "../prompts/compose.ts";
+import type { CaptureResult } from "./editor-text.ts";
 import type { TakePendingResponse } from "../shared/messages.ts";
-import { applyText, captureSelection } from "./editor-bridge.ts";
+import { applyText, captureSelection, peekSelection } from "./editor-bridge.ts";
 import { controls, describeScope, initialState, reduce, resolveAction, planJob, replyHasNoBasis, resolveInstructionJob, scopeEvent, startEvent } from "./popup-state.ts";
 import type { PopupEvent, PopupJob } from "./popup-state.ts";
 import { loadOriginal } from "../mail/message-text.ts";
@@ -36,14 +39,18 @@ const discardBtn = $<HTMLButtonElement>("discard");
 const regenerateBtn = $<HTMLButtonElement>("regenerate");
 const actionButtons = [...actionsEl.querySelectorAll<HTMLButtonElement>("button[data-action]")];
 
-const backend = new CliBackend();
 let state = initialState();
 let tabId: number | null = null;
 let isPlainText = false;
 let lastJob: PopupJob | null = null;
 let relatedMessageId: number | null = null;
-let controller: AbortController | null = null;
 let result = "";
+let jobPort: JobPort | null = null;
+// The background script owns the running job and the preview (memory only); this popup shows the
+// latest snapshot. The captured range lives in the editor script and survives closing the popup.
+let snapshot: JobSnapshot | null = null;
+let initialized = false;
+let firstSnapshot: ((s: JobSnapshot) => void) | null = null;
 
 const t = (key: string, subs?: string[]): string => messenger.i18n.getMessage(key, subs);
 
@@ -70,19 +77,79 @@ function setStatus(text: string): void {
   statusEl.textContent = text;
 }
 
-// Captures the current range and updates the scope label and state; returns the text to process.
-// A reply draft may also replace an empty own text, so "usable" differs per job type.
+function showScope(capture: CaptureResult): { text: string; usable: boolean; replyUsable: boolean } | null {
+  const info = describeScope(capture);
+  scopeEl.textContent = info.count === undefined ? t(info.key) : t(info.key, [String(info.count)]);
+  dispatch(scopeEvent(info));
+  return "text" in capture ? { text: capture.text, ...info } : null;
+}
+
+// Captures the current range (replacing the stored capture) and updates the scope label and state;
+// returns the text to process. A reply draft may also replace an empty own text, so "usable" differs per job type.
 async function refreshScope(): Promise<{ text: string; usable: boolean; replyUsable: boolean } | null> {
   if (tabId === null) {
     dispatch("scope_unusable");
     return null;
   }
-  const capture = await captureSelection(tabId, isPlainText);
-  const info = describeScope(capture);
-  scopeEl.textContent =
-    info.count === undefined ? t(info.key) : t(info.key, [String(info.count)]);
-  dispatch(scopeEvent(info));
-  return "text" in capture ? { text: capture.text, ...info } : null;
+  return showScope(await captureSelection(tabId, isPlainText));
+}
+
+function showSnapshot(snap: JobSnapshot): void {
+  snapshot = snap;
+  if (snap.job) lastJob = snap.job;
+  if (snap.phase === "streaming") {
+    previewEl.textContent = snap.text;
+    result = "";
+  } else if (snap.phase === "done") {
+    result = snap.text;
+    previewEl.textContent = result;
+  } else {
+    result = "";
+    previewEl.textContent = "";
+  }
+  if (!initialized) {
+    firstSnapshot?.(snap);
+    return;
+  }
+  reportOutcome(snap);
+  syncState();
+}
+
+function reportOutcome(snap: JobSnapshot): void {
+  if (snap.phase === "error" && snap.error !== undefined) {
+    setStatus(snap.error === "empty_result" ? t("composeEmptyResult") : errorMessage(new BackendError(snap.error)));
+  } else if (snap.phase === "cancelled") {
+    setStatus(errorMessage(new BackendError("cancelled")));
+  }
+}
+
+function syncState(): void {
+  if (!snapshot) return;
+  switch (snapshot.phase) {
+    case "streaming":
+      dispatch("resume");
+      break;
+    case "done":
+      dispatch("show_preview");
+      applyBtn.focus();
+      break;
+    case "error":
+      dispatch("fail");
+      break;
+    case "cancelled":
+    case "idle":
+      dispatch(state.phase === "preview" ? "discard" : "cancel");
+      break;
+  }
+}
+
+function onEvent(event: PortEvent): void {
+  if (event.type === "snapshot") {
+    showSnapshot(event.snapshot);
+    return;
+  }
+  if (!initialized || state.phase !== "streaming") return;
+  previewEl.textContent = (previewEl.textContent ?? "") + event.text;
 }
 
 async function start(job: PopupJob): Promise<void> {
@@ -125,47 +192,21 @@ async function start(job: PopupJob): Promise<void> {
     dispatch("prepare_fail");
     return;
   }
-  const ctl = new AbortController();
-  controller = ctl;
+  const { system, prompt } =
+    job.type === "reply"
+      ? buildReplyDraftPrompt(original, job.notes)
+      : job.type === "compose"
+        ? buildComposePrompt(job.action, text)
+        : buildInstructionDraftPrompt(job.instruction, original);
+  const model = job.type === "compose" ? REWRITE_MODEL : DRAFT_MODEL;
   result = "";
   previewEl.textContent = "";
-  dispatch(startEvent(job));
-  try {
-    const { system, prompt } =
-      job.type === "reply"
-        ? buildReplyDraftPrompt(original, job.notes)
-        : job.type === "compose"
-          ? buildComposePrompt(job.action, text)
-          : buildInstructionDraftPrompt(job.instruction, original);
-    const model = job.type === "compose" ? REWRITE_MODEL : DRAFT_MODEL;
-    for await (const chunk of backend.run({ system, prompt, model, signal: ctl.signal })) {
-      result += chunk;
-      previewEl.textContent = result;
-    }
-    if (ctl.signal.aborted) throw new BackendError("cancelled");
-    result = cleanModelOutput(result);
-    if (isBlank(result)) {
-      previewEl.textContent = "";
-      result = "";
-      setStatus(t("composeEmptyResult"));
-      dispatch("fail");
-      return;
-    }
-    previewEl.textContent = result;
-    dispatch("done");
-    applyBtn.focus();
-  } catch (e) {
-    previewEl.textContent = "";
-    if (e instanceof BackendError && e.code === "cancelled") {
-      setStatus(errorMessage(e));
-      dispatch("cancel");
-    } else {
-      setStatus(errorMessage(e));
-      dispatch("fail");
-    }
-  } finally {
-    controller = null;
+  if (!jobPort?.post({ type: "start", system, prompt, model, job })) {
+    setStatus(t("errorInternal"));
+    dispatch("prepare_fail");
+    return;
   }
+  dispatch(startEvent(job));
 }
 
 function startChoice(choice: string): void {
@@ -200,9 +241,10 @@ instructionEl.addEventListener("keydown", (ev) => {
     if (!runCustomBtn.disabled) startInstruction();
   }
 });
-cancelBtn.addEventListener("click", () => controller?.abort());
+cancelBtn.addEventListener("click", () => jobPort?.post({ type: "cancel" }));
 
 discardBtn.addEventListener("click", () => {
+  jobPort?.post({ type: "discard" });
   previewEl.textContent = "";
   result = "";
   setStatus("");
@@ -210,6 +252,7 @@ discardBtn.addEventListener("click", () => {
 });
 regenerateBtn.addEventListener("click", () => {
   if (!lastJob) return;
+  jobPort?.post({ type: "discard" });
   dispatch("discard");
   void start(lastJob);
 });
@@ -219,9 +262,11 @@ applyBtn.addEventListener("click", () => {
     try {
       const res = await applyText(tabId, result);
       if ("ok" in res) {
+        jobPort?.post({ type: "applied" });
         window.close();
         return;
       }
+      jobPort?.post({ type: "discard" });
       previewEl.textContent = "";
       setStatus(t("composeStale"));
       dispatch("discard");
@@ -245,12 +290,39 @@ void (async () => {
       relatedMessageId = details.relatedMessageId;
       replySection.hidden = false;
     }
-    await refreshScope();
+    await initScope();
   } catch (e) {
     setStatus(errorMessage(e));
   }
+  initialized = true;
+  if (snapshot) reportOutcome(snapshot);
+  syncState();
   await takePendingReplyDraft();
 })();
+
+// Opens the port and waits for the first snapshot. If a job runs or a preview exists, the popup must
+// not capture again (that would replace the stored range the preview belongs to): it only peeks.
+async function initScope(): Promise<void> {
+  if (tabId === null) return;
+  const first = new Promise<JobSnapshot | null>((resolve) => {
+    firstSnapshot = resolve;
+    setTimeout(() => resolve(null), 3000);
+  });
+  try {
+    jobPort = await openJobPort(PORT_COMPOSE, onEvent, () => {
+      jobPort = null;
+    });
+    jobPort.post({ type: "open", tabId });
+  } catch {
+    jobPort = null;
+    setStatus(t("errorInternal"));
+  }
+  const snap = jobPort ? await first : null;
+  if (snap) snapshot = snap;
+  const holdsRange = snap?.phase === "streaming" || snap?.phase === "done";
+  if (holdsRange) showScope(await peekSelection(tabId, isPlainText));
+  else await refreshScope();
+}
 
 // A reply draft started from the message display popup: prefill the notes and run the usual path.
 async function takePendingReplyDraft(): Promise<void> {

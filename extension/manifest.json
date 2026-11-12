@@ -34,6 +34,7 @@
     "scripting",
     "compose",
     "messagesRead",
-    "accountsRead"
+    "accountsRead",
+    "storage"
   ]
 }

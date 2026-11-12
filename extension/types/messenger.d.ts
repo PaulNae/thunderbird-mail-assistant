@@ -18,6 +18,8 @@ declare namespace messenger {
     }
     interface Port {
       name: string;
+      /** Set on ports passed to onConnect. */
+      sender?: MessageSender;
       error?: { message?: string } | null;
       postMessage(message: unknown): void;
       disconnect(): void;
@@ -27,6 +29,9 @@ declare namespace messenger {
     const lastError: { message?: string } | null | undefined;
     // Callers use `await`, which handles both a Port and a Promise<Port>.
     function connectNative(application: string): Port | Promise<Port>;
+    /** Resolves to a Port; the extension id is passed explicitly because a lone connectInfo is not documented. */
+    function connect(extensionId: string, connectInfo?: { name?: string }): Port | Promise<Port>;
+    const onConnect: MessengerEvent<(port: Port) => void>;
     const onInstalled: MessengerEvent<(details: InstalledDetails) => void>;
     const id: string;
     interface MessageSender {
@@ -63,10 +68,13 @@ declare namespace messenger {
       windowId?: number;
     }
     function query(queryInfo: { active?: boolean; currentWindow?: boolean }): Promise<Tab[]>;
+    const onRemoved: MessengerEvent<(tabId: number, removeInfo: { windowId: number; isWindowClosing: boolean }) => void>;
   }
   namespace messageDisplay {
     // MV3 returns a MessageList ({ id, messages }), not an array.
     function getDisplayedMessages(tabId?: number): Promise<messages.MessageList>;
+    /** Needs messagesRead. Fired for a single message and for multiple selected messages. */
+    const onMessagesDisplayed: MessengerEvent<(tab: tabs.Tab, displayedMessages: messages.MessageList) => void>;
   }
   namespace compose {
     interface ComposeDetails {
@@ -144,5 +152,16 @@ declare namespace messenger {
       identities: MailIdentity[];
     }
     function get(accountId: string, includeSubFolders?: boolean): Promise<MailAccount | null>;
+  }
+}
+
+declare namespace messenger {
+  namespace storage {
+    /** Kept in memory only, until Thunderbird or the add-on is closed or reloaded (TB 115+, needs "storage"). */
+    const session: {
+      get(keys: string | string[] | null): Promise<Record<string, unknown>>;
+      set(items: Record<string, unknown>): Promise<void>;
+      remove(keys: string | string[]): Promise<void>;
+    };
   }
 }

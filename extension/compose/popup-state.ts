@@ -19,7 +19,7 @@ export interface PopupState {
   canReply: boolean;
 }
 
-export type PopupEvent = "prepare" | "prepare_fail" | "start" | "start_reply" | "scope_reply_only" | "done" | "fail" | "cancel" | "discard" | "scope_ok" | "scope_unusable";
+export type PopupEvent = "prepare" | "prepare_fail" | "start" | "start_reply" | "resume" | "show_preview" | "scope_reply_only" | "done" | "fail" | "cancel" | "discard" | "scope_ok" | "scope_unusable";
 
 export function initialState(): PopupState {
   return { phase: "idle", canAct: false, canReply: false };
@@ -45,6 +45,11 @@ export function reduce(state: PopupState, event: PopupEvent): PopupState {
       return state.canAct && canStart(state) ? { ...state, phase: "streaming" } : state;
     case "start_reply":
       return state.canReply && canStart(state) ? { ...state, phase: "streaming" } : state;
+    case "resume":
+      // A job started earlier (popup reopened) still runs in the background.
+      return state.phase === "idle" || state.phase === "error" ? { ...state, phase: "streaming" } : state;
+    case "show_preview":
+      return state.phase === "idle" || state.phase === "error" || state.phase === "streaming" ? { ...state, phase: "preview" } : state;
     case "done":
       return state.phase === "streaming" ? { ...state, phase: "preview" } : state;
     case "fail":

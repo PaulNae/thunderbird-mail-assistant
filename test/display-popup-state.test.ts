@@ -81,3 +81,10 @@ test("questionTooLong counts the trimmed question", () => {
   assert.equal(questionTooLong("x".repeat(2001)), true);
   assert.equal(questionTooLong("x".repeat(2000)), false);
 });
+
+test("resume: a job still running in the background is shown after reopening", () => {
+  const idle = reduce(initialState(), "loaded");
+  assert.equal(reduce(idle, "resume").phase, "streaming");
+  assert.equal(reduce(reduce(reduce(idle, "resume"), "done"), "resume").phase, "streaming");
+  assert.equal(reduce(initialState(), "resume").phase, "loading");
+});

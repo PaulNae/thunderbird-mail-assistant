@@ -10,7 +10,7 @@ export interface DisplayState {
   replyOnly?: boolean;
 }
 
-export type DisplayEvent = "loaded" | "loaded_no_thread" | "unavailable" | "prepare" | "prepare_fail" | "start" | "done" | "fail" | "cancel";
+export type DisplayEvent = "loaded" | "loaded_no_thread" | "unavailable" | "prepare" | "prepare_fail" | "start" | "resume" | "done" | "fail" | "cancel";
 
 export function initialState(): DisplayState {
   return { phase: "loading" };
@@ -38,6 +38,9 @@ function step(state: DisplayState, event: DisplayEvent): DisplayState {
       return p === "preparing" ? { phase: "idle" } : state;
     case "start":
       return p === "preparing" ? { phase: "streaming" } : state;
+    case "resume":
+      // A job started earlier (popup reopened) is still running in the background.
+      return READY.includes(p) ? { phase: "streaming" } : state;
     case "done":
       return p === "streaming" ? { phase: "done" } : state;
     case "fail":

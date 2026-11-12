@@ -9,6 +9,8 @@ export type ApplyResult = { ok: true } | { error: "no_capture" | "stale" };
 export interface EditorApi {
   capture(isPlainText: boolean): CaptureResult;
   apply(text: string): ApplyResult;
+  /** Same range determination as capture, but leaves the stored capture untouched (for display only). */
+  peek(isPlainText: boolean): CaptureResult;
 }
 
 export type InsertOp = { kind: "text"; value: string } | { kind: "br" };

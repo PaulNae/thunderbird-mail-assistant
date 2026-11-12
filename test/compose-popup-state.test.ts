@@ -160,3 +160,10 @@ test("replyHasNoBasis: reply without readable original and without notes", () =>
   assert.equal(replyHasNoBasis({ type: "reply", notes: "" }, true), false);
   assert.equal(replyHasNoBasis({ type: "instruction_draft", instruction: "x" }, false), false);
 });
+
+test("resume and show_preview restore a job from the background without needing a scope", () => {
+  assert.equal(run(["resume"]).phase, "streaming");
+  assert.equal(run(["show_preview"]).phase, "preview");
+  assert.equal(run(["resume", "show_preview"]).phase, "preview");
+  assert.equal(run(["scope_ok", "start", "done", "resume"]).phase, "preview");
+});

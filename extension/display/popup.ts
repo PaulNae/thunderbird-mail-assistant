@@ -1,13 +1,15 @@
 import { localizeDocument } from "../shared/i18n.ts";
 import { errorMessage } from "../shared/errors.ts";
 import { BackendError } from "../backend/backend.ts";
-import { CliBackend } from "../backend/cli-backend.ts";
-import { cleanModelOutput } from "../prompts/compose.ts";
+import { openJobPort } from "../shared/job-client.ts";
+import type { JobPort } from "../shared/job-client.ts";
+import { PORT_DISPLAY } from "../shared/job-messages.ts";
+import type { JobSnapshot, PortEvent } from "../shared/job-messages.ts";
 import { MAX_QUESTION_CHARS, QUESTION_MODEL, SUMMARY_MODEL, buildQuestionPrompt, buildSummaryPrompt } from "../prompts/read.ts";
 import type { HistoryEntry, PromptParts } from "../prompts/read.ts";
 import { loadThread } from "../mail/thread.ts";
 import type { LoadedThread } from "../mail/thread.ts";
-import { appendHistory, canAsk, controls, initialState, isSubmitKey, questionTooLong, reduce, threadNotice, uiLang } from "./popup-state.ts";
+import { canAsk, controls, initialState, isSubmitKey, questionTooLong, reduce, threadNotice, uiLang } from "./popup-state.ts";
 import type { DisplayEvent } from "./popup-state.ts";
 
 localizeDocument();
@@ -34,16 +36,15 @@ const askBtn = $<HTMLButtonElement>("ask");
 const replyNotesEl = $<HTMLInputElement>("reply-notes");
 const replyBtn = $<HTMLButtonElement>("reply-draft");
 
-const backend = new CliBackend();
 let state = initialState();
 let thread: LoadedThread | null = null;
 let displayedId: number | null = null;
 let replyStarting = false;
-// The last successful summary; kept while a new one streams.
-let summaryText = "";
-// Lives only in this popup's memory; never stored or logged.
-let history: HistoryEntry[] = [];
-let controller: AbortController | null = null;
+let jobPort: JobPort | null = null;
+// The background script owns running jobs, the last summary and the question history (memory only);
+// this popup shows the latest snapshot and the streamed text.
+let snapshot: JobSnapshot | null = null;
+let streamText = "";
 
 const t = (key: string, subs?: string[]): string => messenger.i18n.getMessage(key, subs);
 
@@ -84,7 +85,7 @@ function startReplyDraft(): void {
   })();
 }
 
-function renderHistory(): void {
+function renderHistory(history: readonly HistoryEntry[]): void {
   historyEl.replaceChildren();
   for (const entry of history) {
     const li = document.createElement("li");
@@ -99,40 +100,67 @@ function renderHistory(): void {
   historySection.hidden = history.length === 0;
 }
 
-// Runs one streamed job; the text is buffered and shown in `target` while it streams. Only on
-// success it replaces `previous`; on cancel or failure `target` shows `previous` again.
-// Returns the cleaned text on success, null otherwise.
-async function run(parts: PromptParts, model: string, target: HTMLElement, previous = ""): Promise<string | null> {
-  const ctl = new AbortController();
-  controller = ctl;
-  statusEl.textContent = "";
-  target.textContent = "";
-  let text = "";
-  dispatch("start");
-  try {
-    for await (const chunk of backend.run({ system: parts.system, prompt: parts.prompt, model, signal: ctl.signal })) {
-      text += chunk;
-      target.textContent = text;
+// Shows a snapshot. While the thread is still loading only the content is shown; the state is
+// synced once loading has finished (see syncState).
+function showSnapshot(snap: JobSnapshot): void {
+  const before = snapshot;
+  snapshot = snap;
+  const streaming = snap.phase === "streaming";
+  streamText = streaming ? snap.text : "";
+  summarySection.hidden = !(snap.summary !== "" || (streaming && snap.kind === "summary"));
+  summaryEl.textContent = streaming && snap.kind === "summary" ? snap.text : snap.summary;
+  answerSection.hidden = !(streaming && snap.kind === "question");
+  answerEl.textContent = streaming && snap.kind === "question" ? snap.text : "";
+  renderHistory(snap.history);
+  if (streaming && snap.question !== undefined && questionEl.value === "") questionEl.value = snap.question;
+  if (before?.phase === "streaming" && snap.phase === "done" && snap.kind === "question") questionEl.value = "";
+  if (!streaming) {
+    if (snap.phase === "error" && snap.error !== undefined) {
+      statusEl.textContent = snap.error === "empty_result" ? t("composeEmptyResult") : errorMessage(new BackendError(snap.error));
+    } else if (snap.phase === "cancelled") {
+      statusEl.textContent = errorMessage(new BackendError("cancelled"));
     }
-    if (ctl.signal.aborted) throw new BackendError("cancelled");
-    text = cleanModelOutput(text);
-    if (text.trim() === "") {
-      target.textContent = previous;
-      statusEl.textContent = t("composeEmptyResult");
-      dispatch("fail");
-      return null;
-    }
-    target.textContent = text;
-    dispatch("done");
-    return text;
-  } catch (e) {
-    target.textContent = previous;
-    statusEl.textContent = errorMessage(e);
-    dispatch(e instanceof BackendError && e.code === "cancelled" ? "cancel" : "fail");
-    return null;
-  } finally {
-    controller = null;
+  } else {
+    statusEl.textContent = "";
   }
+  syncState();
+}
+
+function syncState(): void {
+  if (!snapshot || state.phase === "loading" || state.phase === "unavailable" || state.phase === "preparing") return;
+  switch (snapshot.phase) {
+    case "streaming":
+      dispatch("resume");
+      break;
+    case "done":
+      dispatch("done");
+      break;
+    case "error":
+      dispatch("fail");
+      break;
+    case "cancelled":
+    case "idle":
+      dispatch("cancel");
+      break;
+  }
+}
+
+function startJob(kind: "summary" | "question", parts: PromptParts, model: string, question?: string): void {
+  if (displayedId === null || !jobPort) {
+    dispatch("prepare_fail");
+    return;
+  }
+  statusEl.textContent = "";
+  const ok = jobPort.post({ type: "start", kind, system: parts.system, prompt: parts.prompt, model, messageId: displayedId, ...(question === undefined ? {} : { question }) });
+  if (!ok) {
+    statusEl.textContent = t("errorInternal");
+    dispatch("prepare_fail");
+    return;
+  }
+  // The background confirms with a snapshot; show the streaming state right away.
+  streamText = "";
+  (kind === "summary" ? summarySection : answerSection).hidden = false;
+  dispatch("start");
 }
 
 function summarize(): void {
@@ -142,12 +170,7 @@ function summarize(): void {
     dispatch("prepare_fail");
     return;
   }
-  summarySection.hidden = false;
-  const previous = summaryText;
-  void run(buildSummaryPrompt(thread, uiLang(messenger.i18n.getUILanguage())), SUMMARY_MODEL, summaryEl, previous).then((text) => {
-    if (text !== null) summaryText = text;
-    summarySection.hidden = summaryText === "";
-  });
+  startJob("summary", buildSummaryPrompt(thread, uiLang(messenger.i18n.getUILanguage())), SUMMARY_MODEL);
 }
 
 function ask(): void {
@@ -163,19 +186,17 @@ function ask(): void {
     dispatch("prepare_fail");
     return;
   }
-  answerSection.hidden = false;
-  void run(buildQuestionPrompt(thread, history, question), QUESTION_MODEL, answerEl).then((answer) => {
-    if (answer !== null) {
-      history = appendHistory(history, question, answer, true);
-      renderHistory();
-      questionEl.value = "";
-      answerSection.hidden = true;
-      answerEl.textContent = "";
-      render();
-    } else {
-      answerSection.hidden = true;
-    }
-  });
+  startJob("question", buildQuestionPrompt(thread, snapshot?.history ?? [], question), QUESTION_MODEL, question);
+}
+
+function onEvent(event: PortEvent): void {
+  if (event.type === "snapshot") {
+    showSnapshot(event.snapshot);
+    return;
+  }
+  if (snapshot?.phase !== "streaming" && state.phase !== "streaming") return;
+  streamText += event.text;
+  (snapshot?.kind === "question" ? answerEl : summaryEl).textContent = streamText;
 }
 
 summarizeBtn.addEventListener("click", summarize);
@@ -187,7 +208,7 @@ replyNotesEl.addEventListener("keydown", (ev) => {
     startReplyDraft();
   }
 });
-cancelBtn.addEventListener("click", () => controller?.abort());
+cancelBtn.addEventListener("click", () => jobPort?.post({ type: "cancel" }));
 questionEl.addEventListener("input", render);
 questionEl.addEventListener("keydown", (ev) => {
   if (isSubmitKey(ev)) {
@@ -213,10 +234,19 @@ void (async () => {
     // Set first: the reply draft works even if loading the thread fails.
     displayedId = only.id;
     try {
+      jobPort = await openJobPort(PORT_DISPLAY, onEvent, () => {
+        jobPort = null;
+      });
+      jobPort.post({ type: "open", tabId: id, messageId: only.id });
+    } catch {
+      jobPort = null;
+    }
+    try {
       thread = await loadThread(only.id);
     } catch (e) {
       statusEl.textContent = errorMessage(e);
       dispatch("loaded_no_thread");
+      syncState();
       return;
     }
     infoEl.textContent = t("displayThreadCount", [String(thread.messages.length)]);
@@ -226,6 +256,7 @@ void (async () => {
       noticeEl.hidden = false;
     }
     dispatch("loaded");
+    syncState();
   } catch (e) {
     statusEl.textContent = errorMessage(e);
     dispatch("unavailable");

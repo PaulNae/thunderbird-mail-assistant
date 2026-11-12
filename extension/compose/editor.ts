@@ -142,27 +142,37 @@ function textOfRange(range: Range): string {
   return text;
 }
 
-function capture(isPlainText: boolean): CaptureResult {
-  current = null;
+/** Determines the range to work on without storing it. */
+function determine(isPlainText: boolean): { result: CaptureResult; stored: Capture | null } {
   const root = getRoot();
   const sig = findPlainSignature(root, isPlainText);
   const sel = window.getSelection();
 
   if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
     const range = sel.getRangeAt(0);
-    if (!document.body.contains(range.commonAncestorContainer)) return { error: "protected" };
-    if (selectionTouchesProtected(range, sig)) return { error: "protected" };
+    if (!document.body.contains(range.commonAncestorContainer)) return { result: { error: "protected" }, stored: null };
+    if (selectionTouchesProtected(range, sig)) return { result: { error: "protected" }, stored: null };
     const text = sel.toString();
-    if (isBlank(text)) return { error: "empty" };
-    current = { range: range.cloneRange(), text };
-    return { scope: "selection", text };
+    if (isBlank(text)) return { result: { error: "empty" }, stored: null };
+    return { result: { scope: "selection", text }, stored: { range: range.cloneRange(), text } };
   }
 
   const own = findOwnTextRange(root, sig);
   const range = own ?? cursorRange(root, sig) ?? emptyBodyRange(root);
   const text = own ? textOfRange(range) : "";
-  current = { range, text };
-  return { scope: "body", text };
+  return { result: { scope: "body", text }, stored: { range, text } };
+}
+
+function capture(isPlainText: boolean): CaptureResult {
+  const { result, stored } = determine(isPlainText);
+  current = stored;
+  return result;
+}
+
+// Used when the popup is reopened while a job runs or a preview exists: the stored capture stays,
+// so a later apply still checks the text it was made for.
+function peek(isPlainText: boolean): CaptureResult {
+  return determine(isPlainText).result;
 }
 
 function runOps(ops: InsertOp[]): number {
@@ -234,6 +244,6 @@ function apply(text: string): ApplyResult {
   return { ok: true };
 }
 
-const api: EditorApi = { capture, apply };
+const api: EditorApi = { capture, apply, peek };
 const g = globalThis as { mailAssistantEditor?: EditorApi };
 if (!g.mailAssistantEditor) g.mailAssistantEditor = api;

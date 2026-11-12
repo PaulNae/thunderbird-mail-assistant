@@ -71,6 +71,16 @@ Nachrichten vom Host sind auf 1 MB begrenzt, deshalb immer in Stücken streamen.
 - Das Modell hat keine Tools und das Add-on führt aus der Antwort nichts automatisch aus.
 - Ergebnis wird immer als Vorschau gezeigt; Übernahme nur per Klick. HTML aus der Antwort wird
   nicht ungeprüft in den Editor oder ins Popup geschrieben.
+- Aufträge, Ergebnisse und Verlauf (Zusammenfassung, Fragen und Antworten, Vorschau im Verfassen-Fenster)
+  liegen nur im Arbeitsspeicher, gebunden an die angezeigte Mail bzw. das Verfassen-Fenster, nie auf der
+  Festplatte (kein `storage.local`/`storage.sync`). Sie werden gelöscht, sobald im Tab eine andere Mail
+  angezeigt wird, der Tab schließt, die Vorschau übernommen oder verworfen wird oder Thunderbird endet.
+  Besitzer ist das Hintergrundskript (`extension/background/jobs.ts`), die Popups verbinden sich per
+  `runtime.connect` und können jederzeit schließen und wieder öffnen. Zusätzlich zum Modulspeicher werden
+  fertige Ergebnisse in `storage.session` gespiegelt (nur Speicher, ab TB 115, überlebt das Beenden des
+  Hintergrundskripts als Event-Page, nicht aber das Beenden von Thunderbird); die Prompts mit dem vollen
+  Mailtext werden nie gespiegelt. Obergrenzen: Text je Eintrag, Verlaufseinträge wie beim Prompt, 20 Einträge
+  gesamt (älteste zuerst).
 - Modelle: neu entstehende Texte (Antwortentwurf, Entwurf aus Anweisung) auf Sonnet;
   Umformulieren, Kürzen, Ton, Übersetzen und Zusammenfassen auf Haiku; Postfach-Abfragen auf Sonnet.
   In den Einstellungen änderbar.
@@ -124,6 +134,17 @@ Nachgewiesen am 2026-11-12 in Thunderbird 160: Abnahme vom Nutzer im Testprofil 
 
 Abnahme: Zusammenfassung einer langen HTML-Mail und eine Folgefrage dazu, jeweils gestreamt.
 Nachgewiesen am 2026-11-12 in Thunderbird 160: Abnahme vom Nutzer im Testprofil bestätigt (Zusammenfassung der langen HTML-Mail `test/fixtures/long-html.eml` und Folgefrage, jeweils gestreamt; "Antwort entwerfen" aus einem lokalen Ordner). Aus einer Datei geöffnete Mails: Antwortfenster lässt sich nicht per `beginReply` öffnen, Popup nennt den normalen Antworten-Knopf als Weg.
+
+#### Nacharbeit
+- [x] Antworten mit der Identität, an die die Mail ging (`accountsRead`); Thread-Suche auf das Konto der Mail begrenzt
+- [x] Laufende Aufträge und das letzte Ergebnis überleben das Schließen des Popups (Hintergrundskript als Besitzer,
+      `runtime.connect`, `storage.session` als Spiegel; Compose-Erfassung bleibt im Editor-Skript, das Popup
+      liest beim Wiederöffnen nur per `peek`)
+
+Abnahme: Zusammenfassung starten, rausklicken, Popup wieder öffnen, Ergebnis ist da; andere Mail anklicken,
+Ergebnis ist weg; dasselbe mit einem Entwurf im Verfassen-Fenster; Antwort auf eine Mail an eine
+Nicht-Standard-Adresse nutzt diese Adresse.
+Noch nicht in Thunderbird nachgewiesen (nur Zustandslogik mit Tests geprüft).
 
 ### Phase 5 – Postfach-Abfrage
 - [ ] Chat-Tab; Schritt 1: Modell erzeugt aus der Frage Suchparameter (strukturierte Ausgabe)
