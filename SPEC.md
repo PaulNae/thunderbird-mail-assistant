@@ -115,7 +115,7 @@ Abnahme: Markierten Absatz in einer HTML-Mail umformulieren und übernehmen, Res
 inklusive Formatierung und Signatur unverändert; dasselbe in einer Nur-Text-Mail.
 In einer leeren neuen Mail erzeugt eine freie Anweisung einen Entwurf, der nach Klick eingefügt wird;
 in einer leeren Antwort landet er vor Zitat und Signatur, beide bleiben unverändert.
-Umgesetzt und reviewt; Nachweis in Thunderbird steht aus.
+Nachgewiesen am 2026-11-12 in Thunderbird 160: Abnahme vom Nutzer im Testprofil bestätigt (Umformulieren und Übernehmen in HTML- und Nur-Text-Mail, Entwurf aus Anweisung).
 
 ### Phase 4 – Lesen
 - [ ] Popup in der Mailansicht: Zusammenfassung, Frage stellen, "Antwort entwerfen" (öffnet Phase 3)
