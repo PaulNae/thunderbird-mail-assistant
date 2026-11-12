@@ -178,13 +178,28 @@ Sperre, Widerruf, geändertes Modell und geänderte Obergrenze, Verbindungstest,
 Verbindungstest nutzt die bestehende Verbindung zum Helfer: ein bei laufendem Thunderbird deinstallierter Helfer wird
 erst nach einem Neustart als "nicht installiert" gemeldet. Bildschirmleser nicht geprüft.
 
-### Phase 7 – Veröffentlichung
-- [ ] `ApiBackend` mit API-Key (Standard für veröffentlichte Version)
-- [ ] Host-Installer für Windows und Linux
-- [ ] Nutzungsbedingungen von Anthropic für das CLI-Backend prüfen; Produktname ohne "Claude" vorn
-- [ ] Datenschutzerklärung, Store-Texte, Einreichung bei addons.thunderbird.net
+### Phase 7 – Veröffentlichung auf GitHub (nur Repository, CLI-Backend, macOS)
+- [x] Nutzungsbedingungen von Anthropic gelesen (2026-11-12, `code.claude.com/docs/en/legal-and-compliance` und
+      Consumer Terms): Das Add-on bietet keinen Claude-Login an, fasst keine Zugangsdaten an und ruft nur das vom
+      Nutzer installierte, unveränderte Claude Code auf, in dem dieser selbst angemeldet ist. Ein ausdrückliches Verbot
+      dafür steht dort nicht; Anthropic empfiehlt Entwicklern aber API-Keys und behält sich Durchsetzung ohne
+      Vorankündigung vor. Daher: CLI-Backend nur im GitHub-Repository, Store-Version mit API-Key (Phase 8).
+- [ ] Lizenzdatei (MIT), Urheber "PaulNae"
+- [ ] README auf Englisch, mit Abschnitten zu Datenschutz (was wann wohin geht, Verweis auf Anthropics
+      Datenschutzerklärung, Hinweis auf Daten Dritter in Mails) und zu Anthropic (kein offizielles Produkt, eigenes
+      Claude Code und eigenes Konto nötig, Abo laut Consumer Terms nicht für geschäftliche Nutzung)
+- [ ] Übrige nach außen sichtbare Texte auf Englisch (Ausgaben des Installers, `package.json`); SPEC.md und CLAUDE.md
+      bleiben deutsch
+- [ ] Git-Historie auf die GitHub-Noreply-Adresse umschreiben und neu pushen (überschreibt `origin/main`)
+- [ ] GitHub-Release mit der `.xpi`; Repository öffentlich schalten (nur auf ausdrückliches Wort des Nutzers)
+
+### Phase 8 – Store (addons.thunderbird.net)
+- [ ] `ApiBackend` mit API-Key als Standard der Store-Version (neue Host-Berechtigung für `api.anthropic.com`)
+- [ ] Backend-Umschalter in den Einstellungen
+- [ ] Host-Installer für Windows und Linux (nur falls das CLI-Backend im Store bleibt)
+- [ ] Datenschutzerklärung als Volltext, Store-Texte, `data_collection_permissions` klären, Einreichung
 
 ## Offene Entscheidungen
 
 - ~~Produktname und Add-on-ID~~: entschieden am 2026-11-12, Name "Mail Assistant", ID `mail-assistant@paulnae.github.io`.
-- Lizenz (vor einer Veröffentlichung festlegen).
+- ~~Lizenz~~: MIT, Urheber "PaulNae" (2026-11-12).
