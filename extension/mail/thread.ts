@@ -1,5 +1,6 @@
 // Thread context for the displayed message: related messages found through the References and
 // In-Reply-To headers. Only messages that can be found this way are included.
+import { findReplyContext } from "./identity.ts";
 import { loadMessage } from "./message-text.ts";
 import type { LoadedMessage } from "./message-text.ts";
 import { DEFAULT_THREAD_LIMITS, parseMessageIds, selectThread } from "./thread-select.ts";
@@ -34,12 +35,14 @@ export async function loadThread(
   ];
   const ids = [...new Set(wanted)].slice(-MAX_LOOKUPS);
 
-  // Searching all accounts is the best possible here: limiting it to the account of the displayed
-  // message needs folder.accountId (MessageHeader.folder), which requires accountsRead.
+  // Limited to the account of the displayed message (folder.accountId, needs accountsRead; query
+  // accountId needs TB 121+). Without a known account (e.g. a message opened from a file) all
+  // accounts are searched.
+  const { accountId } = await findReplyContext(messageId);
   const lookup = async (headerMessageId: string): Promise<LoadedMessage | null> => {
     let listId: string | null = null;
     try {
-      const list = await messenger.messages.query({ headerMessageId });
+      const list = await messenger.messages.query(accountId ? { headerMessageId, accountId } : { headerMessageId });
       listId = list.id;
       const hit = list.messages.find((m) => m.id !== messageId);
       return hit ? await loadMessage(hit.id) : null;

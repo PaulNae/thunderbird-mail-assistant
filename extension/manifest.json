@@ -33,6 +33,7 @@
     "nativeMessaging",
     "scripting",
     "compose",
-    "messagesRead"
+    "messagesRead",
+    "accountsRead"
   ]
 }

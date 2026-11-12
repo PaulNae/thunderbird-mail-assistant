@@ -72,4 +72,5 @@ test("scripting and compose permissions are requested", () => {
   assert.ok(permissions.includes("scripting"));
   assert.ok(permissions.includes("compose"));
   assert.ok(permissions.includes("messagesRead"));
+  assert.ok(permissions.includes("accountsRead"));
 });

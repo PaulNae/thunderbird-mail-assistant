@@ -1,5 +1,6 @@
 // Background script. Listeners must be registered at top level (MV3).
 import { PendingReplyDrafts, isOwnSender, parseRuntimeRequest } from "../shared/messages.ts";
+import { findReplyContext } from "../mail/identity.ts";
 import type { StartReplyDraftResponse, TakePendingResponse } from "../shared/messages.ts";
 
 // Only user notes, in memory only. If the background script is unloaded the entry is lost,
@@ -12,7 +13,9 @@ messenger.runtime.onInstalled.addListener((details) => {
 
 async function startReplyDraft(messageId: number, notes: string): Promise<StartReplyDraftResponse> {
   try {
-    const tab = await messenger.compose.beginReply(messageId);
+    // Reply from the identity the mail was addressed to; without one Thunderbird chooses.
+    const { identityId } = await findReplyContext(messageId);
+    const tab = await messenger.compose.beginReply(messageId, undefined, identityId ? { identityId } : undefined);
     if (tab.id === undefined) return { ok: false };
     pending.put(tab.id, notes);
     let popupOpened = false;

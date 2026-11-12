@@ -74,9 +74,11 @@ declare namespace messenger {
       type?: "draft" | "new" | "reply" | "forward" | "redirect";
       /** Only set with the messagesRead permission, and not if the original was opened from a file. */
       relatedMessageId?: number;
+      /** Needs accountsRead (TB 76+). */
+      identityId?: string;
     }
     function getComposeDetails(tabId: number): Promise<ComposeDetails>;
-    function beginReply(messageId: number, replyType?: "replyToAll" | "replyToList" | "replyToSender", details?: ComposeDetails): Promise<tabs.Tab>;
+    function beginReply(messageId: number, replyType?: "replyToAll" | "replyToList" | "replyToSender" | undefined, details?: ComposeDetails): Promise<tabs.Tab>;
   }
   namespace composeAction {
     /** Resolves to false if the popup cannot be opened (TB 113+ for options and return value). */
@@ -93,6 +95,12 @@ declare namespace messenger {
       /** Date header; may be invalid or missing for broken messages. */
       date?: Date;
       headerMessageId: string;
+      /** To recipients; ccList/bccList are not populated for news messages. */
+      recipients?: string[];
+      ccList?: string[];
+      bccList?: string[];
+      /** Only present with accountsRead; accountId is a string since TB 121. */
+      folder?: { accountId: string };
     }
     interface MessageAttachment {
       name: string;
@@ -114,7 +122,7 @@ declare namespace messenger {
     function listAttachments(messageId: number): Promise<MessageAttachment[]>;
     /** Options exist only from TB 133 (strict_min_version is 128), so none are passed. */
     function getFull(messageId: number): Promise<MessagePart>;
-    function query(queryInfo: { headerMessageId?: string }): Promise<MessageList>;
+    function query(queryInfo: { headerMessageId?: string; accountId?: string | string[] }): Promise<MessageList>;
     /** TB 120+. Finalizes a list and stops any process still adding messages. */
     function abortList(messageListId: string): Promise<void>;
   }
@@ -123,3 +131,18 @@ declare namespace messenger {
 // Set by the compose editor content script (extension/compose/editor.ts).
 // eslint-disable-next-line no-var
 declare var mailAssistantEditor: import("../compose/editor-text.ts").EditorApi | undefined;
+
+declare namespace messenger {
+  namespace accounts {
+    interface MailIdentity {
+      id?: string;
+      email?: string;
+    }
+    interface MailAccount {
+      id: string;
+      /** The default identity is listed first. */
+      identities: MailIdentity[];
+    }
+    function get(accountId: string, includeSubFolders?: boolean): Promise<MailAccount | null>;
+  }
+}
